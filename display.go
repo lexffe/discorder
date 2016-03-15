@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
-	"log"
 	"math"
 	"unicode/utf8"
 )
@@ -34,8 +33,9 @@ func (app *App) RefreshDisplay() {
 	}
 	headerStr += " "
 	CreateHeader(headerStr)
-
-	app.CreateFooter()
+	if app.session != nil && app.session.Token != "" {
+		app.CreateFooter()
+	}
 
 	app.currentState.RefreshDisplay() // state specific stuff
 
@@ -94,7 +94,7 @@ func (app *App) DisplayMessages() {
 
 		lines := HeightRequired(len(cells), sizex-padding*2)
 		y -= lines
-		app.SetCells(cells, padding, y, sizex-padding*2, 0)
+		SetCells(cells, padding, y, sizex-padding*2, 0)
 	}
 }
 
@@ -104,6 +104,11 @@ type AttribPoint struct {
 }
 
 var ResetAttribPoint = AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
+
+func SimpleSetText(startX, startY, width int, str string, fg, bg termbox.Attribute) int {
+	cells := GenCellSlice(str, map[int]AttribPoint{0: AttribPoint{fg, bg}})
+	return SetCells(cells, startX, startY, width, 0)
+}
 
 func GenCellSlice(str string, points map[int]AttribPoint) []termbox.Cell {
 	index := 0
@@ -126,7 +131,7 @@ func GenCellSlice(str string, points map[int]AttribPoint) []termbox.Cell {
 }
 
 // Returns number of lines
-func (app *App) SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
+func SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
 	x := 0
 	y := 0
 
@@ -170,7 +175,7 @@ func (app *App) CreateFooter() {
 	}
 	preStrLen := utf8.RuneCountInString(preStr)
 
-	body := app.currentSendBuffer + " "
+	body := app.currentTextBuffer + " "
 	//bodyLen := utf8.RuneCountInString(body)
 
 	pointTyped := AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
@@ -178,13 +183,24 @@ func (app *App) CreateFooter() {
 	cells := GenCellSlice(preStr+body, map[int]AttribPoint{
 		0:         AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
 		preStrLen: pointTyped,
-		//preStrLen + app.currentCursorLocation:     AttribPoint{termbox.ColorDefault, termbox.ColorYellow},
-		//preStrLen + app.currentCursorLocation + 1: pointTyped,
 	})
 
 	sizeX, sizeY := termbox.Size()
-	app.SetCells(cells, 0, sizeY-1, sizeX, 1)
+	SetCells(cells, 0, sizeY-1, sizeX, 1)
 	termbox.SetCursor(preStrLen+app.currentCursorLocation, sizeY-1)
+}
+
+func (app *App) Prompt(x, y, width int, cursor int, buffer string) {
+	///body := app.currentSendBuffer + " "
+	//bodyLen := utf8.RuneCountInString(body)
+
+	cells := GenCellSlice(buffer, map[int]AttribPoint{
+		0: AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
+	})
+
+	//sizeX, sizeY := termbox.Size()
+	SetCells(cells, x, y, width, 1)
+	termbox.SetCursor(x+cursor, y)
 }
 
 func CreateWindow(title string, startX, startY, width, height int, color termbox.Attribute) {
@@ -208,33 +224,6 @@ func CreateWindow(title string, startX, startY, width, height int, color termbox
 		}
 	}
 
-}
-
-func (app *App) CreateServerWindow(selected int) {
-	state := app.session.State
-	state.RLock()
-	defer state.RUnlock()
-
-	strList := make([]string, len(state.Guilds))
-	for k, v := range state.Guilds {
-		strList[k] = v.Name
-	}
-	app.CreateListWindow("Servers", strList, selected)
-}
-
-func (app *App) CreateChannelWindow(selected int) {
-	g, err := app.session.State.Guild(app.selectedServerId)
-	if err != nil {
-		log.Println("Error getting guild ", err.Error())
-		return
-	}
-	strList := make([]string, 0)
-	for _, v := range g.Channels {
-		if v.Type == "text" {
-			strList = append(strList, "#"+v.Name)
-		}
-	}
-	app.CreateListWindow("Channels", strList, selected)
 }
 
 func (app *App) CreateListWindow(title string, list []string, selected int) {
@@ -265,7 +254,7 @@ func (app *App) CreateListWindow(title string, list []string, selected int) {
 			bg = termbox.ColorYellow
 		}
 		cells := GenCellSlice(v, map[int]AttribPoint{0: AttribPoint{termbox.ColorDefault, bg}})
-		mod := app.SetCells(cells, startX+1, y, windowWidth, 0)
+		mod := SetCells(cells, startX+1, y, windowWidth, 0)
 		y += mod
 	}
 }

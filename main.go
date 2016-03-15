@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,23 +14,33 @@ const (
 var (
 	channels map[string]*discordgo.Channel
 	app      *App
+	config   *Config
+
+	configPath = "config.json"
 )
 
 func main() {
 
-	var err error
-
 	// Check for Username and Password CLI arguments.
-	if len(os.Args) != 3 {
-		fmt.Println("You must provide username and password as arguments. See below example.")
-		fmt.Println(os.Args[0], " [username] [password]")
-		return
+	// if len(os.Args) != 3 {
+	// 	fmt.Println("You must provide username and password as arguments. See below example.")
+	// 	fmt.Println(os.Args[0], " [username] [password]")
+	// 	return
+	// }
+
+	if len(os.Args) >= 2 {
+		configPath = os.Args[1]
 	}
 
-	app, err = Login(os.Args[1], os.Args[2])
+	c, err := LoadConfig(configPath)
 	if err != nil {
-		log.Println(err)
-		return
+		c = &Config{}
+		fmt.Println("Failed to open config, creating new one")
+		c.Save(configPath)
 	}
+
+	config = c
+
+	app = NewApp(config)
 	app.Run()
 }
