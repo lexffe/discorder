@@ -351,8 +351,15 @@ func (s *StateChannelSelection) HandleInput(event termbox.Event) {
 				return
 			}
 
-			if s.curSelection < len(curGuild.Channels) || s.curSelection >= 0 {
-				s.app.selectedChannelId = curGuild.Channels[s.curSelection].ID
+			realList := make([]discordgo.Channel, 0)
+			for _, v := range curGuild.Channels {
+				if v.Type == "text" {
+					realList = append(realList, v)
+				}
+			}
+
+			if s.curSelection < len(realList) || s.curSelection >= 0 {
+				s.app.selectedChannelId = realList[s.curSelection].ID
 			}
 
 			s.app.currentState = &StateNormal{s.app}
