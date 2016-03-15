@@ -1,6 +1,7 @@
 Some tasks to complete before 0.1 release today:
 
      ☐ Config file
+         ☐ automatically sets to the server and channel last used, when starting
      ☐ Take password interactively with option to store password
          Should look into some password storing utilities to integrate with into later
      ✔ Improve text input @done (16-03-15 15:47)
@@ -9,13 +10,12 @@ Some tasks to complete before 0.1 release today:
          ✔ Receive @done (16-03-15 15:47)
          ☐ Send
  Later (0.2?):
-     ☐ Get history when selecting a new server and or channel
+     ☐ History
+     ☐ Mentions
 
  Optimisation:
-     ☐ Store channels in a map
-     ☐ Store guilds in a map
-         So we dont have to iterate over each element to get a channel or guild
-
+     ☐ stuff
 
  Bugs:
      ✔ Fix the channel selection @done (16-03-15 15:02)
+     ☐ Fix race conditions....

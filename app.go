@@ -28,6 +28,9 @@ type App struct {
 	selectedServerId  string
 	selectedChannelId string
 
+	selectedGuild   *discordgo.Guild
+	selectedChannel *discordgo.Channel
+
 	history *list.List
 
 	currentState State
@@ -46,20 +49,12 @@ func Login(user, password string) (*App, error) {
 
 	session.StateEnabled = true
 
-	// session := discordgo.Session{
-	// 	ShouldReconnectOnError: true,
-	// 	StateEnabled:           true,
-	// 	State:                  discordgo.NewState(),
-	// }
-
 	app := &App{
 		session: session,
 		history: list.New(),
 	}
 
 	session.AddHandler(app.messageCreate)
-
-	// err := session.Login(user, password)
 
 	err = session.Open()
 	return app, err
@@ -102,7 +97,7 @@ func (app *App) Run() {
 	// Start polling events
 	go app.PollEvents()
 
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 
 	for {
 		select {
@@ -123,6 +118,20 @@ func (app *App) Run() {
 		case msg := <-app.logChan:
 			app.HandleMessage(msg)
 		case <-ticker.C:
+			var err error
+			if app.selectedServerId != "" {
+				app.selectedGuild, err = app.session.State.Guild(app.selectedServerId)
+				if err != nil {
+					log.Println("App.Run: ", err)
+				}
+			}
+			if app.selectedChannelId != "" && app.selectedGuild != nil {
+				app.selectedChannel, err = app.session.State.GuildChannel(app.selectedServerId, app.selectedChannelId)
+				if err != nil {
+					log.Println("App.Run: ", err)
+				}
+			}
+
 			app.RefreshDisplay()
 		}
 	}
@@ -168,11 +177,10 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 			log.Println("Stopping...")
 			go app.Stop()
 		}
-	} else if event.Type == termbox.EventResize {
-		app.RefreshDisplay()
 	}
 
 	app.currentState.HandleInput(event)
+	app.RefreshDisplay()
 }
 
 func (app *App) PollEvents() {
@@ -211,6 +219,80 @@ func (app *App) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+func (app *App) HandleTextInput(event termbox.Event) {
+	if event.Type == termbox.EventKey {
+		if event.Key == termbox.KeyEnter {
+			// send
+			cp := app.currentSendBuffer
+			app.currentSendBuffer = ""
+			app.currentCursorLocation = 0
+			app.RefreshDisplay()
+			_, err := app.session.ChannelMessageSend(app.selectedChannelId, cp)
+			if err != nil {
+				log.Println("Error sending: ", err)
+			}
+		} else if event.Key == termbox.KeyArrowLeft {
+			app.currentCursorLocation--
+			if app.currentCursorLocation < 0 {
+				app.currentCursorLocation = 0
+			}
+		} else if event.Key == termbox.KeyArrowRight {
+			app.currentCursorLocation++
+			bufLen := utf8.RuneCountInString(app.currentSendBuffer)
+			if app.currentCursorLocation > bufLen {
+				app.currentCursorLocation = bufLen
+			}
+		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+			bufLen := utf8.RuneCountInString(app.currentSendBuffer)
+			if bufLen == 0 {
+				return
+			}
+			if app.currentCursorLocation == bufLen {
+				_, size := utf8.DecodeLastRuneInString(app.currentSendBuffer)
+				app.currentCursorLocation--
+				app.currentSendBuffer = app.currentSendBuffer[:len(app.currentSendBuffer)-size]
+			} else if app.currentCursorLocation == 1 {
+				_, size := utf8.DecodeRuneInString(app.currentSendBuffer)
+				app.currentCursorLocation--
+				app.currentSendBuffer = app.currentSendBuffer[size:]
+			} else if app.currentCursorLocation == 0 {
+				return
+			} else {
+				runeSlice := []rune(app.currentSendBuffer)
+				newSlice := append(runeSlice[:app.currentCursorLocation], runeSlice[app.currentCursorLocation+1:]...)
+				app.currentSendBuffer = string(newSlice)
+				app.currentCursorLocation--
+			}
+		} else if event.Ch != 0 || event.Key == termbox.KeySpace {
+			char := event.Ch
+			if event.Key == termbox.KeySpace {
+				char = ' '
+			}
+
+			bufLen := utf8.RuneCountInString(app.currentSendBuffer)
+			if app.currentCursorLocation == bufLen {
+				app.currentSendBuffer += string(char)
+				app.currentCursorLocation++
+			} else if app.currentCursorLocation == 0 {
+				app.currentSendBuffer = string(char) + app.currentSendBuffer
+				app.currentCursorLocation++
+			} else {
+				bufSlice := []rune(app.currentSendBuffer)
+				bufCopy := ""
+
+				for i := 0; i < len(bufSlice); i++ {
+					if i == app.currentCursorLocation {
+						bufCopy += string(char)
+					}
+					bufCopy += string(bufSlice[i])
+				}
+				app.currentSendBuffer = bufCopy
+				app.currentCursorLocation++
+			}
+		}
+	}
+}
+
 type StateNormal struct {
 	app *App
 }
@@ -225,82 +307,9 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			s.app.currentState = &StateChannelSelection{
 				app: s.app,
 			}
-		} else if event.Key == termbox.KeyEnter {
-			// send
-			_, err := s.app.session.ChannelMessageSend(s.app.selectedChannelId, s.app.currentSendBuffer)
-			if err != nil {
-				log.Println("Error sending: ", err)
-			}
-			s.app.currentSendBuffer = ""
-			s.app.currentCursorLocation = 0
-		} else if event.Key == termbox.KeyArrowLeft {
-			s.app.currentCursorLocation--
-			if s.app.currentCursorLocation < 0 {
-				s.app.currentCursorLocation = 0
-			}
-		} else if event.Key == termbox.KeyArrowRight {
-			s.app.currentCursorLocation++
-			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
-			if s.app.currentCursorLocation > bufLen {
-				s.app.currentCursorLocation = bufLen
-			}
-		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
-			if bufLen == 0 {
-				return
-			}
-			if s.app.currentCursorLocation == bufLen {
-				_, size := utf8.DecodeLastRuneInString(s.app.currentSendBuffer)
-				s.app.currentCursorLocation--
-				s.app.currentSendBuffer = s.app.currentSendBuffer[:len(s.app.currentSendBuffer)-size]
-			} else if s.app.currentCursorLocation == 1 {
-				_, size := utf8.DecodeRuneInString(s.app.currentSendBuffer)
-				s.app.currentCursorLocation--
-				s.app.currentSendBuffer = s.app.currentSendBuffer[size:]
-			} else if s.app.currentCursorLocation == 0 {
-				return
-			} else {
-				runeSlice := []rune(s.app.currentSendBuffer)
-				newSlice := append(runeSlice[:s.app.currentCursorLocation], runeSlice[s.app.currentCursorLocation+1:]...)
-				s.app.currentSendBuffer = string(newSlice)
-				s.app.currentCursorLocation--
-			}
-		} else if event.Ch != 0 || event.Key == termbox.KeySpace {
-			char := event.Ch
-			if event.Key == termbox.KeySpace {
-				char = ' '
-			}
-
-			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
-			if s.app.currentCursorLocation == bufLen {
-				s.app.currentSendBuffer += string(char)
-				s.app.currentCursorLocation++
-			} else if s.app.currentCursorLocation == 0 {
-				s.app.currentSendBuffer = string(char) + s.app.currentSendBuffer
-				s.app.currentCursorLocation++
-			} else {
-				bufSlice := []rune(s.app.currentSendBuffer)
-				bufCopy := ""
-
-				for i := 0; i < len(bufSlice); i++ {
-					if i == s.app.currentCursorLocation {
-						bufCopy += string(char)
-					}
-					bufCopy += string(bufSlice[i])
-				}
-				s.app.currentSendBuffer = bufCopy
-				s.app.currentCursorLocation++
-				// before := bufSlice[:s.app.currentCursorLocation]
-				// after := bufSlice[s.app.currentCursorLocation:]
-				// before = append(before[len(before)-1:], char)
-				// before = append(before, after...)
-				// str := string(before)
-				// s.app.currentSendBuffer = str
-				// s.app.currentCursorLocation++
-			}
-
+		} else {
+			s.app.HandleTextInput(event)
 		}
-		s.app.RefreshDisplay()
 	}
 }
 func (s *StateNormal) RefreshDisplay() {}

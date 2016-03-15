@@ -18,6 +18,30 @@ func (app *App) RefreshDisplay() {
 	// Main display
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
+	app.DisplayMessages()
+
+	headerStr := " Discorder (v" + VERSION + ") (╯°□°） ╯ ︵ ┻━┻"
+	if app.selectedGuild != nil {
+		headerStr += " Server: " + app.selectedGuild.Name
+		if app.selectedChannel != nil {
+			headerStr += ", Active Channel: " + app.selectedChannel.Name
+		} else {
+			headerStr += ", Ctrl+h to select a channel"
+		}
+	} else {
+		headerStr += " Ctrl+s to select a server "
+	}
+	headerStr += " "
+	CreateHeader(headerStr)
+
+	app.CreateFooter()
+
+	app.currentState.RefreshDisplay() // state specific stuff
+
+	termbox.Flush()
+}
+
+func (app *App) DisplayMessages() {
 	sizex, sizey := termbox.Size()
 
 	y := sizey - 2
@@ -71,14 +95,6 @@ func (app *App) RefreshDisplay() {
 		y -= lines
 		app.SetCells(cells, padding, y, sizex-padding*2, 0)
 	}
-
-	CreateHeader(" Discorder DEV (╯°□°）╯︵ ┻━┻ " + app.selectedServerId + " : " + app.selectedChannelId)
-	//CreateWindow("A window!", sizex/2-30, sizey/2-10, 60, 20, termbox.ColorBlack)
-	//app.CreateServerWindow(0)
-	app.CreateFooter()
-	app.currentState.RefreshDisplay()
-
-	termbox.Flush()
 }
 
 type AttribPoint struct {
@@ -147,7 +163,10 @@ func CreateHeader(header string) {
 }
 
 func (app *App) CreateFooter() {
-	preStr := "Send To " + app.selectedChannelId + " :"
+	preStr := "Send To " + app.selectedChannelId + ":"
+	if app.selectedChannel != nil {
+		preStr = "Send to #" + app.selectedChannel.Name + ":"
+	}
 	preStrLen := utf8.RuneCountInString(preStr)
 
 	body := app.currentSendBuffer + " "

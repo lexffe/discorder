@@ -8,6 +8,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	VERSION = "0.0.1 DEV"
+)
+
 var (
 	channels map[string]*discordgo.Channel
 	app      *App
