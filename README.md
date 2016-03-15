@@ -10,6 +10,6 @@ TODO:
 
  - Fix all race conditions... theres a lot of them probably
 
-Heres Image of it's current state
+Heres an image of its current state
 
 ![Preview image](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-15T05%3A47%3A51%2B01%3A00.png)
