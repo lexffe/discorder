@@ -351,7 +351,7 @@ func (s *StateChannelSelection) HandleInput(event termbox.Event) {
 				return
 			}
 
-			realList := make([]discordgo.Channel, 0)
+			realList := make([]*discordgo.Channel, 0)
 			for _, v := range curGuild.Channels {
 				if v.Type == "text" {
 					realList = append(realList, v)
