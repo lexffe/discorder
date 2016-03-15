@@ -1,4 +1,4 @@
-Some tasks to complete before 0.1 release today:
+Some tasks to complete before 0.1 release:
 
      ☐ Config file
          ☐ automatically sets to the server and channel last used, when starting
@@ -9,7 +9,7 @@ Some tasks to complete before 0.1 release today:
      ☐ PM's
          ✔ Receive @done (16-03-15 15:47)
          ☐ Send
- Later (0.2?):
+ Later (0.2):
      ☐ History
      ☐ Mentions
 
