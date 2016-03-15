@@ -1,5 +1,3 @@
-// This file provides a basic "quick start" example of using the Discordgo
-// package to connect to Discord using the low level API functions.
 package main
 
 import (
@@ -33,27 +31,3 @@ func main() {
 	}
 	app.Run()
 }
-
-// This function will be called (due to AddHandler above) every time a new
-// message is created on any channel that the autenticated user has access to.
-
-// func getChannel(id string) (*discordgo.Channel, error) {
-// 	if channels == nil {
-// 		channels = make(map[string]*discordgo.Channel)
-// 	}
-// 	channel, ok := channels[id]
-// 	if !ok {
-// 		ch, err := session.Channel(id)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		channels[id] = ch
-// 		channel = ch
-// 		fmt.Println("Fetched new channel")
-// 	}
-// 	return channel, nil
-// }
-
-// func changeState(newState State) {
-
-// }

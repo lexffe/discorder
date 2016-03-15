@@ -137,11 +137,16 @@ func (app *App) HandleMessage(msg interface{}) {
 	cast, ok := msg.(discordgo.Message)
 	if ok {
 		chId := cast.ChannelID
+		state := app.session.State
+		// Check if its a private channel
+		_, err := state.PrivateChannel(cast.ChannelID)
+		if err == nil {
+			app.history.PushFront(msg)
+		}
+
 		if app.selectedServerId != "" {
 			_, err := app.session.State.GuildChannel(app.selectedServerId, chId)
-			if err != nil {
-				// We ignore t since its not on our server
-			} else {
+			if err == nil {
 				app.history.PushFront(msg)
 			}
 		}
@@ -236,15 +241,15 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 		} else if event.Key == termbox.KeyArrowRight {
 			s.app.currentCursorLocation++
 			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
-			if s.app.currentCursorLocation >= bufLen {
-				s.app.currentCursorLocation = bufLen - 1
+			if s.app.currentCursorLocation > bufLen {
+				s.app.currentCursorLocation = bufLen
 			}
 		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
 			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
 			if bufLen == 0 {
 				return
 			}
-			if s.app.currentCursorLocation == bufLen-1 {
+			if s.app.currentCursorLocation == bufLen {
 				_, size := utf8.DecodeLastRuneInString(s.app.currentSendBuffer)
 				s.app.currentCursorLocation--
 				s.app.currentSendBuffer = s.app.currentSendBuffer[:len(s.app.currentSendBuffer)-size]
@@ -267,21 +272,21 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			}
 
 			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
-			if s.app.currentCursorLocation == bufLen-1 {
+			if s.app.currentCursorLocation == bufLen {
 				s.app.currentSendBuffer += string(char)
 				s.app.currentCursorLocation++
 			} else if s.app.currentCursorLocation == 0 {
 				s.app.currentSendBuffer = string(char) + s.app.currentSendBuffer
-				//s.app.currentCursorLocation++
+				s.app.currentCursorLocation++
 			} else {
 				bufSlice := []rune(s.app.currentSendBuffer)
 				bufCopy := ""
 
 				for i := 0; i < len(bufSlice); i++ {
-					bufCopy += string(bufSlice[i])
 					if i == s.app.currentCursorLocation {
 						bufCopy += string(char)
 					}
+					bufCopy += string(bufSlice[i])
 				}
 				s.app.currentSendBuffer = bufCopy
 				s.app.currentCursorLocation++

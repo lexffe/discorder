@@ -1,0 +1,21 @@
+Some tasks to complete before 0.1 release today:
+
+     ☐ Config file
+     ☐ Take password interactively with option to store password
+         Should look into some password storing utilities to integrate with into later
+     ✔ Improve text input @done (16-03-15 15:47)
+     ☐ Mark channels you want to listen too
+     ☐ PM's
+         ✔ Receive @done (16-03-15 15:47)
+         ☐ Send
+ Later (0.2?):
+     ☐ Get history when selecting a new server and or channel
+
+ Optimisation:
+     ☐ Store channels in a map
+     ☐ Store guilds in a map
+         So we dont have to iterate over each element to get a channel or guild
+
+
+ Bugs:
+     ✔ Fix the channel selection @done (16-03-15 15:02)

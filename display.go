@@ -43,12 +43,22 @@ func (app *App) RefreshDisplay() {
 				}
 				cells = GenCellSlice(fullMsg, points)
 			} else {
+				name := channel.Name
+				dm := false
+				if name == "" {
+					name = "Direct Message"
+					dm = true
+				}
+
 				fullMsg := "[" + channel.Name + "]" + msg.Author.Username + ": " + msg.ContentWithMentionsReplaced()
 				channelLen := utf8.RuneCountInString(channel.Name) + 2
 				points := map[int]AttribPoint{
 					0:                      AttribPoint{termbox.ColorGreen, termbox.ColorDefault},
 					channelLen:             AttribPoint{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
 					channelLen + authorLen: ResetAttribPoint,
+				}
+				if dm {
+					points[0] = AttribPoint{termbox.ColorMagenta, termbox.ColorDefault}
 				}
 				cells = GenCellSlice(fullMsg, points)
 			}
@@ -148,12 +158,13 @@ func (app *App) CreateFooter() {
 	cells := GenCellSlice(preStr+body, map[int]AttribPoint{
 		0:         AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
 		preStrLen: pointTyped,
-		preStrLen + app.currentCursorLocation + 1: AttribPoint{termbox.ColorDefault, termbox.ColorYellow},
-		preStrLen + app.currentCursorLocation + 2: pointTyped,
+		//preStrLen + app.currentCursorLocation:     AttribPoint{termbox.ColorDefault, termbox.ColorYellow},
+		//preStrLen + app.currentCursorLocation + 1: pointTyped,
 	})
 
 	sizeX, sizeY := termbox.Size()
 	app.SetCells(cells, 0, sizeY-1, sizeX, 1)
+	termbox.SetCursor(preStrLen+app.currentCursorLocation, sizeY-1)
 }
 
 func CreateWindow(title string, startX, startY, width, height int, color termbox.Attribute) {
