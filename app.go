@@ -6,6 +6,7 @@ import (
 	"github.com/nsf/termbox-go"
 	"log"
 	"time"
+	"unicode/utf8"
 )
 
 const HistorySize = 1000
@@ -20,25 +21,36 @@ type App struct {
 	stopping       bool
 	stopChan       chan chan error
 	msgRecvChan    chan *discordgo.Message
-	session        discordgo.Session
+	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 	logChan        chan string
 
-	curChannel discordgo.Channel
-	history    *list.List
+	selectedServerId  string
+	selectedChannelId string
 
-	currentState  State
-	selectedIndex int
+	history *list.List
+
+	currentState State
 
 	stopPollEvents chan chan bool
+
+	currentSendBuffer     string
+	currentCursorLocation int
 }
 
 func Login(user, password string) (*App, error) {
-	session := discordgo.Session{
-		ShouldReconnectOnError: true,
-		StateEnabled:           true,
-		State:                  discordgo.NewState(),
+	session, err := discordgo.New(user, password)
+	if err != nil {
+		return nil, err
 	}
+
+	session.StateEnabled = true
+
+	// session := discordgo.Session{
+	// 	ShouldReconnectOnError: true,
+	// 	StateEnabled:           true,
+	// 	State:                  discordgo.NewState(),
+	// }
 
 	app := &App{
 		session: session,
@@ -47,10 +59,7 @@ func Login(user, password string) (*App, error) {
 
 	session.AddHandler(app.messageCreate)
 
-	err := session.Login(user, password)
-	if err != nil {
-		return nil, err
-	}
+	// err := session.Login(user, password)
 
 	err = session.Open()
 	return app, err
@@ -125,7 +134,21 @@ func delayedInterrupt(d time.Duration) {
 }
 
 func (app *App) HandleMessage(msg interface{}) {
-	app.history.PushFront(msg)
+	cast, ok := msg.(discordgo.Message)
+	if ok {
+		chId := cast.ChannelID
+		if app.selectedServerId != "" {
+			_, err := app.session.State.GuildChannel(app.selectedServerId, chId)
+			if err != nil {
+				// We ignore t since its not on our server
+			} else {
+				app.history.PushFront(msg)
+			}
+		}
+	} else {
+		// Let log messages through
+		app.history.PushFront(msg)
+	}
 
 	for app.history.Len() > HistorySize {
 		app.history.Remove(app.history.Back())
@@ -193,27 +216,149 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			s.app.currentState = &StateServerSelection{
 				app: s.app,
 			}
+		} else if event.Key == termbox.KeyCtrlH {
+			s.app.currentState = &StateChannelSelection{
+				app: s.app,
+			}
+		} else if event.Key == termbox.KeyEnter {
+			// send
+			_, err := s.app.session.ChannelMessageSend(s.app.selectedChannelId, s.app.currentSendBuffer)
+			if err != nil {
+				log.Println("Error sending: ", err)
+			}
+			s.app.currentSendBuffer = ""
+			s.app.currentCursorLocation = 0
+		} else if event.Key == termbox.KeyArrowLeft {
+			s.app.currentCursorLocation--
+			if s.app.currentCursorLocation < 0 {
+				s.app.currentCursorLocation = 0
+			}
+		} else if event.Key == termbox.KeyArrowRight {
+			s.app.currentCursorLocation++
+			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
+			if s.app.currentCursorLocation >= bufLen {
+				s.app.currentCursorLocation = bufLen - 1
+			}
+		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
+			if bufLen == 0 {
+				return
+			}
+			if s.app.currentCursorLocation == bufLen-1 {
+				_, size := utf8.DecodeLastRuneInString(s.app.currentSendBuffer)
+				s.app.currentCursorLocation--
+				s.app.currentSendBuffer = s.app.currentSendBuffer[:len(s.app.currentSendBuffer)-size]
+			} else if s.app.currentCursorLocation == 1 {
+				_, size := utf8.DecodeRuneInString(s.app.currentSendBuffer)
+				s.app.currentCursorLocation--
+				s.app.currentSendBuffer = s.app.currentSendBuffer[size:]
+			} else if s.app.currentCursorLocation == 0 {
+				return
+			} else {
+				runeSlice := []rune(s.app.currentSendBuffer)
+				newSlice := append(runeSlice[:s.app.currentCursorLocation], runeSlice[s.app.currentCursorLocation+1:]...)
+				s.app.currentSendBuffer = string(newSlice)
+				s.app.currentCursorLocation--
+			}
+		} else if event.Ch != 0 || event.Key == termbox.KeySpace {
+			char := event.Ch
+			if event.Key == termbox.KeySpace {
+				char = ' '
+			}
+
+			bufLen := utf8.RuneCountInString(s.app.currentSendBuffer)
+			if s.app.currentCursorLocation == bufLen-1 {
+				s.app.currentSendBuffer += string(char)
+				s.app.currentCursorLocation++
+			} else if s.app.currentCursorLocation == 0 {
+				s.app.currentSendBuffer = string(char) + s.app.currentSendBuffer
+				//s.app.currentCursorLocation++
+			} else {
+				bufSlice := []rune(s.app.currentSendBuffer)
+				bufCopy := ""
+
+				for i := 0; i < len(bufSlice); i++ {
+					bufCopy += string(bufSlice[i])
+					if i == s.app.currentCursorLocation {
+						bufCopy += string(char)
+					}
+				}
+				s.app.currentSendBuffer = bufCopy
+				s.app.currentCursorLocation++
+				// before := bufSlice[:s.app.currentCursorLocation]
+				// after := bufSlice[s.app.currentCursorLocation:]
+				// before = append(before[len(before)-1:], char)
+				// before = append(before, after...)
+				// str := string(before)
+				// s.app.currentSendBuffer = str
+				// s.app.currentCursorLocation++
+			}
+
 		}
+		s.app.RefreshDisplay()
 	}
 }
 func (s *StateNormal) RefreshDisplay() {}
 
 type StateServerSelection struct {
-	app         *App
-	curSelecton int
+	app          *App
+	curSelection int
 }
 
 func (s *StateServerSelection) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		if event.Key == termbox.KeyArrowUp {
-			s.curSelecton--
+			s.curSelection--
 		} else if event.Key == termbox.KeyArrowDown {
-			s.curSelecton++
+			s.curSelection++
 		} else if event.Key == termbox.KeyEnter {
+
+			state := s.app.session.State
+			state.RLock()
+			defer state.RUnlock()
+
+			if s.curSelection < len(state.Guilds) || s.curSelection >= 0 {
+				s.app.selectedServerId = state.Guilds[s.curSelection].ID
+			}
+
 			s.app.currentState = &StateNormal{s.app}
 		}
 	}
 }
 func (s *StateServerSelection) RefreshDisplay() {
-	app.CreateServerWindow(s.curSelecton)
+	app.CreateServerWindow(s.curSelection)
+}
+
+type StateChannelSelection struct {
+	app          *App
+	curSelection int
+}
+
+func (s *StateChannelSelection) HandleInput(event termbox.Event) {
+	if event.Type == termbox.EventKey {
+		if event.Key == termbox.KeyArrowUp {
+			s.curSelection--
+		} else if event.Key == termbox.KeyArrowDown {
+			s.curSelection++
+		} else if event.Key == termbox.KeyEnter {
+			state := s.app.session.State
+			state.RLock()
+			defer state.RUnlock()
+
+			curGuild, err := state.Guild(s.app.selectedServerId)
+			if err != nil {
+				log.Println("Error getting guild: ", err.Error())
+				return
+			}
+
+			if s.curSelection < len(curGuild.Channels) || s.curSelection >= 0 {
+				s.app.selectedChannelId = curGuild.Channels[s.curSelection].ID
+			}
+
+			s.app.currentState = &StateNormal{s.app}
+		}
+	}
+}
+func (s *StateChannelSelection) RefreshDisplay() {
+	app.CreateChannelWindow(s.curSelection)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
+	"log"
 	"math"
 	"unicode/utf8"
 )
@@ -61,10 +62,10 @@ func (app *App) RefreshDisplay() {
 		app.SetCells(cells, padding, y, sizex-padding*2, 0)
 	}
 
-	CreateHeader(" Discorder DEV (╯°□°）╯︵ ┻━┻ ")
+	CreateHeader(" Discorder DEV (╯°□°）╯︵ ┻━┻ " + app.selectedServerId + " : " + app.selectedChannelId)
 	//CreateWindow("A window!", sizex/2-30, sizey/2-10, 60, 20, termbox.ColorBlack)
 	//app.CreateServerWindow(0)
-
+	app.CreateFooter()
 	app.currentState.RefreshDisplay()
 
 	termbox.Flush()
@@ -135,6 +136,26 @@ func CreateHeader(header string) {
 	}
 }
 
+func (app *App) CreateFooter() {
+	preStr := "Send To " + app.selectedChannelId + " :"
+	preStrLen := utf8.RuneCountInString(preStr)
+
+	body := app.currentSendBuffer + " "
+	//bodyLen := utf8.RuneCountInString(body)
+
+	pointTyped := AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
+
+	cells := GenCellSlice(preStr+body, map[int]AttribPoint{
+		0:         AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
+		preStrLen: pointTyped,
+		preStrLen + app.currentCursorLocation + 1: AttribPoint{termbox.ColorDefault, termbox.ColorYellow},
+		preStrLen + app.currentCursorLocation + 2: pointTyped,
+	})
+
+	sizeX, sizeY := termbox.Size()
+	app.SetCells(cells, 0, sizeY-1, sizeX, 1)
+}
+
 func CreateWindow(title string, startX, startY, width, height int, color termbox.Attribute) {
 	headerLen := utf8.RuneCountInString(title)
 	runeSlice := []rune(title)
@@ -158,34 +179,57 @@ func CreateWindow(title string, startX, startY, width, height int, color termbox
 
 }
 
-// Need a scrollbar
 func (app *App) CreateServerWindow(selected int) {
 	state := app.session.State
 	state.RLock()
 	defer state.RUnlock()
 
-	sizeX, sizeY := termbox.Size()
+	strList := make([]string, len(state.Guilds))
+	for k, v := range state.Guilds {
+		strList[k] = v.Name
+	}
+	app.CreateListWindow("Servers", strList, selected)
+}
 
+func (app *App) CreateChannelWindow(selected int) {
+	g, err := app.session.State.Guild(app.selectedServerId)
+	if err != nil {
+		log.Println("Error getting guild ", err.Error())
+		return
+	}
+	strList := make([]string, 0)
+	for _, v := range g.Channels {
+		if v.Type == "text" {
+			strList = append(strList, "#"+v.Name)
+		}
+	}
+	app.CreateListWindow("Channels", strList, selected)
+}
+
+// Need a scrollbar
+func (app *App) CreateListWindow(title string, list []string, selected int) {
+	sizeX, sizeY := termbox.Size()
 	windowWidth := int(float64(sizeX) / 1.5)
 
-	serverStrings := make([]string, len(state.Guilds))
 	height := 2
-	for k, v := range state.Guilds {
-		serverStrings[k] = v.Name
-		height += HeightRequired(utf8.RuneCountInString(v.Name), windowWidth)
+	for _, v := range list {
+		height += HeightRequired(utf8.RuneCountInString(v), windowWidth)
 	}
 
-	CreateWindow("Servers", (sizeX/2)-(windowWidth/2), sizeY/2-height/2, windowWidth, height, termbox.ColorBlack)
+	startX := sizeX/2 - windowWidth/2
 	startY := sizeY/2 - height/2
+
+	CreateWindow(title, startX, startY, windowWidth, height, termbox.ColorBlack)
+
 	y := startY + 1
-	x := sizeX/2 - windowWidth/2
-	for k, v := range serverStrings {
+
+	for k, v := range list {
 		bg := termbox.ColorBlack
 		if k == selected {
 			bg = termbox.ColorYellow
 		}
 		cells := GenCellSlice(v, map[int]AttribPoint{0: AttribPoint{termbox.ColorDefault, bg}})
-		mod := app.SetCells(cells, x+1, y, windowWidth, 0)
+		mod := app.SetCells(cells, startX+1, y, windowWidth, 0)
 		y += mod
 	}
 }
