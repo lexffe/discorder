@@ -2,9 +2,12 @@ package main
 
 import (
 	"container/list"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
 	"log"
+	"os"
+	"runtime/debug"
 	"time"
 	"unicode/utf8"
 )
@@ -85,6 +88,14 @@ func (app *App) Run() {
 		return
 	}
 	app.running = true
+
+	defer func() {
+		if r := recover(); r != nil {
+			termbox.Close()
+			fmt.Println("Panic!: ", r, string(debug.Stack()))
+			os.Exit(1)
+		}
+	}()
 
 	app.msgRecvChan = make(chan *discordgo.Message)
 	app.stopChan = make(chan chan error)
@@ -291,95 +302,4 @@ func (app *App) HandleTextInput(event termbox.Event) {
 			}
 		}
 	}
-}
-
-type StateNormal struct {
-	app *App
-}
-
-func (s *StateNormal) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyCtrlS {
-			s.app.currentState = &StateServerSelection{
-				app: s.app,
-			}
-		} else if event.Key == termbox.KeyCtrlH {
-			s.app.currentState = &StateChannelSelection{
-				app: s.app,
-			}
-		} else {
-			s.app.HandleTextInput(event)
-		}
-	}
-}
-func (s *StateNormal) RefreshDisplay() {}
-
-type StateServerSelection struct {
-	app          *App
-	curSelection int
-}
-
-func (s *StateServerSelection) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyArrowUp {
-			s.curSelection--
-		} else if event.Key == termbox.KeyArrowDown {
-			s.curSelection++
-		} else if event.Key == termbox.KeyEnter {
-
-			state := s.app.session.State
-			state.RLock()
-			defer state.RUnlock()
-
-			if s.curSelection < len(state.Guilds) || s.curSelection >= 0 {
-				s.app.selectedServerId = state.Guilds[s.curSelection].ID
-			}
-
-			s.app.currentState = &StateNormal{s.app}
-		}
-	}
-}
-func (s *StateServerSelection) RefreshDisplay() {
-	app.CreateServerWindow(s.curSelection)
-}
-
-type StateChannelSelection struct {
-	app          *App
-	curSelection int
-}
-
-func (s *StateChannelSelection) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyArrowUp {
-			s.curSelection--
-		} else if event.Key == termbox.KeyArrowDown {
-			s.curSelection++
-		} else if event.Key == termbox.KeyEnter {
-			state := s.app.session.State
-			state.RLock()
-			defer state.RUnlock()
-
-			curGuild, err := state.Guild(s.app.selectedServerId)
-			if err != nil {
-				log.Println("Error getting guild: ", err.Error())
-				return
-			}
-
-			realList := make([]*discordgo.Channel, 0)
-			for _, v := range curGuild.Channels {
-				if v.Type == "text" {
-					realList = append(realList, v)
-				}
-			}
-
-			if s.curSelection < len(realList) || s.curSelection >= 0 {
-				s.app.selectedChannelId = realList[s.curSelection].ID
-			}
-
-			s.app.currentState = &StateNormal{s.app}
-		}
-	}
-}
-func (s *StateChannelSelection) RefreshDisplay() {
-	app.CreateChannelWindow(s.curSelection)
 }
