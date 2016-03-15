@@ -1,14 +1,13 @@
-#Discorder A Commandline Interactive Discord Client
+#Discorder
+
+An interactve command line discord client
 
 Yup, very much in development.
 
- - Should be light on resource usage aswell
- - Just started so not much added, and what is is somewhat buggy
+ - Should be light on resource usage
+ - Just started so not much added, and what is is somewhat buggy, see tasks.TODO for details
  - Voice support might be added laaaaaater
 
-TODO:
-
- - Fix all race conditions... theres a lot of them probably
 
 Heres an image of its current state
 

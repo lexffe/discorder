@@ -139,7 +139,11 @@ func (app *App) Run() {
 			if app.selectedChannelId != "" && app.selectedGuild != nil {
 				app.selectedChannel, err = app.session.State.GuildChannel(app.selectedServerId, app.selectedChannelId)
 				if err != nil {
-					log.Println("App.Run: ", err)
+					var err2 error
+					app.selectedChannel, err2 = app.session.State.PrivateChannel(app.selectedChannelId)
+					if err2 != nil {
+						log.Println("App.Run: ", err, err2)
+					}
 				}
 			}
 

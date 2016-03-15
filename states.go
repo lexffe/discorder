@@ -13,6 +13,7 @@ type StateNormal struct {
 func (s *StateNormal) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		if event.Key == termbox.KeyCtrlS {
+			// Select server
 			state := app.session.State
 			state.RLock()
 			defer state.RUnlock()
@@ -34,6 +35,7 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 				OnSelect: serverSelected,
 			}
 		} else if event.Key == termbox.KeyCtrlH {
+			// Select channel
 			if s.app.selectedGuild == nil {
 				return
 			}
@@ -51,7 +53,30 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 				Options:  options,
 				OnSelect: channelSelected,
 			}
+		} else if event.Key == termbox.KeyCtrlP {
+			// Select private message channel
+
+			state := app.session.State
+			state.RLock()
+			defer state.RUnlock()
+
+			options := make([]string, len(state.PrivateChannels))
+			for k, v := range state.PrivateChannels {
+				options[k] = v.Recipient.Username
+			}
+
+			s.app.currentState = &StateListSelection{
+				app:      s.app,
+				Header:   "Select a Conversation",
+				Options:  options,
+				OnSelect: channelPrivateSelected,
+			}
+		} else if event.Key == termbox.KeyCtrlR {
+			// quick respond or return
+		} else if event.Key == termbox.KeyCtrlH {
+			// help
 		} else {
+			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)
 		}
 	}
@@ -93,6 +118,26 @@ func channelSelected(app *App, index int, name string) {
 		channel := realList[index]
 		if "#"+channel.Name != name {
 			log.Println("Name mismatch, channel list changed ", channel.Name, "!=", name)
+			app.currentState = &StateNormal{app}
+			return
+		}
+
+		app.selectedChannelId = channel.ID
+		app.selectedChannel = channel
+	}
+
+	app.currentState = &StateNormal{app}
+}
+
+func channelPrivateSelected(app *App, index int, name string) {
+	state := app.session.State
+	state.RLock()
+	defer state.RUnlock()
+
+	if index < len(state.PrivateChannels) && index >= 0 {
+		channel := state.PrivateChannels[index]
+		if channel.Recipient.Username != name {
+			log.Println("Name mismatch, user list changed ", channel.Name, "!=", name)
 			app.currentState = &StateNormal{app}
 			return
 		}

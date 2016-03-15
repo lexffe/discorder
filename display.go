@@ -24,7 +24,8 @@ func (app *App) RefreshDisplay() {
 	if app.selectedGuild != nil {
 		headerStr += " Server: " + app.selectedGuild.Name
 		if app.selectedChannel != nil {
-			headerStr += ", Active Channel: " + app.selectedChannel.Name
+			chName := getChannelName(app.selectedChannel)
+			headerStr += ", Active Channel: " + chName
 		} else {
 			headerStr += ", Ctrl+h to select a channel"
 		}
@@ -74,8 +75,8 @@ func (app *App) DisplayMessages() {
 					dm = true
 				}
 
-				fullMsg := "[" + channel.Name + "]" + msg.Author.Username + ": " + msg.ContentWithMentionsReplaced()
-				channelLen := utf8.RuneCountInString(channel.Name) + 2
+				fullMsg := "[" + name + "]" + msg.Author.Username + ": " + msg.ContentWithMentionsReplaced()
+				channelLen := utf8.RuneCountInString(name) + 2
 				points := map[int]AttribPoint{
 					0:                      AttribPoint{termbox.ColorGreen, termbox.ColorDefault},
 					channelLen:             AttribPoint{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
@@ -165,7 +166,7 @@ func CreateHeader(header string) {
 func (app *App) CreateFooter() {
 	preStr := "Send To " + app.selectedChannelId + ":"
 	if app.selectedChannel != nil {
-		preStr = "Send to #" + app.selectedChannel.Name + ":"
+		preStr = "Send to #" + getChannelName(app.selectedChannel) + ":"
 	}
 	preStrLen := utf8.RuneCountInString(preStr)
 
@@ -236,7 +237,6 @@ func (app *App) CreateChannelWindow(selected int) {
 	app.CreateListWindow("Channels", strList, selected)
 }
 
-// Need a scrollbar
 func (app *App) CreateListWindow(title string, list []string, selected int) {
 	sizeX, sizeY := termbox.Size()
 	windowWidth := int(float64(sizeX) / 1.5)
@@ -253,6 +253,12 @@ func (app *App) CreateListWindow(title string, list []string, selected int) {
 
 	y := startY + 1
 
+	if height > sizeY {
+		// If window is taller then scroll
+		added := int(float64(height)*(float64(len(list)-selected)/float64(len(list)))) - height/2
+		y += added
+	}
+
 	for k, v := range list {
 		bg := termbox.ColorBlack
 		if k == selected {
@@ -262,4 +268,11 @@ func (app *App) CreateListWindow(title string, list []string, selected int) {
 		mod := app.SetCells(cells, startX+1, y, windowWidth, 0)
 		y += mod
 	}
+}
+
+func getChannelName(channel *discordgo.Channel) string {
+	if channel.IsPrivate {
+		return channel.Recipient.Username
+	}
+	return channel.Name
 }

@@ -6,9 +6,10 @@ Some tasks to complete before 0.1 release:
          Should look into some password storing utilities to integrate with into later
      ✔ Improve text input @done (16-03-15 15:47)
      ☐ Mark channels you want to listen too
-     ☐ PM's
+     ✔ PM's @done (16-03-15 23:12)
          ✔ Receive @done (16-03-15 15:47)
-         ☐ Send
+         ✔ Send @done (16-03-15 23:12)
+     ☐ Help window
  Later (0.2):
      ☐ History
      ☐ Mentions
