@@ -16,12 +16,13 @@ What works:
 Next on the list to be worked on is history, and the channel listening system mentioned above
 
 Controlls:
+ - ctrl-h: Opens help 
 
  - ctrl-s: Select server
- - ctrl-h: select channel (Gonna change this to g)
+ - ctrl-g: select channel 
  - ctrl-p: select private channel (direct messages)
  - escape: Quit
- - backspace when a window is open exits that window
+ - backspace: closes the active window if any
 
 Heres an image of its current state
 

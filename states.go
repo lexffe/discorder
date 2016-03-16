@@ -47,7 +47,7 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 				Options:  options,
 				OnSelect: serverSelected,
 			}
-		} else if event.Key == termbox.KeyCtrlH {
+		} else if event.Key == termbox.KeyCtrlG {
 			// Select channel
 			if s.app.selectedGuild == nil {
 				return
@@ -88,6 +88,7 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			// quick respond or return
 		} else if event.Key == termbox.KeyCtrlH {
 			// help
+			s.app.currentState = &StateHelp{app}
 		} else {
 			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)
@@ -314,5 +315,40 @@ func (s *StateLogin) RefreshDisplay() {
 
 	if s.err != nil {
 		SimpleSetText(startX+1, startY+7, 48, s.err.Error(), termbox.ColorRed, termbox.ColorBlack)
+	}
+}
+
+type StateHelp struct {
+	app *App
+}
+
+func (s *StateHelp) Start() {}
+func (s *StateHelp) RefreshDisplay() {
+	sizeX, sizeY := termbox.Size()
+
+	wWidth := 70
+	wHeight := 20
+
+	startX := sizeX/2 - wWidth/2
+	startY := sizeY/2 - wHeight/2
+	CreateWindow("Help", startX, startY, wWidth, wHeight, termbox.ColorBlack)
+	SimpleSetText(startX+1, startY+1, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+2, wWidth-2, "Ctrl-H: Help", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+3, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+4, wWidth-2, "Ctrl-G: Select channel", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+5, wWidth-2, "Ctrl-P: Select private conversation", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+6, wWidth-2, "Escape: Quit", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+7, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+10, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+11, wWidth-2, "This is still in very early development, please report any bugs you find here", termbox.ColorDefault, termbox.ColorDefault)
+	SimpleSetText(startX+1, startY+13, wWidth-2, "https://github.com/jonas747/discorder", termbox.ColorDefault, termbox.ColorDefault)
+}
+
+func (s *StateHelp) HandleInput(event termbox.Event) {
+	if event.Type == termbox.EventKey {
+		switch event.Key {
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
+			s.app.currentState = &StateNormal{s.app}
+		}
 	}
 }

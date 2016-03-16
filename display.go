@@ -207,17 +207,18 @@ func CreateWindow(title string, startX, startY, width, height int, color termbox
 	headerLen := utf8.RuneCountInString(title)
 	runeSlice := []rune(title)
 	headerStartPos := (width / 2) - (headerLen / 2)
-	for curX := 0; curX < width; curX++ {
-		for curY := 0; curY < height; curY++ {
+
+	for curX := 0; curX <= width; curX++ {
+		for curY := 0; curY <= height; curY++ {
 			realX := curX + startX
 			realY := curY + startY
 
 			char := ' '
 			if curX >= headerStartPos && curX < headerStartPos+headerLen && curY == 0 {
 				char = runeSlice[curX-headerStartPos]
-			} else if curX == 0 || curX == width-1 {
+			} else if curX == 0 || curX == width {
 				char = '|'
-			} else if curY == 0 || curY == height-1 {
+			} else if curY == 0 || curY == height {
 				char = '-'
 			}
 			termbox.SetCell(realX, realY, char, termbox.ColorDefault, color)
