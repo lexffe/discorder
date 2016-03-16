@@ -8,12 +8,6 @@ import (
 )
 
 func (app *App) RefreshDisplay() {
-	if !termbox.IsInit {
-		err := termbox.Init()
-		if err != nil {
-			panic(err)
-		}
-	}
 	// Main display
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 

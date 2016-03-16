@@ -118,6 +118,12 @@ func (app *App) Run() {
 	app.currentState = &StateLogin{app: app}
 	log.SetOutput(app)
 	log.Println("Started!")
+
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+
 	// Start polling events
 	go app.PollEvents()
 
@@ -225,13 +231,6 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 }
 
 func (app *App) PollEvents() {
-	if !termbox.IsInit {
-		err := termbox.Init()
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	for {
 		evt := termbox.PollEvent()
 
