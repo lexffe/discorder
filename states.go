@@ -219,8 +219,6 @@ type StateLogin struct {
 func (s *StateLogin) Start() {
 	if s.app.config.Email != "" && s.app.config.Password != "" {
 		s.currentlyLoggingIn = true
-		s.RefreshDisplay()
-		termbox.Flush()
 
 		err := s.app.Login(s.app.config.Email, s.app.config.Password)
 		if err != nil {
