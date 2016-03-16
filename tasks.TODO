@@ -1,8 +1,8 @@
 Some tasks to complete before 0.1 release:
 
-     ☐ Config file
-         ☐ automatically sets to the server and channel last used, when starting
-     ☐ Take password interactively with option to store password
+     ✔ Config file @done (16-03-16 01:00)
+         ✔ automatically sets to the server and channel last used, when starting @done (16-03-16 01:00)
+     ✔ Take password interactively with option to store password @done (16-03-16 01:00)
          Should look into some password storing utilities to integrate with into later
      ✔ Improve text input @done (16-03-15 15:47)
      ☐ Mark channels you want to listen too
