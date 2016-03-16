@@ -7,11 +7,19 @@ import (
 	"unicode/utf8"
 )
 
+type State interface {
+	Enter()
+	Exit()
+	HandleInput(event termbox.Event)
+	RefreshDisplay()
+}
+
 type StateNormal struct {
 	app *App
 }
 
-func (s *StateNormal) Start() {}
+func (s *StateNormal) Enter() {}
+func (s *StateNormal) Exit()  {}
 
 func (s *StateNormal) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
@@ -27,68 +35,26 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			}
 		} else if event.Key == termbox.KeyCtrlS {
 			// Select server
-			state := app.session.State
-			state.RLock()
-			defer state.RUnlock()
-
-			if len(state.Guilds) < 1 {
-				log.Println("No guilds, probably starting up still...")
+			if len(s.app.session.State.Guilds) < 0 {
+				log.Println("No guilds, Most likely starting up still...")
 				return
 			}
-
-			options := make([]string, len(state.Guilds))
-			for k, v := range state.Guilds {
-				options[k] = v.Name
-			}
-
-			s.app.currentState = &StateListSelection{
-				app:      s.app,
-				Header:   "Select a server",
-				Options:  options,
-				OnSelect: serverSelected,
-			}
+			s.app.SetState(&StateSelectServer{app: s.app})
 		} else if event.Key == termbox.KeyCtrlG {
 			// Select channel
 			if s.app.selectedGuild == nil {
+				log.Println("No valid server selected")
 				return
 			}
-
-			options := make([]string, 0)
-			for _, v := range s.app.selectedGuild.Channels {
-				if v.Type == "text" {
-					options = append(options, "#"+v.Name)
-				}
-			}
-
-			s.app.currentState = &StateListSelection{
-				app:      s.app,
-				Header:   "Select a Channel",
-				Options:  options,
-				OnSelect: channelSelected,
-			}
+			s.app.SetState(&StateSelectChannel{app: s.app})
 		} else if event.Key == termbox.KeyCtrlP {
 			// Select private message channel
-
-			state := app.session.State
-			state.RLock()
-			defer state.RUnlock()
-
-			options := make([]string, len(state.PrivateChannels))
-			for k, v := range state.PrivateChannels {
-				options[k] = v.Recipient.Username
-			}
-
-			s.app.currentState = &StateListSelection{
-				app:      s.app,
-				Header:   "Select a Conversation",
-				Options:  options,
-				OnSelect: channelPrivateSelected,
-			}
+			s.app.SetState(&StateSelectPrivateChannel{app: s.app})
 		} else if event.Key == termbox.KeyCtrlR {
 			// quick respond or return
 		} else if event.Key == termbox.KeyCtrlH {
 			// help
-			s.app.currentState = &StateHelp{app}
+			s.app.SetState(&StateHelp{s.app})
 		} else {
 			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)
@@ -97,109 +63,176 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 }
 func (s *StateNormal) RefreshDisplay() {}
 
-func serverSelected(app *App, index int, name string) {
+type StateSelectServer struct {
+	app           *App
+	listSelection *ListSelection
+}
 
-	state := app.session.State
+func (s *StateSelectServer) Enter() {
+	state := s.app.session.State
 	state.RLock()
 	defer state.RUnlock()
 
-	guild := state.Guilds[index]
-	if guild.Name != name {
-		log.Println("Name mismatch, guild list changed")
-		app.currentState = &StateNormal{app}
+	if len(state.Guilds) < 1 {
+		log.Println("No guilds, probably starting up still...")
 		return
 	}
 
-	app.selectedGuild = guild
-	app.selectedServerId = guild.ID
-
-	app.currentState = &StateNormal{app}
-}
-
-func channelSelected(app *App, index int, name string) {
-	state := app.session.State
-	state.RLock()
-	defer state.RUnlock()
-
-	realList := make([]*discordgo.Channel, 0)
-	for _, v := range app.selectedGuild.Channels {
-		if v.Type == "text" {
-			realList = append(realList, v)
-		}
+	options := make([]string, len(state.Guilds))
+	for k, v := range state.Guilds {
+		options[k] = v.Name
 	}
 
-	if index < len(realList) && index >= 0 {
-		channel := realList[index]
-		if "#"+channel.Name != name {
-			log.Println("Name mismatch, channel list changed ", channel.Name, "!=", name)
-			app.currentState = &StateNormal{app}
-			return
-		}
-
-		app.selectedChannelId = channel.ID
-		app.selectedChannel = channel
+	s.listSelection = &ListSelection{
+		app:     s.app,
+		Header:  "Select a Server",
+		Options: options,
 	}
-
-	app.currentState = &StateNormal{app}
 }
-
-func channelPrivateSelected(app *App, index int, name string) {
-	state := app.session.State
-	state.RLock()
-	defer state.RUnlock()
-
-	if index < len(state.PrivateChannels) && index >= 0 {
-		channel := state.PrivateChannels[index]
-		if channel.Recipient.Username != name {
-			log.Println("Name mismatch, user list changed ", channel.Name, "!=", name)
-			app.currentState = &StateNormal{app}
-			return
-		}
-
-		app.selectedChannelId = channel.ID
-		app.selectedChannel = channel
-	}
-
-	app.currentState = &StateNormal{app}
-}
-
-type StateListSelection struct {
-	app          *App
-	Options      []string
-	Header       string
-	OnSelect     func(app *App, selectedIndex int, selectedStr string)
-	curSelection int
-}
-
-func (s *StateListSelection) Start() {}
-
-func (s *StateListSelection) HandleInput(event termbox.Event) {
+func (s *StateSelectServer) Exit() {}
+func (s *StateSelectServer) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyArrowUp {
-			s.curSelection--
-			if s.curSelection < 0 {
-				s.curSelection = 0
+		if event.Key == termbox.KeyEnter {
+			state := s.app.session.State
+			state.RLock()
+			defer state.RUnlock()
+
+			if s.listSelection.curSelection >= len(state.Guilds) {
+				log.Println("Guild list changed while selecting.. aborting")
+				s.app.SetState(&StateNormal{s.app})
+				return
 			}
-		} else if event.Key == termbox.KeyArrowDown {
-			s.curSelection++
-			if s.curSelection >= len(s.Options) {
-				s.curSelection = len(s.Options) - 1
+
+			guild := state.Guilds[s.listSelection.curSelection]
+			if guild.Name != s.listSelection.GetCurrentSelection() {
+				log.Println("Name mismatch, guild list changed")
+				s.app.SetState(&StateNormal{s.app})
+				return
 			}
-		} else if event.Key == termbox.KeyEnter {
-			if s.OnSelect != nil {
-				s.OnSelect(s.app, s.curSelection, s.Options[s.curSelection])
-			}
-		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-			s.app.currentState = &StateNormal{s.app}
+
+			s.app.selectedGuild = guild
+			s.app.selectedServerId = guild.ID
+			s.app.SetState(&StateNormal{s.app})
+		} else {
+			s.listSelection.HandleInput(event)
 		}
 	}
 }
+func (s *StateSelectServer) RefreshDisplay() {
+	s.listSelection.RefreshDisplay()
+}
 
-func (s *StateListSelection) RefreshDisplay() {
-	if s.Header == "" {
-		s.Header = "Select an item"
+type StateSelectChannel struct {
+	app           *App
+	listSelection *ListSelection
+}
+
+func (s *StateSelectChannel) Enter() {
+	options := make([]string, 0)
+	for _, v := range s.app.selectedGuild.Channels {
+		if v.Type == "text" {
+			options = append(options, "#"+v.Name)
+		}
 	}
-	app.CreateListWindow(s.Header, s.Options, s.curSelection)
+
+	s.listSelection = &ListSelection{
+		app:     s.app,
+		Header:  "Select a Channel",
+		Options: options,
+	}
+}
+func (s *StateSelectChannel) Exit() {}
+func (s *StateSelectChannel) HandleInput(event termbox.Event) {
+	if event.Type == termbox.EventKey {
+		if event.Key == termbox.KeyEnter {
+			state := s.app.session.State
+			state.RLock()
+			defer state.RUnlock()
+
+			realList := make([]*discordgo.Channel, 0)
+			for _, v := range s.app.selectedGuild.Channels {
+				if v.Type == "text" {
+					realList = append(realList, v)
+				}
+			}
+
+			index := s.listSelection.curSelection
+			name := s.listSelection.GetCurrentSelection()
+
+			if index < len(realList) && index >= 0 {
+				channel := realList[index]
+				if "#"+channel.Name != name {
+					log.Println("Name mismatch, channel list changed ", channel.Name, "!=", name)
+					s.app.SetState(&StateNormal{s.app})
+					return
+				}
+
+				s.app.selectedChannelId = channel.ID
+				s.app.selectedChannel = channel
+			}
+
+			s.app.SetState(&StateNormal{s.app})
+		} else {
+			s.listSelection.HandleInput(event)
+		}
+	}
+}
+func (s *StateSelectChannel) RefreshDisplay() {
+	s.listSelection.RefreshDisplay()
+}
+
+type StateSelectPrivateChannel struct {
+	app           *App
+	listSelection *ListSelection
+}
+
+func (s *StateSelectPrivateChannel) Enter() {
+	state := s.app.session.State
+	state.RLock()
+	defer state.RUnlock()
+
+	options := make([]string, len(state.PrivateChannels))
+	for k, v := range state.PrivateChannels {
+		options[k] = v.Recipient.Username
+	}
+
+	s.listSelection = &ListSelection{
+		app:     s.app,
+		Header:  "Select a User",
+		Options: options,
+	}
+}
+func (s *StateSelectPrivateChannel) Exit() {}
+func (s *StateSelectPrivateChannel) HandleInput(event termbox.Event) {
+	if event.Type == termbox.EventKey {
+		if event.Key == termbox.KeyEnter {
+			state := s.app.session.State
+			state.RLock()
+			defer state.RUnlock()
+
+			index := s.listSelection.curSelection
+			name := s.listSelection.GetCurrentSelection()
+
+			if index < len(state.PrivateChannels) && index >= 0 {
+				channel := state.PrivateChannels[index]
+				if channel.Recipient.Username != name {
+					log.Println("Name mismatch, user list changed ", channel.Name, "!=", name)
+					s.app.SetState(&StateNormal{s.app})
+					return
+				}
+
+				s.app.selectedChannelId = channel.ID
+				s.app.selectedChannel = channel
+			}
+
+			s.app.SetState(&StateNormal{s.app})
+		} else {
+			s.listSelection.HandleInput(event)
+		}
+	}
+}
+func (s *StateSelectPrivateChannel) RefreshDisplay() {
+	s.listSelection.RefreshDisplay()
 }
 
 var (
@@ -217,7 +250,9 @@ type StateLogin struct {
 	err           error
 }
 
-func (s *StateLogin) Start() {
+func (s *StateLogin) Exit() {}
+
+func (s *StateLogin) Enter() {
 	if s.app.config.Email != "" && s.app.config.Password != "" {
 		s.currentlyLoggingIn = true
 
@@ -225,7 +260,7 @@ func (s *StateLogin) Start() {
 		if err != nil {
 			log.Println("Error logging in :", err)
 		} else {
-			s.app.currentState = &StateNormal{app}
+			s.app.SetState(&StateNormal{s.app})
 		}
 		s.currentlyLoggingIn = false
 	} else {
@@ -258,7 +293,7 @@ func (s *StateLogin) HandleInput(event termbox.Event) {
 					s.app.config.Save(configPath)
 					s.app.currentTextBuffer = ""
 					s.app.currentCursorLocation = 0
-					s.app.currentState = &StateNormal{s.app}
+					s.app.SetState(&StateNormal{s.app})
 				}
 			}
 		case termbox.KeyCtrlS:
@@ -322,7 +357,8 @@ type StateHelp struct {
 	app *App
 }
 
-func (s *StateHelp) Start() {}
+func (s *StateHelp) Enter() {}
+func (s *StateHelp) Exit()  {}
 func (s *StateHelp) RefreshDisplay() {
 	sizeX, sizeY := termbox.Size()
 
@@ -331,24 +367,27 @@ func (s *StateHelp) RefreshDisplay() {
 
 	startX := sizeX/2 - wWidth/2
 	startY := sizeY/2 - wHeight/2
+
+	curY := startY + 1
 	CreateWindow("Help", startX, startY, wWidth, wHeight, termbox.ColorBlack)
-	SimpleSetText(startX+1, startY+1, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+2, wWidth-2, "Ctrl-H: Help", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+3, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+4, wWidth-2, "Ctrl-G: Select channel", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+5, wWidth-2, "Ctrl-P: Select private conversation", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+6, wWidth-2, "Escape: Quit", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+7, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+10, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+11, wWidth-2, "This is still in very early development, please report any bugs you find here", termbox.ColorDefault, termbox.ColorDefault)
-	SimpleSetText(startX+1, startY+13, wWidth-2, "https://github.com/jonas747/discorder", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-H: Help", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-G: Select channel", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-P: Select private conversation", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Escape: Quit", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
+	curY++
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "This is still in very early development, please report any bugs you find here", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "https://github.com/jonas747/discorder", termbox.ColorDefault, termbox.ColorDefault)
 }
 
 func (s *StateHelp) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		switch event.Key {
 		case termbox.KeyBackspace, termbox.KeyBackspace2:
-			s.app.currentState = &StateNormal{s.app}
+			s.app.SetState(&StateNormal{s.app})
 		}
 	}
 }

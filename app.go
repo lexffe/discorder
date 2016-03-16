@@ -14,12 +14,6 @@ import (
 
 const HistorySize = 1000
 
-type State interface {
-	Start()
-	HandleInput(event termbox.Event)
-	RefreshDisplay()
-}
-
 type App struct {
 	running        bool
 	stopping       bool
@@ -115,7 +109,7 @@ func (app *App) Run() {
 	app.inputEventChan = make(chan termbox.Event)
 	app.stopPollEvents = make(chan chan bool)
 	app.logChan = make(chan string)
-	app.currentState = &StateLogin{app: app}
+
 	log.SetOutput(app)
 	log.Println("Started!")
 
@@ -135,7 +129,7 @@ func (app *App) Run() {
 		app.selectedServerId = app.config.LastServer
 	}
 
-	app.currentState.Start()
+	app.SetState(&StateLogin{app: app})
 
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
@@ -321,4 +315,14 @@ func (app *App) HandleTextInput(event termbox.Event) {
 			}
 		}
 	}
+}
+
+func (app *App) SetState(state State) {
+	oldState := app.currentState
+	if oldState != nil {
+		oldState.Exit()
+	}
+
+	app.currentState = state
+	state.Enter()
 }

@@ -11,6 +11,7 @@ func (app *App) RefreshDisplay() {
 	// Main display
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
+	// Always display messages incase of log messages and whatnot
 	app.DisplayMessages()
 
 	headerStr := " Discorder (v" + VERSION + ") (╯°□°） ╯ ︵ ┻━┻"

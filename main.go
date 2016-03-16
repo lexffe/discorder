@@ -12,9 +12,9 @@ const (
 )
 
 var (
-	channels map[string]*discordgo.Channel
-	app      *App
-	config   *Config
+	channels    map[string]*discordgo.Channel
+	application *App
+	config      *Config
 
 	configPath = "config.json"
 )
@@ -41,6 +41,6 @@ func main() {
 
 	config = c
 
-	app = NewApp(config)
-	app.Run()
+	application = NewApp(config)
+	application.Run()
 }

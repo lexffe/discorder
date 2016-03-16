@@ -10,13 +10,14 @@ Some tasks to complete before 0.1 release:
          ✔ Receive @done (16-03-15 15:47)
          ✔ Send @done (16-03-15 23:12)
      ✔ Help window @done (16-03-16 03:55)
+     ☐ History
      
 Later (0.2):
-     ☐ History
      ☐ Mentions
      ☐ Quick reply with return
          Got a pm? ctrl-r, go back to the channel you were in after replying? ctrl-r!
-
+     ☐ Toggleable sidebar
+         For member display
 Ideas:
     ☐ Maybe allow multiple servers aswell and not just channels? hmmm
 
@@ -26,3 +27,4 @@ Optimisation:
  Bugs:
      ✔ Fix the channel selection @done (16-03-15 15:02)
      ☐ Fix race conditions....
+         Shouldn't be many left if any
