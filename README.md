@@ -28,7 +28,7 @@ Heres an image of its current state
 
 ![Logging in](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T01%3A00%3A23%2B01%3A00.png)
 
-![Chatting](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T01%3A42%3A03%2B01%3A00.png)
+![Channels list](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T03%3A57%3A45%2B01%3A00.png)
 
 ![Direct messages](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-15T23%3A09%3A22%2B01%3A00.png)
 
