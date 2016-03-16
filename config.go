@@ -9,10 +9,11 @@ import (
 type Config struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
-	AuthToken string `json"authToken"`
+	AuthToken string `json:"authToken"` // Not used currently, but planned
 
-	LastServer  string `json:"lastServer"`
-	LastChannel string `json:"lastChannel"`
+	LastServer        string   `json:"lastServer"`
+	LastChannel       string   `json:"lastChannel"`
+	ListeningChannels []string `json:"listeningChannels"`
 }
 
 func LoadConfig(path string) (*Config, error) {

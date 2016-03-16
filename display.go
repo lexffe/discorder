@@ -219,10 +219,9 @@ func CreateWindow(title string, startX, startY, width, height int, color termbox
 			termbox.SetCell(realX, realY, char, termbox.ColorDefault, color)
 		}
 	}
-
 }
 
-func (app *App) CreateListWindow(title string, list []string, selected int) {
+func (app *App) CreateListWindow(title string, list []string, cursor int, selections []int) {
 	sizeX, sizeY := termbox.Size()
 	windowWidth := int(float64(sizeX) / 1.5)
 
@@ -240,14 +239,20 @@ func (app *App) CreateListWindow(title string, list []string, selected int) {
 
 	if height > sizeY {
 		// If window is taller then scroll
-		added := int(float64(height)*(float64(len(list)-selected)/float64(len(list)))) - height/2
+		added := int(float64(height)*(float64(len(list)-cursor)/float64(len(list)))) - height/2
 		y += added
 	}
 
 	for k, v := range list {
 		bg := termbox.ColorBlack
-		if k == selected {
-			bg = termbox.ColorYellow
+		for _, selected := range selections {
+			if selected == k {
+				bg = termbox.ColorYellow
+				break
+			}
+		}
+		if k == cursor {
+			bg = termbox.ColorCyan
 		}
 		cells := GenCellSlice(v, map[int]AttribPoint{0: AttribPoint{termbox.ColorDefault, bg}})
 		mod := SetCells(cells, startX+1, y, windowWidth, 0)
