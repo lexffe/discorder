@@ -53,6 +53,9 @@ func (app *App) DisplayMessages() {
 			cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
 		} else {
 			msg := item.discordMessage
+			if msg == nil {
+				continue
+			}
 			authorLen := utf8.RuneCountInString(msg.Author.Username)
 			channel, err := app.session.State.Channel(msg.ChannelID)
 			if err != nil {
@@ -252,7 +255,12 @@ func (app *App) CreateListWindow(title string, list []string, cursor int, select
 			}
 		}
 		if k == cursor {
-			bg = termbox.ColorCyan
+			if bg == termbox.ColorYellow {
+				// Both cursor and selected! What a world we live in!
+				bg = termbox.ColorBlue
+			} else {
+				bg = termbox.ColorCyan
+			}
 		}
 		cells := GenCellSlice(v, map[int]AttribPoint{0: AttribPoint{termbox.ColorDefault, bg}})
 		mod := SetCells(cells, startX+1, y, windowWidth, 0)

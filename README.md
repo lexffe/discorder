@@ -10,7 +10,8 @@ Yup, very much in development.
  - Voice support might be added laaaaaater
 
 What works:
- - Sending/receiving messages,
+ - Sending/receiving messages
+     + You also received the changes when they get edited and removed
  - Sending/receiving direct messages EXCEPT for initiating new conversations
  - State will be saved when you leave and restored when you open again
 

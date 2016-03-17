@@ -181,7 +181,8 @@ func (app *App) Run() {
 					}
 				}
 			}
-			app.BuildDisplayMessages()
+			_, size := termbox.Size()
+			app.BuildDisplayMessages(size - 2)
 			app.RefreshDisplay()
 		}
 	}
@@ -256,12 +257,10 @@ type LogMessage struct {
 
 // A target for optimisation when i get that far
 // Builds a list of messages to display from all of the channels were listening to, pm's and the log
-func (app *App) BuildDisplayMessages() {
+func (app *App) BuildDisplayMessages(size int) {
 	state := app.session.State
 	state.RLock()
 	defer state.RUnlock()
-
-	size := 10
 
 	messages := make([]*DisplayMessage, size)
 
@@ -278,7 +277,6 @@ func (app *App) BuildDisplayMessages() {
 			if err != nil {
 				continue
 			}
-			log.Println(channel.Name, len(channel.Messages))
 			for j := len(channel.Messages) - 1; j >= 0; j-- {
 				msg := channel.Messages[j]
 				parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
@@ -326,7 +324,7 @@ func (app *App) BuildDisplayMessages() {
 			}
 		}
 		if curNewestMessage == nil {
-			log.Println("No new message :(", i)
+			// Looks like we ran out of messages to display! D:
 			break
 		}
 		messages[i] = curNewestMessage
