@@ -1,24 +1,27 @@
 #Discorder
 
-An interactve command line discord client (Would not reccomend for use atleast before 0.1, 0.2 will be a lot more usable with history and other stuff)
+An interactive command line discord client (Would not reccomend for use atleast before 0.1, 0.2 will be a lot more usable with history and other stuff)
 
 Yup, very much in development.
 
  - Should be light on resource usage
+     + Maybe not so much in this early development stage where everything is still getting set up
  - Just started so not much added, and what is is somewhat buggy, see tasks.TODO for details
  - Voice support might be added laaaaaater
 
 What works:
- - Sending/receiving messages, you will currently get all messages from the server you're on even if you haven't got that channel selected, im adding a feature to mark channels for listening
+ - Sending/receiving messages,
  - Sending/receiving direct messages EXCEPT for initiating new conversations
  - State will be saved when you leave and restored when you open again
 
 Next on the list to be worked on is history, and the channel listening system mentioned above
 
 Controlls:
- - ctrl-h: Opens help 
 
+ - ctrl-h: Opens help 
  - ctrl-s: Select server
+     + space marks a channel for listening
+     + enter selects the channel for typing
  - ctrl-g: select channel 
  - ctrl-p: select private channel (direct messages)
  - escape: Quit
