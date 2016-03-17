@@ -65,7 +65,7 @@ func (app *App) DisplayMessages() {
 			channel, err := app.session.State.Channel(msg.ChannelID)
 			if err != nil {
 				errStr := "(error getting channel" + err.Error() + ") "
-				fullMsg := errStr + msg.Author.Username + ": " + msg.ContentWithMentionsReplaced()
+				fullMsg := errStr + author + ": " + msg.ContentWithMentionsReplaced()
 				errLen := utf8.RuneCountInString(errStr)
 				points := map[int]AttribPoint{
 					0:                  AttribPoint{termbox.ColorWhite, termbox.ColorRed},
@@ -81,7 +81,7 @@ func (app *App) DisplayMessages() {
 					dm = true
 				}
 
-				fullMsg := "[" + name + "]" + msg.Author.Username + ": " + msg.ContentWithMentionsReplaced()
+				fullMsg := "[" + name + "]" + author + ": " + msg.ContentWithMentionsReplaced()
 				channelLen := utf8.RuneCountInString(name) + 2
 				points := map[int]AttribPoint{
 					0:                      AttribPoint{termbox.ColorGreen, termbox.ColorDefault},
