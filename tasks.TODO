@@ -5,7 +5,7 @@ Some tasks to complete before 0.1 release:
      ✔ Take password interactively with option to store password @done (16-03-16 01:00)
          Should look into some password storing utilities to integrate with into later
      ✔ Improve text input @done (16-03-15 15:47)
-     ☐ Mark channels you want to listen too
+     ✔ Mark channels you want to listen too
      ✔ PM's @done (16-03-15 23:12)
          ✔ Receive @done (16-03-15 15:47)
          ✔ Send @done (16-03-15 23:12)
