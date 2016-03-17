@@ -143,7 +143,6 @@ func (app *App) Run() {
 		select {
 		case errChan := <-app.stopChan:
 			app.running = false
-
 			app.config.LastServer = app.selectedServerId
 			app.config.LastChannel = app.selectedChannelId
 			app.config.ListeningChannels = app.listeningChannels
@@ -204,7 +203,7 @@ func (app *App) HandleLogMessage(msg string) {
 
 func (app *App) HandleInputEvent(event termbox.Event) {
 	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyEsc {
+		if event.Key == termbox.KeyCtrlQ {
 			log.Println("Stopping...")
 			go app.Stop()
 		}
@@ -228,7 +227,6 @@ func (app *App) PollEvents() {
 		default:
 			break
 		}
-
 		app.inputEventChan <- evt
 	}
 }

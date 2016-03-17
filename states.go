@@ -436,9 +436,11 @@ func (s *StateHelp) RefreshDisplay() {
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-H: Help", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-G: Select channel", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-G: Select channels", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "	Space: mark channel", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "	Enter: Select as send channelf", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-P: Select private conversation", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Escape: Quit", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-Q: Quit", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
 	curY++
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)
