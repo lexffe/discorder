@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/list"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
@@ -9,10 +8,11 @@ import (
 	"os"
 	"runtime/debug"
 	"time"
-	"unicode/utf8"
 )
 
-const HistorySize = 1000
+const (
+	DiscordTimeFormat = "2006-01-02T15:04:05-07:00"
+)
 
 type App struct {
 	running        bool
@@ -30,8 +30,11 @@ type App struct {
 	selectedGuild     *discordgo.Guild
 	selectedChannel   *discordgo.Channel
 
-	history           *list.List
+	//history           *list.List
 	listeningChannels []string
+
+	displayMessages []*DisplayMessage
+	logBuffer       []*LogMessage
 
 	currentState State
 
@@ -43,8 +46,8 @@ type App struct {
 
 func NewApp(config *Config) *App {
 	a := &App{
-		history: list.New(),
-		config:  config,
+		//history: list.New(),
+		config: config,
 	}
 	return a
 }
@@ -66,7 +69,7 @@ func (app *App) Login(user, password string) error {
 	}
 
 	session.StateEnabled = true
-	session.AddHandler(app.messageCreate)
+	session.State.MaxMessageCount = 100
 	err = session.Open()
 	return err
 }
@@ -129,6 +132,9 @@ func (app *App) Run() {
 	if app.config.LastServer != "" {
 		app.selectedServerId = app.config.LastServer
 	}
+	if app.config.ListeningChannels != nil && len(app.config.ListeningChannels) > 0 {
+		app.listeningChannels = app.config.ListeningChannels
+	}
 
 	app.SetState(&StateLogin{app: app})
 
@@ -140,6 +146,7 @@ func (app *App) Run() {
 
 			app.config.LastServer = app.selectedServerId
 			app.config.LastChannel = app.selectedChannelId
+			app.config.ListeningChannels = app.listeningChannels
 			app.config.Save(configPath)
 			pollStopped := make(chan bool)
 			// Stop the event polling
@@ -148,12 +155,12 @@ func (app *App) Run() {
 			<-pollStopped
 			errChan <- nil
 			return
-		case msg := <-app.msgRecvChan:
-			app.HandleMessage(*msg)
+		case _ = <-app.msgRecvChan:
+			//app.HandleMessage(*msg)
 		case evt := <-app.inputEventChan:
 			app.HandleInputEvent(evt)
 		case msg := <-app.logChan:
-			app.HandleMessage(msg)
+			app.HandleLogMessage(msg)
 		case <-ticker.C:
 			if app.session != nil {
 				var err error
@@ -174,6 +181,7 @@ func (app *App) Run() {
 					}
 				}
 			}
+			app.BuildDisplayMessages()
 			app.RefreshDisplay()
 		}
 	}
@@ -184,33 +192,13 @@ func delayedInterrupt(d time.Duration) {
 	termbox.Interrupt()
 }
 
-func (app *App) HandleMessage(msg interface{}) {
-	cast, ok := msg.(discordgo.Message)
-	if ok {
-		chId := cast.ChannelID
-		state := app.session.State
-		// Check if its a private channel
-		_, err := state.PrivateChannel(cast.ChannelID)
-		if err == nil {
-			app.history.PushFront(msg)
-		}
-
-		if app.selectedServerId != "" {
-			_, err := app.session.State.GuildChannel(app.selectedServerId, chId)
-			if err == nil {
-				app.history.PushFront(msg)
-			}
-		}
-	} else {
-		// Let log messages through
-		app.history.PushFront(msg)
+func (app *App) HandleLogMessage(msg string) {
+	now := time.Now()
+	obj := &LogMessage{
+		timestamp: now,
+		content:   msg,
 	}
-
-	for app.history.Len() > HistorySize {
-		app.history.Remove(app.history.Back())
-	}
-
-	//app.RefreshDisplay()
+	app.logBuffer = append(app.logBuffer, obj)
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {
@@ -252,4 +240,97 @@ func (app *App) SetState(state State) {
 
 	app.currentState = state
 	state.Enter()
+}
+
+type DisplayMessage struct {
+	discordMessage *discordgo.Message
+	logMessage     *LogMessage
+	isLogMessage   bool
+	timestamp      time.Time
+}
+
+type LogMessage struct {
+	timestamp time.Time
+	content   string
+}
+
+// A target for optimisation when i get that far
+// Builds a list of messages to display from all of the channels were listening to, pm's and the log
+func (app *App) BuildDisplayMessages() {
+	state := app.session.State
+	state.RLock()
+	defer state.RUnlock()
+
+	size := 10
+
+	messages := make([]*DisplayMessage, size)
+
+	// Get a sorted list
+	var lastMessage *DisplayMessage
+	for i := 0; i < size; i++ {
+		// Get newest message after "lastMessage", set it to curNewestMessage if its newer than that
+
+		var curNewestMessage *DisplayMessage
+
+		// Check the channels were listening on
+		for _, listeningChannelId := range app.listeningChannels {
+			channel, err := state.GuildChannel(app.selectedServerId, listeningChannelId)
+			if err != nil {
+				continue
+			}
+			log.Println(channel.Name, len(channel.Messages))
+			for j := len(channel.Messages) - 1; j >= 0; j-- {
+				msg := channel.Messages[j]
+				parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
+				if lastMessage == nil || parsedTimestamp.Before(lastMessage.timestamp) {
+					if curNewestMessage == nil || parsedTimestamp.After(curNewestMessage.timestamp) {
+						curNewestMessage = &DisplayMessage{
+							discordMessage: msg,
+							timestamp:      parsedTimestamp,
+						}
+					}
+					break // Newest message after last since ordered
+				}
+			}
+
+		}
+		// Check for newest pm's
+		for _, privateChannel := range state.PrivateChannels {
+			for j := len(privateChannel.Messages) - 1; j >= 0; j-- {
+				msg := privateChannel.Messages[j]
+				parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
+				if lastMessage == nil || parsedTimestamp.Before(lastMessage.timestamp) {
+					if curNewestMessage == nil || parsedTimestamp.After(curNewestMessage.timestamp) {
+						curNewestMessage = &DisplayMessage{
+							discordMessage: msg,
+							timestamp:      parsedTimestamp,
+						}
+					}
+					break // Newest message after last since ordered
+				}
+			}
+		}
+
+		// Check the logerino
+		for j := len(app.logBuffer) - 1; j >= 0; j-- {
+			msg := app.logBuffer[j]
+			if lastMessage == nil || msg.timestamp.Before(lastMessage.timestamp) {
+				if curNewestMessage == nil || msg.timestamp.After(curNewestMessage.timestamp) {
+					curNewestMessage = &DisplayMessage{
+						logMessage:   msg,
+						timestamp:    msg.timestamp,
+						isLogMessage: true,
+					}
+				}
+				break // Newest message after last since ordered
+			}
+		}
+		if curNewestMessage == nil {
+			log.Println("No new message :(", i)
+			break
+		}
+		messages[i] = curNewestMessage
+		lastMessage = curNewestMessage
+	}
+	app.displayMessages = messages
 }

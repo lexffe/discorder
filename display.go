@@ -44,13 +44,16 @@ func (app *App) DisplayMessages() {
 	padding := 2
 
 	// Iterate through list and print its contents.
-	for e := app.history.Front(); e != nil; e = e.Next() {
+	for _, item := range app.displayMessages {
 		var cells []termbox.Cell
-		switch msg := e.Value.(type) {
-		case discordgo.Message:
-
+		if item == nil {
+			break
+		}
+		if item.isLogMessage {
+			cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
+		} else {
+			msg := item.discordMessage
 			authorLen := utf8.RuneCountInString(msg.Author.Username)
-
 			channel, err := app.session.State.Channel(msg.ChannelID)
 			if err != nil {
 				errStr := "(error getting channel" + err.Error() + ") "
@@ -82,9 +85,6 @@ func (app *App) DisplayMessages() {
 				}
 				cells = GenCellSlice(fullMsg, points)
 			}
-
-		case string:
-			cells = GenCellSlice("Log: "+msg, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
 		}
 
 		lines := HeightRequired(len(cells), sizex-padding*2)
