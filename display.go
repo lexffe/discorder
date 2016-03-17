@@ -56,7 +56,12 @@ func (app *App) DisplayMessages() {
 			if msg == nil {
 				continue
 			}
-			authorLen := utf8.RuneCountInString(msg.Author.Username)
+			author := "Unknown?"
+			if msg.Author != nil {
+				author = msg.Author.Username
+			}
+
+			authorLen := utf8.RuneCountInString(author)
 			channel, err := app.session.State.Channel(msg.ChannelID)
 			if err != nil {
 				errStr := "(error getting channel" + err.Error() + ") "
