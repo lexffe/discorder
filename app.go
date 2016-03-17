@@ -273,7 +273,11 @@ func (app *App) BuildDisplayMessages(size int) {
 
 		// Check the channels were listening on
 		for _, listeningChannelId := range app.listeningChannels {
+			// Avoid deadlock since guildchannel also calls rlock, whch will block if there was a new message in the meantime causing lock to be called
+			// before that
+			state.RUnlock()
 			channel, err := state.GuildChannel(app.selectedServerId, listeningChannelId)
+			state.RLock()
 			if err != nil {
 				continue
 			}
