@@ -25,7 +25,7 @@ Controlls:
      + enter selects the channel for typing
  - ctrl-g: select channel 
  - ctrl-p: select private channel (direct messages)
- - escape: Quit
+ - ctrl-q: Quit
  - backspace: closes the active window if any
 
 Heres an image of its current state
