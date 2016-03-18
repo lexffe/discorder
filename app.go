@@ -348,7 +348,7 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 		for _, ch := range g.Channels {
 			for _, ls := range app.listeningChannels {
 				if ch.ID == ls {
-					go app.GetHistory(ls, 50, ch.LastMessageID, "")
+					go app.GetHistory(ls, 50, "", "")
 					break
 				}
 			}

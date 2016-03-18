@@ -23,7 +23,8 @@ func (s *StateNormal) Exit()  {}
 
 func (s *StateNormal) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyEnter {
+		switch event.Key {
+		case termbox.KeyEnter:
 			// send
 			cp := s.app.currentTextBuffer
 			s.app.currentTextBuffer = ""
@@ -33,33 +34,36 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			if err != nil {
 				log.Println("Error sending: ", err)
 			}
-		} else if event.Key == termbox.KeyCtrlS {
+		case termbox.KeyCtrlS:
 			// Select server
 			if len(s.app.session.State.Guilds) < 0 {
 				log.Println("No guilds, Most likely starting up still...")
 				return
 			}
 			s.app.SetState(&StateSelectServer{app: s.app})
-		} else if event.Key == termbox.KeyCtrlG {
+		case termbox.KeyCtrlG:
 			// Select channel
 			if s.app.selectedGuild == nil {
 				log.Println("No valid server selected")
 				return
 			}
 			s.app.SetState(&StateSelectChannel{app: s.app})
-		} else if event.Key == termbox.KeyCtrlP {
+		case termbox.KeyCtrlP:
 			// Select private message channel
 			s.app.SetState(&StateSelectPrivateChannel{app: s.app})
-		} else if event.Key == termbox.KeyCtrlR {
-			// quick respond or return
-		} else if event.Key == termbox.KeyCtrlH {
+		case termbox.KeyCtrlR:
+		// quick respond or return
+		case termbox.KeyCtrlH:
 			// help
 			s.app.SetState(&StateHelp{s.app})
-		} else if event.Key == termbox.KeyCtrlJ {
+		case termbox.KeyCtrlJ:
 			go s.app.GetHistory(s.app.selectedChannelId, 10, "", "")
-		} else {
+		case termbox.KeyCtrlL:
+			s.app.logBuffer = make([]*LogMessage, 0)
+		default:
 			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)
+
 		}
 	}
 }
@@ -219,7 +223,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 				} else {
 					// Add
 					s.app.listeningChannels = append(s.app.listeningChannels, channel.ID)
-					go s.app.GetHistory(channel.ID, 50, channel.LastMessageID, "")
+					go s.app.GetHistory(channel.ID, 50, "", "")
 				}
 				s.SetMarked()
 			}
@@ -446,6 +450,8 @@ func (s *StateHelp) RefreshDisplay() {
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "	Enter: Select as send channelf", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-P: Select private conversation", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-Q: Quit", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-J: Queries the history of the current channel (For debugging)", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-L: Clear log messages", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
 	curY++
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)

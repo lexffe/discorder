@@ -25,6 +25,8 @@ Controlls:
      + enter selects the channel for typing
  - ctrl-g: select channel 
  - ctrl-p: select private channel (direct messages)
+ - ctrl-j: Queries the log for the current channel (for debugging, or when you think it missed a new message)
+ - ctrl-l: Clears the log, will later be changed to toggle hiding the log, and you can view the log in a seperate window, but thats for later...!
  - escape: Quit
  - backspace: closes the active window if any
 
@@ -34,6 +36,6 @@ Heres an image of its current state
 
 ![Channels list](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T03%3A57%3A45%2B01%3A00.png)
 
-![Direct messages](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-15T23%3A09%3A22%2B01%3A00.png)
+![Direct messages](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-18T04%3A15%3A40%2B01%3A00.png)
 
 
