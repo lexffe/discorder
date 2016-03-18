@@ -279,6 +279,8 @@ func (app *App) BuildDisplayMessages(size int) {
 
 	messages := make([]*DisplayMessage, size)
 
+	lastLogIndex := len(app.logBuffer) - 1
+
 	// Get a sorted list
 	var lastMessage *DisplayMessage
 	for i := 0; i < size; i++ {
@@ -329,23 +331,29 @@ func (app *App) BuildDisplayMessages(size int) {
 		}
 
 		// Check the logerino
-		for j := len(app.logBuffer) - 1; j >= 0; j-- {
+		for j := lastLogIndex; j >= 0; j-- {
 			msg := app.logBuffer[j]
-			if lastMessage == nil || msg.timestamp.Before(lastMessage.timestamp) {
-				if curNewestMessage == nil || msg.timestamp.After(curNewestMessage.timestamp) {
+			if lastMessage == nil || !msg.timestamp.After(lastMessage.timestamp) {
+				if lastMessage != nil && lastMessage.isLogMessage && lastMessage.logMessage == msg {
+					continue
+				}
+				if curNewestMessage == nil || !msg.timestamp.Before(curNewestMessage.timestamp) {
 					curNewestMessage = &DisplayMessage{
 						logMessage:   msg,
 						timestamp:    msg.timestamp,
 						isLogMessage: true,
 					}
 				}
+				lastLogIndex = j - 1
 				break // Newest message after last since ordered
 			}
 		}
+
 		if curNewestMessage == nil {
 			// Looks like we ran out of messages to display! D:
 			break
 		}
+
 		messages[i] = curNewestMessage
 		lastMessage = curNewestMessage
 	}
@@ -353,6 +361,12 @@ func (app *App) BuildDisplayMessages(size int) {
 }
 
 func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
+	log.Println("Received ready!")
+
+	app.session.State.Lock()
+	app.session.State.Ready = *r
+	app.session.State.Unlock()
+
 	for _, g := range r.Guilds {
 		for _, ch := range g.Channels {
 			for _, ls := range app.listeningChannels {
@@ -367,6 +381,5 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 }
 
 func (app *App) PrintWelcome() {
-	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know!")
-	log.Println("Press ctrl-h For help, ctrl-l hides the log messages")
+	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know! (Press ctrl-o For help)")
 }

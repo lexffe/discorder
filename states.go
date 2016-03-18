@@ -53,7 +53,7 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			s.app.SetState(&StateSelectPrivateChannel{app: s.app})
 		case termbox.KeyCtrlR:
 		// quick respond or return
-		case termbox.KeyCtrlH:
+		case termbox.KeyCtrlO:
 			// help
 			s.app.SetState(&StateHelp{s.app})
 		case termbox.KeyCtrlJ:
@@ -450,7 +450,7 @@ func (s *StateHelp) RefreshDisplay() {
 	curY := startY + 1
 	CreateWindow("Help", startX, startY, wWidth, wHeight, termbox.ColorBlack)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-H: Help", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-O: Help", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-G: Select channels", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "	Space: mark channel", termbox.ColorDefault, termbox.ColorDefault)

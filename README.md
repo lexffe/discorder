@@ -19,7 +19,7 @@ Next on the list to be worked on is history, and the channel listening system me
 
 Controlls:
 
- - ctrl-h: Opens help 
+ - ctrl-o: Opens help 
  - ctrl-s: Select server
      + space marks a channel for listening
      + enter selects the channel for typing
