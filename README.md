@@ -27,7 +27,7 @@ Controlls:
  - ctrl-p: select private channel (direct messages)
  - ctrl-j: Queries the log for the current channel (for debugging, or when you think it missed a new message)
  - ctrl-l: Clears the log, will later be changed to toggle hiding the log, and you can view the log in a seperate window, but thats for later...!
- - escape: Quit
+ - ctrl-q: Quit
  - backspace: closes the active window if any
 
 Heres an image of its current state
