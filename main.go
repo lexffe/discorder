@@ -1,8 +1,8 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"os"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -16,21 +16,16 @@ var (
 	application *App
 	config      *Config
 
-	configPath = "config.json"
+	configPath  = "discorder.json"
+	flagLogPath = flag.String("log", "discorder.log", "Path to output logs")
 )
 
 func main() {
+	flag.Parse()
 
-	// Check for Username and Password CLI arguments.
-	// if len(os.Args) != 3 {
-	// 	fmt.Println("You must provide username and password as arguments. See below example.")
-	// 	fmt.Println(os.Args[0], " [username] [password]")
-	// 	return
+	// if len(os.Args) >= 2 {
+	// 	configPath = os.Args[1]
 	// }
-
-	if len(os.Args) >= 2 {
-		configPath = os.Args[1]
-	}
 
 	c, err := LoadConfig(configPath)
 	if err != nil {
@@ -41,6 +36,6 @@ func main() {
 
 	config = c
 
-	application = NewApp(config)
+	application = NewApp(config, *flagLogPath)
 	application.Run()
 }

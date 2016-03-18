@@ -47,13 +47,15 @@ type App struct {
 	currentCursorLocation int
 }
 
-func NewApp(config *Config) *App {
-	logFile, _ := os.Create("log.txt")
+func NewApp(config *Config, logPath string) *App {
+	logFile, err := os.Create(logPath)
 
 	a := &App{
 		//history: list.New(),
-		config:  config,
-		logFile: logFile,
+		config: config,
+	}
+	if err == nil {
+		a.logFile = logFile
 	}
 	return a
 }
@@ -264,7 +266,12 @@ type LogMessage struct {
 // A target for optimisation when i get that far
 // Builds a list of messages to display from all of the channels were listening to, pm's and the log
 func (app *App) BuildDisplayMessages(size int) {
-	state := app.session.State
+	var state *discordgo.State
+	if app.session != nil && app.session.State != nil {
+		state = app.session.State
+	} else {
+		state = discordgo.NewState()
+	}
 	state.RLock()
 	defer state.RUnlock()
 

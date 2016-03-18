@@ -57,9 +57,11 @@ func (app *App) Write(p []byte) (n int, err error) {
 		app.logChan <- cop
 	}()
 
-	// app.logFileLock.Lock()
-	// defer app.logFileLock.Unlock()
-	// app.logFile.Write(p)
+	if app.logFile != nil {
+		app.logFileLock.Lock()
+		defer app.logFileLock.Unlock()
+		app.logFile.Write(p)
+	}
 
 	return len(p), nil
 }
