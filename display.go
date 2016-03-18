@@ -61,7 +61,7 @@ func (app *App) DisplayMessages() {
 			if msg.Author != nil {
 				author = msg.Author.Username
 			}
-			ts := item.timestamp.Format(time.Stamp) + " "
+			ts := item.timestamp.Local().Format(time.Stamp) + " "
 			tsLen := utf8.RuneCountInString(ts)
 
 			authorLen := utf8.RuneCountInString(author)
