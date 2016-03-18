@@ -55,6 +55,8 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 		} else if event.Key == termbox.KeyCtrlH {
 			// help
 			s.app.SetState(&StateHelp{s.app})
+		} else if event.Key == termbox.KeyCtrlJ {
+			go s.app.GetHistory(s.app.selectedChannelId, 10, "", "")
 		} else {
 			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)
@@ -206,6 +208,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 				}
 
 				if index != -1 {
+					// Remove
 					if index == 0 {
 						s.app.listeningChannels = s.app.listeningChannels[1:]
 					} else if index == len(s.app.listeningChannels)-1 {
@@ -214,7 +217,9 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 						s.app.listeningChannels = append(s.app.listeningChannels[:index], s.app.listeningChannels[index+1:]...)
 					}
 				} else {
+					// Add
 					s.app.listeningChannels = append(s.app.listeningChannels, channel.ID)
+					go s.app.GetHistory(channel.ID, 50, channel.LastMessageID, "")
 				}
 				s.SetMarked()
 			}

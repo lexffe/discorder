@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
 	"math"
+	"time"
 	"unicode/utf8"
 )
 
@@ -60,17 +61,20 @@ func (app *App) DisplayMessages() {
 			if msg.Author != nil {
 				author = msg.Author.Username
 			}
+			ts := item.timestamp.Format(time.Stamp) + " "
+			tsLen := utf8.RuneCountInString(ts)
 
 			authorLen := utf8.RuneCountInString(author)
 			channel, err := app.session.State.Channel(msg.ChannelID)
 			if err != nil {
 				errStr := "(error getting channel" + err.Error() + ") "
-				fullMsg := errStr + author + ": " + msg.ContentWithMentionsReplaced()
+				fullMsg := ts + errStr + author + ": " + msg.ContentWithMentionsReplaced()
 				errLen := utf8.RuneCountInString(errStr)
 				points := map[int]AttribPoint{
-					0:                  AttribPoint{termbox.ColorWhite, termbox.ColorRed},
-					errLen:             AttribPoint{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
-					errLen + authorLen: ResetAttribPoint,
+					0:                          AttribPoint{termbox.ColorBlue, termbox.ColorRed},
+					tsLen:                      AttribPoint{termbox.ColorWhite, termbox.ColorRed},
+					errLen + tsLen:             AttribPoint{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
+					errLen + authorLen + tsLen: ResetAttribPoint,
 				}
 				cells = GenCellSlice(fullMsg, points)
 			} else {
@@ -81,15 +85,16 @@ func (app *App) DisplayMessages() {
 					dm = true
 				}
 
-				fullMsg := "[" + name + "]" + author + ": " + msg.ContentWithMentionsReplaced()
+				fullMsg := ts + "[" + name + "]" + author + ": " + msg.ContentWithMentionsReplaced()
 				channelLen := utf8.RuneCountInString(name) + 2
 				points := map[int]AttribPoint{
-					0:                      AttribPoint{termbox.ColorGreen, termbox.ColorDefault},
-					channelLen:             AttribPoint{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
-					channelLen + authorLen: ResetAttribPoint,
+					0:                              AttribPoint{termbox.ColorBlue, termbox.ColorDefault},
+					tsLen:                          AttribPoint{termbox.ColorGreen, termbox.ColorDefault},
+					channelLen + tsLen:             AttribPoint{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
+					channelLen + authorLen + tsLen: ResetAttribPoint,
 				}
 				if dm {
-					points[0] = AttribPoint{termbox.ColorMagenta, termbox.ColorDefault}
+					points[1] = AttribPoint{termbox.ColorMagenta, termbox.ColorDefault}
 				}
 				cells = GenCellSlice(fullMsg, points)
 			}

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"runtime/debug"
+	"sync"
 	"time"
 )
 
@@ -35,6 +36,8 @@ type App struct {
 
 	displayMessages []*DisplayMessage
 	logBuffer       []*LogMessage
+	logFile         *os.File
+	logFileLock     sync.Mutex
 
 	currentState State
 
@@ -45,9 +48,12 @@ type App struct {
 }
 
 func NewApp(config *Config) *App {
+	logFile, _ := os.Create("log.txt")
+
 	a := &App{
 		//history: list.New(),
-		config: config,
+		config:  config,
+		logFile: logFile,
 	}
 	return a
 }
@@ -70,6 +76,7 @@ func (app *App) Login(user, password string) error {
 
 	session.StateEnabled = true
 	session.State.MaxMessageCount = 100
+	app.session.AddHandler(app.Ready)
 	err = session.Open()
 	return err
 }
@@ -199,6 +206,7 @@ func (app *App) HandleLogMessage(msg string) {
 		content:   msg,
 	}
 	app.logBuffer = append(app.logBuffer, obj)
+	//app.logFile.Write([]byte(msg))
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {
@@ -333,4 +341,23 @@ func (app *App) BuildDisplayMessages(size int) {
 		lastMessage = curNewestMessage
 	}
 	app.displayMessages = messages
+}
+
+func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
+	for _, g := range r.Guilds {
+		for _, ch := range g.Channels {
+			for _, ls := range app.listeningChannels {
+				if ch.ID == ls {
+					go app.GetHistory(ls, 50, ch.LastMessageID, "")
+					break
+				}
+			}
+		}
+	}
+	app.PrintWelcome()
+}
+
+func (app *App) PrintWelcome() {
+	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know!")
+	log.Println("Press ctrl-h For help, ctrl-l hides the log messages")
 }
