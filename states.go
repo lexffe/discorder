@@ -60,6 +60,13 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 			go s.app.GetHistory(s.app.selectedChannelId, 10, "", "")
 		case termbox.KeyCtrlL:
 			s.app.logBuffer = make([]*LogMessage, 0)
+		case termbox.KeyArrowUp:
+			s.app.curChatScroll++
+		case termbox.KeyArrowDown:
+			s.app.curChatScroll--
+			if s.app.curChatScroll < 0 {
+				s.app.curChatScroll = 0
+			}
 		default:
 			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)

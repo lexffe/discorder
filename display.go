@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
 	"math"
@@ -45,10 +46,13 @@ func (app *App) DisplayMessages() {
 	padding := 2
 
 	// Iterate through list and print its contents.
-	for _, item := range app.displayMessages {
+	for k, item := range app.displayMessages {
 		var cells []termbox.Cell
 		if item == nil {
 			break
+		}
+		if k < app.curChatScroll {
+			continue
 		}
 		if item.isLogMessage {
 			cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
@@ -177,6 +181,12 @@ func CreateHeader(header string) {
 }
 
 func (app *App) CreateFooter() {
+	sizeX, sizeY := termbox.Size()
+
+	if app.curChatScroll > 0 {
+		SimpleSetText(0, sizeY-2, sizeX, fmt.Sprintf("Scroll: %d", app.curChatScroll), termbox.ColorDefault, termbox.ColorYellow)
+	}
+
 	preStr := "Send To " + app.selectedChannelId + ":"
 	if app.selectedChannel != nil {
 		preStr = "Send to #" + getChannelName(app.selectedChannel) + ":"
@@ -193,7 +203,6 @@ func (app *App) CreateFooter() {
 		preStrLen: pointTyped,
 	})
 
-	sizeX, sizeY := termbox.Size()
 	SetCells(cells, 0, sizeY-1, sizeX, 1)
 	termbox.SetCursor(preStrLen+app.currentCursorLocation, sizeY-1)
 }

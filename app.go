@@ -45,6 +45,8 @@ type App struct {
 
 	currentTextBuffer     string
 	currentCursorLocation int
+
+	curChatScroll int
 }
 
 func NewApp(config *Config, logPath string) *App {
@@ -190,7 +192,7 @@ func (app *App) Run() {
 				}
 			}
 			_, size := termbox.Size()
-			app.BuildDisplayMessages(size - 2)
+			app.BuildDisplayMessages(size + app.curChatScroll - 2)
 			app.RefreshDisplay()
 		}
 	}
