@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 )
@@ -204,12 +205,20 @@ func delayedInterrupt(d time.Duration) {
 }
 
 func (app *App) HandleLogMessage(msg string) {
+	split := strings.Split(msg, "\n")
+
 	now := time.Now()
-	obj := &LogMessage{
-		timestamp: now,
-		content:   msg,
+	for _, splitStr := range split {
+		if splitStr == "" {
+			continue
+		}
+		obj := &LogMessage{
+			timestamp: now,
+			content:   splitStr,
+		}
+		app.logBuffer = append(app.logBuffer, obj)
 	}
-	app.logBuffer = append(app.logBuffer, obj)
+
 	//app.logFile.Write([]byte(msg))
 }
 
