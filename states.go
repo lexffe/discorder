@@ -459,6 +459,8 @@ func (s *StateHelp) RefreshDisplay() {
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-Q: Quit", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-J: Queries the history of the current channel (For debugging)", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-L: Clear log messages", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Up: Scroll up", termbox.ColorDefault, termbox.ColorDefault)
+	curY += SimpleSetText(startX+1, curY, wWidth-2, "Down: Scroll down", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
 	curY++
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)
