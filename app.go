@@ -355,7 +355,7 @@ func (app *App) BuildDisplayMessages(size int) {
 		// Check the logerino
 		for j := nextLogIndex; j >= 0; j-- {
 			msg := app.logBuffer[j]
-			if !msg.timestamp.Before(beforeTime) || beforeTime.IsZero() {
+			if !msg.timestamp.After(beforeTime) || beforeTime.IsZero() {
 				if newestLog == nil || !msg.timestamp.Before(newestLog.timestamp) {
 					newestLog = &DisplayMessage{
 						logMessage:   msg,

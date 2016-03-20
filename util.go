@@ -68,18 +68,21 @@ func (app *App) Write(p []byte) (n int, err error) {
 
 func (app *App) HandleTextInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyArrowLeft {
+
+		switch event.Key {
+
+		case termbox.KeyArrowLeft:
 			app.currentCursorLocation--
 			if app.currentCursorLocation < 0 {
 				app.currentCursorLocation = 0
 			}
-		} else if event.Key == termbox.KeyArrowRight {
+		case termbox.KeyArrowRight:
 			app.currentCursorLocation++
 			bufLen := utf8.RuneCountInString(app.currentTextBuffer)
 			if app.currentCursorLocation > bufLen {
 				app.currentCursorLocation = bufLen
 			}
-		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
 			bufLen := utf8.RuneCountInString(app.currentTextBuffer)
 			if bufLen == 0 {
 				return
@@ -100,10 +103,13 @@ func (app *App) HandleTextInput(event termbox.Event) {
 				app.currentTextBuffer = string(newSlice)
 				app.currentCursorLocation--
 			}
-		} else if event.Ch != 0 || event.Key == termbox.KeySpace {
+		default:
 			char := event.Ch
 			if event.Key == termbox.KeySpace {
 				char = ' '
+			} else if event.Key == termbox.Key(0) && event.Mod == termbox.ModAlt && char == 0 {
+				char = '@' // Just temporary workaround for non american keyboards on windows
+				// So they're atleast able to log in
 			}
 
 			bufLen := utf8.RuneCountInString(app.currentTextBuffer)
@@ -127,6 +133,7 @@ func (app *App) HandleTextInput(event termbox.Event) {
 				app.currentCursorLocation++
 			}
 		}
+
 	}
 }
 
