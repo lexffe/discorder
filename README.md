@@ -12,9 +12,9 @@ Try the latest alpha versio here: https://github.com/jonas747/discorder/releases
 
 You need go and git installed
 
-run this command: go get -u github.com/jonas747/discorder
+run this command: `go get -u github.com/jonas747/discorder`
 
-(-u: to force and update if you have a older version)
+(-u: to force an update if you have a older version)
 
 After that there should be a built executable in your $GOPATH/bin folder
 
