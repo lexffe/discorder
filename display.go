@@ -98,7 +98,7 @@ func (app *App) DisplayMessages() {
 					channelLen + authorLen + tsLen: ResetAttribPoint,
 				}
 				if dm {
-					points[1] = AttribPoint{termbox.ColorMagenta, termbox.ColorDefault}
+					points[tsLen] = AttribPoint{termbox.ColorMagenta, termbox.ColorDefault}
 				}
 				cells = GenCellSlice(fullMsg, points)
 			}
