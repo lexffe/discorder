@@ -2,12 +2,30 @@
 
 An interactive command line discord client (Would not reccomend for use atleast before 0.1, 0.2 will be a lot more usable with history and other stuff)
 
+##Installing
+
+##### Latest Alpha
+
+Try the latest alpha versio here: https://github.com/jonas747/discorder/releases/tag/v0.1.1
+
+#####compiling from repo
+
+You need go and git installed
+
+run this command: go get -u github.com/jonas747/discorder
+
+(-u: to force and update if you have a older version)
+
+After that there should be a built executable in your $GOPATH/bin folder
+
+##Features
+
 Yup, very much in development.
 
  - Should be light on resource usage
      + Maybe not so much in this early development stage where everything is still getting set up
- - Just started so not much added, and what is is somewhat buggy, see tasks.TODO for details
- - Voice support might be added laaaaaater
+ - Very early in development, a lot of missing features right now
+ - Voice support will be added laaaaaater
 
 What works:
  - Sending/receiving messages
@@ -16,6 +34,10 @@ What works:
  - State will be saved when you leave and restored when you open again
 
 Next on the list to be worked on is history, and the channel listening system mentioned above
+
+## Usage
+
+Run the executable and follow the instructions on screen
 
 Controlls:
 
@@ -30,7 +52,7 @@ Controlls:
  - ctrl-q: Quit
  - backspace: closes the active window if any
 
-Heres an image of its current state
+##Screenshots
 
 ![Logging in](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T01%3A00%3A23%2B01%3A00.png)
 
