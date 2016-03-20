@@ -133,6 +133,7 @@ func (app *App) Run() {
 	if err != nil {
 		panic(err)
 	}
+	termbox.SetInputMode(termbox.InputAlt)
 
 	// Start polling events
 	go app.PollEvents()
