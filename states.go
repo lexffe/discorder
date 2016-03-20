@@ -125,13 +125,17 @@ func (s *StateSelectServer) HandleInput(event termbox.Event) {
 
 			s.app.selectedGuild = guild
 			s.app.selectedServerId = guild.ID
-			s.app.SetState(&StateNormal{s.app})
+			s.app.listeningChannels = make([]string, 0)
+			s.app.SetState(&StateSelectChannel{app: s.app})
 		} else {
 			s.listSelection.HandleInput(event)
 		}
 	}
 }
 func (s *StateSelectServer) RefreshDisplay() {
+	if s.listSelection == nil {
+		return
+	}
 	s.listSelection.RefreshDisplay()
 }
 
@@ -236,6 +240,9 @@ func (s *StateSelectChannel) SetMarked() {
 }
 
 func (s *StateSelectChannel) RefreshDisplay() {
+	if s.listSelection == nil {
+		return
+	}
 	s.listSelection.RefreshDisplay()
 }
 
