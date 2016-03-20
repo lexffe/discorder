@@ -150,7 +150,7 @@ func (s *StateSelectChannel) Enter() {
 
 	s.listSelection = &ListSelection{
 		app:     s.app,
-		Header:  "Select a Channel",
+		Header:  "Select a Channel (Space: mark, Enter: select)",
 		Options: options,
 	}
 
@@ -181,7 +181,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 					s.app.SetState(&StateNormal{s.app})
 					return
 				}
-
+				s.app.AddListeningChannel(channel.ID)
 				s.app.selectedChannelId = channel.ID
 				s.app.selectedChannel = channel
 			}
@@ -210,28 +210,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 					return
 				}
 
-				index := -1
-				for i, listening := range s.app.listeningChannels {
-					if listening == channel.ID {
-						index = i
-						break
-					}
-				}
-
-				if index != -1 {
-					// Remove
-					if index == 0 {
-						s.app.listeningChannels = s.app.listeningChannels[1:]
-					} else if index == len(s.app.listeningChannels)-1 {
-						s.app.listeningChannels = s.app.listeningChannels[:len(s.app.listeningChannels)-1]
-					} else {
-						s.app.listeningChannels = append(s.app.listeningChannels[:index], s.app.listeningChannels[index+1:]...)
-					}
-				} else {
-					// Add
-					s.app.listeningChannels = append(s.app.listeningChannels, channel.ID)
-					go s.app.GetHistory(channel.ID, 50, "", "")
-				}
+				s.app.ToggleListeningChannel(channel.ID)
 				s.SetMarked()
 			}
 		} else {

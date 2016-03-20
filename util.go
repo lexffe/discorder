@@ -219,3 +219,46 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 	channel.Messages = newMessages
 	log.Println("History processing completed!")
 }
+
+// Returns true if removed, otherwise it didnt exist
+func (app *App) RemoveListeningChannel(chId string) bool {
+	index := -1
+	for i, listening := range app.listeningChannels {
+		if listening == chId {
+			index = i
+			break
+		}
+	}
+
+	if index != -1 {
+		// Remove
+		if index == 0 {
+			app.listeningChannels = app.listeningChannels[1:]
+		} else if index == len(app.listeningChannels)-1 {
+			app.listeningChannels = app.listeningChannels[:len(app.listeningChannels)-1]
+		} else {
+			app.listeningChannels = append(app.listeningChannels[:index], app.listeningChannels[index+1:]...)
+		}
+		return true
+	}
+	return false
+}
+
+// Returns true if added, false if allready added before
+func (app *App) AddListeningChannel(chId string) bool {
+	for _, v := range app.listeningChannels {
+		if v == chId {
+			return false
+		}
+	}
+	app.listeningChannels = append(app.listeningChannels, chId)
+	go app.GetHistory(chId, 50, "", "")
+
+	return true
+}
+
+func (app *App) ToggleListeningChannel(chId string) {
+	if !app.AddListeningChannel(chId) {
+		app.RemoveListeningChannel(chId)
+	}
+}
