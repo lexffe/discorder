@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	VERSION = "0.1.0-RC2 Alpha"
+	VERSION = "0.1.0-RC3 Alpha"
 )
 
 var (

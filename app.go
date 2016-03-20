@@ -275,8 +275,10 @@ type LogMessage struct {
 }
 
 // A target for optimisation when i get that far
+// Also a target for cleaning up
 // Builds a list of messages to display from all of the channels were listening to, pm's and the log
 func (app *App) BuildDisplayMessages(size int) {
+	// Ackquire the state, or create one if null (incase were starting)
 	var state *discordgo.State
 	if app.session != nil && app.session.State != nil {
 		state = app.session.State
@@ -288,17 +290,30 @@ func (app *App) BuildDisplayMessages(size int) {
 
 	messages := make([]*DisplayMessage, size)
 
-	lastLogIndex := len(app.logBuffer) - 1
+	// Holds the start indexes in the newest message search
+	listeningIndexes := make([]int, len(app.listeningChannels))
+	pmIndexes := make([]int, len(state.PrivateChannels))
+	// Init the slices with silly vals
+	for i := 0; i < len(app.listeningChannels); i++ {
+		listeningIndexes[i] = -10
+	}
+	for i := 0; i < len(state.PrivateChannels); i++ {
+		pmIndexes[i] = -10
+	}
+	nextLogIndex := len(app.logBuffer) - 1
 
 	// Get a sorted list
 	var lastMessage *DisplayMessage
+	var beforeTime time.Time
 	for i := 0; i < size; i++ {
 		// Get newest message after "lastMessage", set it to curNewestMessage if its newer than that
 
-		var curNewestMessage *DisplayMessage
+		var newestListening *DisplayMessage
+		newestListeningIndex := 0    // confusing, but the index of the indexes slice
+		nextListeningStartIndex := 0 // And the actual next start index to use
 
 		// Check the channels were listening on
-		for _, listeningChannelId := range app.listeningChannels {
+		for k, listeningChannelId := range app.listeningChannels {
 			// Avoid deadlock since guildchannel also calls rlock, whch will block if there was a new message in the meantime causing lock to be called
 			// before that
 			state.RUnlock()
@@ -307,64 +322,77 @@ func (app *App) BuildDisplayMessages(size int) {
 			if err != nil {
 				continue
 			}
-			for j := len(channel.Messages) - 1; j >= 0; j-- {
-				msg := channel.Messages[j]
-				parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
-				if lastMessage == nil || parsedTimestamp.Before(lastMessage.timestamp) {
-					if curNewestMessage == nil || parsedTimestamp.After(curNewestMessage.timestamp) {
-						curNewestMessage = &DisplayMessage{
-							discordMessage: msg,
-							timestamp:      parsedTimestamp,
-						}
-					}
-					break // Newest message after last since ordered
-				}
-			}
 
-		}
-		// Check for newest pm's
-		for _, privateChannel := range state.PrivateChannels {
-			for j := len(privateChannel.Messages) - 1; j >= 0; j-- {
-				msg := privateChannel.Messages[j]
-				parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
-				if lastMessage == nil || parsedTimestamp.Before(lastMessage.timestamp) {
-					if curNewestMessage == nil || parsedTimestamp.After(curNewestMessage.timestamp) {
-						curNewestMessage = &DisplayMessage{
-							discordMessage: msg,
-							timestamp:      parsedTimestamp,
-						}
-					}
-					break // Newest message after last since ordered
-				}
+			newest, nextIndex := GetNewestMessageBefore(channel.Messages, beforeTime, listeningIndexes[k])
+
+			if newest != nil && (newestListening == nil || !newest.timestamp.Before(newestListening.timestamp)) {
+				newestListening = newest
+				newestListeningIndex = k
+				nextListeningStartIndex = nextIndex
 			}
 		}
+
+		var newestPm *DisplayMessage
+		newestPmIndex := 0    // confusing, but the index of the indexes slice
+		nextPmStartIndex := 0 // And the actual next start index to use
+
+		// Check for newest pm's
+		for k, privateChannel := range state.PrivateChannels {
+
+			newest, nextIndex := GetNewestMessageBefore(privateChannel.Messages, beforeTime, pmIndexes[k])
+
+			if newest != nil && (newestPm == nil || !newest.timestamp.Before(newestPm.timestamp)) {
+				newestPm = newest
+				newestPmIndex = k
+				nextPmStartIndex = nextIndex
+			}
+		}
+
+		newNextLogIndex := 0
+		var newestLog *DisplayMessage
 
 		// Check the logerino
-		for j := lastLogIndex; j >= 0; j-- {
+		for j := nextLogIndex; j >= 0; j-- {
 			msg := app.logBuffer[j]
-			if lastMessage == nil || !msg.timestamp.After(lastMessage.timestamp) {
-				if lastMessage != nil && lastMessage.isLogMessage && lastMessage.logMessage == msg {
-					continue
-				}
-				if curNewestMessage == nil || !msg.timestamp.Before(curNewestMessage.timestamp) {
-					curNewestMessage = &DisplayMessage{
+			if !msg.timestamp.Before(beforeTime) || beforeTime.IsZero() {
+				if newestLog == nil || !msg.timestamp.Before(newestLog.timestamp) {
+					newestLog = &DisplayMessage{
 						logMessage:   msg,
 						timestamp:    msg.timestamp,
 						isLogMessage: true,
 					}
+					newNextLogIndex = j - 1
 				}
-				lastLogIndex = j - 1
 				break // Newest message after last since ordered
 			}
 		}
 
-		if curNewestMessage == nil {
-			// Looks like we ran out of messages to display! D:
-			break
-		}
+		if newestListening != nil &&
+			(newestPm == nil || !newestListening.timestamp.Before(newestPm.timestamp)) &&
+			(newestLog == nil || !newestListening.timestamp.Before(newestLog.timestamp)) {
+			messages[i] = newestListening
+			listeningIndexes[newestListeningIndex] = nextListeningStartIndex
 
-		messages[i] = curNewestMessage
-		lastMessage = curNewestMessage
+			lastMessage = newestListening
+			beforeTime = lastMessage.timestamp
+		} else if newestPm != nil &&
+			(newestListening == nil || !newestPm.timestamp.Before(newestListening.timestamp)) &&
+			(newestLog == nil || !newestPm.timestamp.Before(newestLog.timestamp)) {
+
+			messages[i] = newestPm
+			pmIndexes[newestPmIndex] = nextPmStartIndex
+
+			lastMessage = newestPm
+			beforeTime = lastMessage.timestamp
+		} else if newestLog != nil {
+			messages[i] = newestLog
+			nextLogIndex = newNextLogIndex
+
+			lastMessage = newestLog
+			beforeTime = lastMessage.timestamp
+		} else {
+			break // No new shit!
+		}
 	}
 	app.displayMessages = messages
 }
@@ -380,7 +408,7 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 		for _, ch := range g.Channels {
 			for _, ls := range app.listeningChannels {
 				if ch.ID == ls {
-					go app.GetHistory(ls, 50, "", "")
+					go app.GetHistory(ls, 25, "", "")
 					break
 				}
 			}
@@ -390,5 +418,24 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 }
 
 func (app *App) PrintWelcome() {
-	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know! (Press ctrl-o For help)")
+	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know!\n(Press ctrl-o For help)")
+}
+
+func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIndex int) (*DisplayMessage, int) {
+	if startIndex == -10 {
+		startIndex = len(msgs) - 1
+	}
+
+	for j := startIndex; j >= 0; j-- {
+		msg := msgs[j]
+		parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
+		if !parsedTimestamp.After(before) || before.IsZero() { // Reason for !after is so that we still show all the messages with same timestamps
+			curNewestMessage := &DisplayMessage{
+				discordMessage: msg,
+				timestamp:      parsedTimestamp,
+			}
+			return curNewestMessage, j - 1
+		}
+	}
+	return nil, 0
 }
