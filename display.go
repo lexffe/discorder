@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
-	"log"
 	"math"
 	"time"
 	"unicode/utf8"
@@ -188,48 +187,27 @@ func (app *App) DrawFooter() {
 	if app.curChatScroll > 0 {
 		SimpleSetText(0, sizeY-2, sizeX, fmt.Sprintf("Scroll: %d", app.curChatScroll), termbox.ColorDefault, termbox.ColorYellow)
 	}
-
-	// preStr := "Send To " + app.selectedChannelId + ":"
-	// if app.selectedChannel != nil {
-	// 	preStr = "Send to #" + getChannelName(app.selectedChannel) + ":"
-	// }
-	// preStrLen := utf8.RuneCountInString(preStr)
-	// SimpleSetText(0, sizeY+1, width, str, fg, bg)
-
-	// body := app.currentTextBuffer + " "
-	// //bodyLen := utf8.RuneCountInString(body)
-
-	// pointTyped := AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
-
-	// cells := GenCellSlice(preStr+body, map[int]AttribPoint{
-	// 	0:         AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
-	// 	preStrLen: pointTyped,
-	// })
-
-	// SetCells(cells, 0, sizeY-1, sizeX, 1)
-	// termbox.SetCursor(preStrLen+app.currentCursorLocation, sizeY-1)
 }
 
 func DrawPrompt(pre string, x, y, width int, cursor int, buffer string, fg, bg termbox.Attribute) {
-	///body := app.currentSendBuffer + " "
-	//bodyLen := utf8.RuneCountInString(body)
-
 	preStrLen := utf8.RuneCountInString(pre)
-	log.Println(pre, preStrLen)
 	cells := GenCellSlice(pre+buffer, map[int]AttribPoint{
 		0:         AttribPoint{termbox.ColorDefault, termbox.ColorDefault},
 		preStrLen: AttribPoint{termbox.AttrBold | fg, bg},
 	})
 
-	//sizeX, sizeY := termbox.Size()
 	SetCells(cells, x, y, width, 1)
 	termbox.SetCursor(x+preStrLen+cursor, y)
 }
 
-func DrawWindow(title, footer string, startX, startY, width, height int, color termbox.Attribute) {
+func DrawWindow(title, footer string, startX, startY, width, height int, bg termbox.Attribute) {
 	headerLen := utf8.RuneCountInString(title)
 	runeSlice := []rune(title)
 	headerStartPos := (width / 2) - (headerLen / 2)
+
+	footerLen := utf8.RuneCountInString(footer)
+	footerSlice := []rune(footer)
+	footerStartPos := (width / 2) - (footerLen / 2)
 
 	for curX := 0; curX <= width; curX++ {
 		for curY := 0; curY <= height; curY++ {
@@ -239,12 +217,14 @@ func DrawWindow(title, footer string, startX, startY, width, height int, color t
 			char := ' '
 			if curX >= headerStartPos && curX < headerStartPos+headerLen && curY == 0 {
 				char = runeSlice[curX-headerStartPos]
+			} else if curX >= footerStartPos && curX < footerStartPos+footerLen && curY == height {
+				char = footerSlice[curX-footerStartPos]
 			} else if curX == 0 || curX == width {
 				char = '|'
 			} else if curY == 0 || curY == height {
 				char = '-'
 			}
-			termbox.SetCell(realX, realY, char, termbox.ColorDefault, color)
+			termbox.SetCell(realX, realY, char, termbox.ColorMagenta, bg)
 		}
 	}
 }
