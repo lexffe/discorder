@@ -44,7 +44,7 @@ func (s *StateHelp) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		switch event.Key {
 		case termbox.KeyBackspace, termbox.KeyBackspace2:
-			s.app.SetState(&StateNormal{s.app})
+			s.app.SetState(&StateNormal{app: s.app})
 		}
 	}
 }

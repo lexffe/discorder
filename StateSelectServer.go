@@ -41,14 +41,14 @@ func (s *StateSelectServer) HandleInput(event termbox.Event) {
 
 			if s.listSelection.curSelection >= len(state.Guilds) {
 				log.Println("Guild list changed while selecting.. aborting")
-				s.app.SetState(&StateNormal{s.app})
+				s.app.SetState(&StateNormal{app: s.app})
 				return
 			}
 
 			guild := state.Guilds[s.listSelection.curSelection]
 			if guild.Name != s.listSelection.GetCurrentSelection() {
 				log.Println("Name mismatch, guild list changed")
-				s.app.SetState(&StateNormal{s.app})
+				s.app.SetState(&StateNormal{app: s.app})
 				return
 			}
 

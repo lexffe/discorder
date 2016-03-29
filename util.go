@@ -30,7 +30,7 @@ func (s *ListSelection) HandleInput(event termbox.Event) {
 				s.curSelection = len(s.Options) - 1
 			}
 		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-			s.app.currentState = &StateNormal{s.app}
+			s.app.currentState = &StateNormal{app: s.app}
 		}
 	}
 }
@@ -262,4 +262,8 @@ func (app *App) ToggleListeningChannel(chId string) {
 	if !app.AddListeningChannel(chId) {
 		app.RemoveListeningChannel(chId)
 	}
+}
+
+func (app *App) TypingStart(s *discordgo.Session, t *discordgo.TypingStart) {
+	app.typingManager.in <- t
 }

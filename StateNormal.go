@@ -3,10 +3,12 @@ package main
 import (
 	"github.com/nsf/termbox-go"
 	"log"
+	"time"
 )
 
 type StateNormal struct {
-	app *App
+	app            *App
+	lastTypingSent time.Time
 }
 
 func (s *StateNormal) Enter() {}
@@ -61,11 +63,15 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 		default:
 			// Otherwise delegate it to the text input handler
 			s.app.HandleTextInput(event)
-
 		}
 	}
 }
 func (s *StateNormal) RefreshDisplay() {
+	if s.app.currentTextBuffer != "" && time.Since(s.lastTypingSent) > time.Second*2 {
+		go s.app.session.ChannelTyping(s.app.selectedChannelId)
+		s.lastTypingSent = time.Now()
+	}
+
 	preStr := "Send To " + s.app.selectedChannelId + ":"
 	if s.app.selectedChannel != nil {
 		preStr = "Send to #" + getChannelName(s.app.selectedChannel) + ":"

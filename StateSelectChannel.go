@@ -49,7 +49,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 				channel := realList[index]
 				if "#"+channel.Name != name {
 					log.Println("Name mismatch, channel list changed ", channel.Name, "!=", name)
-					s.app.SetState(&StateNormal{s.app})
+					s.app.SetState(&StateNormal{app: s.app})
 					return
 				}
 				s.app.AddListeningChannel(channel.ID)
@@ -57,7 +57,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 				s.app.selectedChannel = channel
 			}
 
-			s.app.SetState(&StateNormal{s.app})
+			s.app.SetState(&StateNormal{app: s.app})
 		} else if event.Key == termbox.KeySpace {
 			state := s.app.session.State
 			state.RLock()
@@ -77,7 +77,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 				channel := realList[index]
 				if "#"+channel.Name != name {
 					log.Println("Name mismatch, channel list changed ", channel.Name, "!=", name)
-					s.app.SetState(&StateNormal{s.app})
+					s.app.SetState(&StateNormal{app: s.app})
 					return
 				}
 

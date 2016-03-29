@@ -41,7 +41,7 @@ func (s *StateSelectPrivateChannel) HandleInput(event termbox.Event) {
 				channel := state.PrivateChannels[index]
 				if channel.Recipient.Username != name {
 					log.Println("Name mismatch, user list changed ", channel.Name, "!=", name)
-					s.app.SetState(&StateNormal{s.app})
+					s.app.SetState(&StateNormal{app: s.app})
 					return
 				}
 
@@ -49,7 +49,7 @@ func (s *StateSelectPrivateChannel) HandleInput(event termbox.Event) {
 				s.app.selectedChannel = channel
 			}
 
-			s.app.SetState(&StateNormal{s.app})
+			s.app.SetState(&StateNormal{app: s.app})
 		} else {
 			s.listSelection.HandleInput(event)
 		}

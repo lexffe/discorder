@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
+	"log"
 	"math"
 	"time"
 	"unicode/utf8"
@@ -43,7 +44,7 @@ func (app *App) DisplayMessages() {
 	sizex, sizey := termbox.Size()
 
 	y := sizey - 2
-	padding := 2
+	padding := 0
 
 	// Iterate through list and print its contents.
 	for k, item := range app.displayMessages {
@@ -106,7 +107,7 @@ func (app *App) DisplayMessages() {
 
 		lines := HeightRequired(len(cells), sizex-padding*2)
 		y -= lines
-		SetCells(cells, padding, y, sizex-padding*2, 0)
+		SetCells(cells, padding, y, sizex-1-padding*2, 0)
 	}
 }
 
@@ -184,6 +185,25 @@ func DrawHeader(header string) {
 func (app *App) DrawFooter() {
 	sizeX, sizeY := termbox.Size()
 
+	typing := app.typingManager.GetTyping(app.listeningChannels)
+	if len(typing) > 0 {
+
+		typingStr := " is typing..."
+		for _, v := range typing {
+			member, err := app.session.State.Member(app.selectedServerId, v.UserID)
+			if err != nil {
+				log.Println("Error getting member in drawfooter", err)
+				continue
+			}
+
+			if member.User.Username != "" {
+				typingStr = ", " + member.User.Username + typingStr
+			}
+		}
+		typingStr = typingStr[2:]
+		SimpleSetText(0, sizeY-2, sizeX, typingStr, termbox.ColorCyan, termbox.ColorDefault)
+	}
+
 	if app.curChatScroll > 0 {
 		SimpleSetText(0, sizeY-2, sizeX, fmt.Sprintf("Scroll: %d", app.curChatScroll), termbox.ColorDefault, termbox.ColorYellow)
 	}
@@ -192,7 +212,7 @@ func (app *App) DrawFooter() {
 func DrawPrompt(pre string, x, y, width int, cursor int, buffer string, fg, bg termbox.Attribute) {
 	preStrLen := utf8.RuneCountInString(pre)
 	cells := GenCellSlice(pre+buffer, map[int]AttribPoint{
-		0:         AttribPoint{termbox.ColorDefault, termbox.ColorDefault},
+		0:         AttribPoint{termbox.ColorYellow | termbox.AttrBold, termbox.ColorDefault},
 		preStrLen: AttribPoint{termbox.AttrBold | fg, bg},
 	})
 

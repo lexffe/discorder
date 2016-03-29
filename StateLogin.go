@@ -31,7 +31,7 @@ func (s *StateLogin) Enter() {
 		if err != nil {
 			log.Println("Error logging in :", err)
 		} else {
-			s.app.SetState(&StateNormal{s.app})
+			s.app.SetState(&StateNormal{app: s.app})
 		}
 		s.currentlyLoggingIn = false
 	} else {
@@ -64,7 +64,7 @@ func (s *StateLogin) HandleInput(event termbox.Event) {
 					s.app.config.Save(configPath)
 					s.app.currentTextBuffer = ""
 					s.app.currentCursorLocation = 0
-					s.app.SetState(&StateNormal{s.app})
+					s.app.SetState(&StateNormal{app: s.app})
 				}
 			}
 		case termbox.KeyCtrlS:

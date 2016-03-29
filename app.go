@@ -25,6 +25,8 @@ type App struct {
 	inputEventChan chan termbox.Event
 	logChan        chan string
 
+	typingManager TypingManager
+
 	stopPollEvents chan chan bool
 
 	selectedServerId  string
@@ -82,6 +84,7 @@ func (app *App) Login(user, password string) error {
 	session.StateEnabled = true
 	session.State.MaxMessageCount = 100
 	app.session.AddHandler(app.Ready)
+	app.session.AddHandler(app.TypingStart)
 	err = session.Open()
 	return err
 }
@@ -120,6 +123,7 @@ func (app *App) Run() {
 		}
 	}()
 
+	// Initialize the channels
 	app.msgRecvChan = make(chan *discordgo.Message)
 	app.stopChan = make(chan chan error)
 	app.inputEventChan = make(chan termbox.Event)
@@ -135,9 +139,15 @@ func (app *App) Run() {
 	}
 	termbox.SetInputMode(termbox.InputAlt)
 
+	app.typingManager = TypingManager{
+		in: make(chan *discordgo.TypingStart),
+	}
+	go app.typingManager.Run()
+
 	// Start polling events
 	go app.PollEvents()
 
+	// Check config
 	if app.config.LastChannel != "" {
 		app.selectedChannelId = app.config.LastChannel
 	}
@@ -149,6 +159,7 @@ func (app *App) Run() {
 		app.listeningChannels = app.config.ListeningChannels
 	}
 
+	// Start login...
 	app.SetState(&StateLogin{app: app})
 
 	ticker := time.NewTicker(1000 * time.Millisecond)
