@@ -10,8 +10,8 @@ import (
 const (
 	VERSION_MAJOR = 0
 	VERSION_MINOR = 1
-	VERSION_PATCH = 1
-	VERSION_NOTE  = "Alpha"
+	VERSION_PATCH = 2
+	VERSION_NOTE  = "Git"
 )
 
 var (

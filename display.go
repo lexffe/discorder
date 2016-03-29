@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
+	"log"
 	"math"
 	"time"
 	"unicode/utf8"
@@ -29,9 +30,9 @@ func (app *App) RefreshDisplay() {
 		headerStr += " Ctrl+s to select a server "
 	}
 	headerStr += " "
-	CreateHeader(headerStr)
+	DrawHeader(headerStr)
 	if app.session != nil && app.session.Token != "" {
-		app.CreateFooter()
+		app.DrawFooter()
 	}
 
 	app.currentState.RefreshDisplay() // state specific stuff
@@ -117,6 +118,7 @@ type AttribPoint struct {
 
 var ResetAttribPoint = AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
 
+// A Helper for drawing simple text, returns number of lines
 func SimpleSetText(startX, startY, width int, str string, fg, bg termbox.Attribute) int {
 	cells := GenCellSlice(str, map[int]AttribPoint{0: AttribPoint{fg, bg}})
 	return SetCells(cells, startX, startY, width, 0)
@@ -166,7 +168,7 @@ func HeightRequired(num, width int) int {
 	return int(math.Ceil(float64(num) / float64(width)))
 }
 
-func CreateHeader(header string) {
+func DrawHeader(header string) {
 	headerLen := utf8.RuneCountInString(header)
 	runeSlice := []rune(header)
 	sizeX, _ := termbox.Size()
@@ -180,47 +182,51 @@ func CreateHeader(header string) {
 	}
 }
 
-func (app *App) CreateFooter() {
+func (app *App) DrawFooter() {
 	sizeX, sizeY := termbox.Size()
 
 	if app.curChatScroll > 0 {
 		SimpleSetText(0, sizeY-2, sizeX, fmt.Sprintf("Scroll: %d", app.curChatScroll), termbox.ColorDefault, termbox.ColorYellow)
 	}
 
-	preStr := "Send To " + app.selectedChannelId + ":"
-	if app.selectedChannel != nil {
-		preStr = "Send to #" + getChannelName(app.selectedChannel) + ":"
-	}
-	preStrLen := utf8.RuneCountInString(preStr)
+	// preStr := "Send To " + app.selectedChannelId + ":"
+	// if app.selectedChannel != nil {
+	// 	preStr = "Send to #" + getChannelName(app.selectedChannel) + ":"
+	// }
+	// preStrLen := utf8.RuneCountInString(preStr)
+	// SimpleSetText(0, sizeY+1, width, str, fg, bg)
 
-	body := app.currentTextBuffer + " "
-	//bodyLen := utf8.RuneCountInString(body)
+	// body := app.currentTextBuffer + " "
+	// //bodyLen := utf8.RuneCountInString(body)
 
-	pointTyped := AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
+	// pointTyped := AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
 
-	cells := GenCellSlice(preStr+body, map[int]AttribPoint{
-		0:         AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
-		preStrLen: pointTyped,
-	})
+	// cells := GenCellSlice(preStr+body, map[int]AttribPoint{
+	// 	0:         AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
+	// 	preStrLen: pointTyped,
+	// })
 
-	SetCells(cells, 0, sizeY-1, sizeX, 1)
-	termbox.SetCursor(preStrLen+app.currentCursorLocation, sizeY-1)
+	// SetCells(cells, 0, sizeY-1, sizeX, 1)
+	// termbox.SetCursor(preStrLen+app.currentCursorLocation, sizeY-1)
 }
 
-func (app *App) Prompt(x, y, width int, cursor int, buffer string) {
+func DrawPrompt(pre string, x, y, width int, cursor int, buffer string, fg, bg termbox.Attribute) {
 	///body := app.currentSendBuffer + " "
 	//bodyLen := utf8.RuneCountInString(body)
 
-	cells := GenCellSlice(buffer, map[int]AttribPoint{
-		0: AttribPoint{termbox.AttrBold | termbox.ColorYellow, termbox.ColorDefault},
+	preStrLen := utf8.RuneCountInString(pre)
+	log.Println(pre, preStrLen)
+	cells := GenCellSlice(pre+buffer, map[int]AttribPoint{
+		0:         AttribPoint{termbox.ColorDefault, termbox.ColorDefault},
+		preStrLen: AttribPoint{termbox.AttrBold | fg, bg},
 	})
 
 	//sizeX, sizeY := termbox.Size()
 	SetCells(cells, x, y, width, 1)
-	termbox.SetCursor(x+cursor, y)
+	termbox.SetCursor(x+preStrLen+cursor, y)
 }
 
-func CreateWindow(title string, startX, startY, width, height int, color termbox.Attribute) {
+func DrawWindow(title, footer string, startX, startY, width, height int, color termbox.Attribute) {
 	headerLen := utf8.RuneCountInString(title)
 	runeSlice := []rune(title)
 	headerStartPos := (width / 2) - (headerLen / 2)
@@ -243,7 +249,7 @@ func CreateWindow(title string, startX, startY, width, height int, color termbox
 	}
 }
 
-func (app *App) CreateListWindow(title string, list []string, cursor int, selections []int) {
+func CreateListWindow(title, footer string, list []string, cursor int, selections []int) {
 	sizeX, sizeY := termbox.Size()
 	windowWidth := int(float64(sizeX) / 1.5)
 
@@ -255,7 +261,7 @@ func (app *App) CreateListWindow(title string, list []string, cursor int, select
 	startX := sizeX/2 - windowWidth/2
 	startY := sizeY/2 - height/2
 
-	CreateWindow(title, startX, startY, windowWidth, height, termbox.ColorBlack)
+	DrawWindow(title, footer, startX, startY, windowWidth, height, termbox.ColorBlack)
 
 	y := startY + 1
 

@@ -74,7 +74,14 @@ func (s *StateNormal) HandleInput(event termbox.Event) {
 		}
 	}
 }
-func (s *StateNormal) RefreshDisplay() {}
+func (s *StateNormal) RefreshDisplay() {
+	preStr := "Send To " + s.app.selectedChannelId + ":"
+	if s.app.selectedChannel != nil {
+		preStr = "Send to #" + getChannelName(s.app.selectedChannel) + ":"
+	}
+	sizeX, sizeY := termbox.Size()
+	DrawPrompt(preStr, 0, sizeY-1, sizeX, s.app.currentCursorLocation, s.app.currentTextBuffer, termbox.ColorDefault, termbox.ColorDefault)
+}
 
 type StateSelectServer struct {
 	app           *App
@@ -386,7 +393,7 @@ func (s *StateLogin) RefreshDisplay() {
 
 	startX := sizeX/2 - 25
 	startY := sizeY/2 - 5
-	CreateWindow("Login", startX, startY, 50, 10, termbox.ColorBlack)
+	DrawWindow("Login", ":)", startX, startY, 50, 10, termbox.ColorBlack)
 
 	if s.currentlyLoggingIn {
 		SimpleSetText(startX+1, startY+1, 48, "Logging in", termbox.ColorDefault, termbox.ColorBlack)
@@ -394,7 +401,7 @@ func (s *StateLogin) RefreshDisplay() {
 	} else {
 		SimpleSetText(startX+1, startY+1, 48, "Enter email", termbox.ColorDefault, termbox.ColorBlack)
 		if s.curInputState == InputStateEmail {
-			s.app.Prompt(startX+1, startY+4, 150, s.app.currentCursorLocation, s.app.currentTextBuffer)
+			DrawPrompt("", startX+1, startY+4, 150, s.app.currentCursorLocation, s.app.currentTextBuffer, termbox.ColorYellow, termbox.ColorDefault)
 		} else {
 			SimpleSetText(startX+1, startY+1, 48, s.app.config.Email, termbox.ColorDefault, termbox.ColorBlack)
 			SimpleSetText(startX+1, startY+2, 48, "Enter Password", termbox.ColorDefault, termbox.ColorBlack)
@@ -402,7 +409,7 @@ func (s *StateLogin) RefreshDisplay() {
 			for i := 0; i < utf8.RuneCountInString(s.app.currentTextBuffer); i++ {
 				str += "*"
 			}
-			s.app.Prompt(startX+1, startY+4, 150, s.app.currentCursorLocation, str)
+			DrawPrompt("", startX+1, startY+4, 150, s.app.currentCursorLocation, str, termbox.ColorYellow, termbox.ColorDefault)
 		}
 
 		SimpleSetText(startX+1, startY+5, 48, "Ctrl-S to switch input", termbox.ColorGreen, termbox.ColorBlack)
@@ -434,7 +441,7 @@ func (s *StateHelp) RefreshDisplay() {
 	startY := sizeY/2 - wHeight/2
 
 	curY := startY + 1
-	CreateWindow("Help", startX, startY, wWidth, wHeight, termbox.ColorBlack)
+	DrawWindow("Help", "Hmmm - Mr Smilery", startX, startY, wWidth, wHeight, termbox.ColorBlack)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-O: Help", termbox.ColorDefault, termbox.ColorDefault)
 	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)

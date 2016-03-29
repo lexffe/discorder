@@ -12,6 +12,7 @@ type ListSelection struct {
 	app          *App
 	Options      []string
 	Header       string
+	Footer       string
 	curSelection int
 	marked       []int
 }
@@ -41,7 +42,7 @@ func (s *ListSelection) RefreshDisplay() {
 	if s.marked == nil {
 		s.marked = []int{}
 	}
-	s.app.CreateListWindow(s.Header, s.Options, s.curSelection, s.marked)
+	CreateListWindow(s.Header, s.Footer, s.Options, s.curSelection, s.marked)
 }
 
 func (s *ListSelection) GetCurrentSelection() string {
