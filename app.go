@@ -106,6 +106,34 @@ func (app *App) Stop() error {
 	return nil
 }
 
+func (app *App) Init() {
+	// Initialize the channels
+	app.msgRecvChan = make(chan *discordgo.Message)
+	app.stopChan = make(chan chan error)
+	app.inputEventChan = make(chan termbox.Event)
+	app.stopPollEvents = make(chan chan bool)
+	app.logChan = make(chan string)
+
+	log.SetOutput(app)
+
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	termbox.SetInputMode(termbox.InputAlt)
+	// Check config
+	if app.config.LastChannel != "" {
+		app.selectedChannelId = app.config.LastChannel
+	}
+
+	if app.config.LastServer != "" {
+		app.selectedServerId = app.config.LastServer
+	}
+	if app.config.ListeningChannels != nil && len(app.config.ListeningChannels) > 0 {
+		app.listeningChannels = app.config.ListeningChannels
+	}
+}
+
 // Lsiten on the channels for incoming messages
 func (app *App) Run() {
 	// Some initialization
@@ -123,22 +151,6 @@ func (app *App) Run() {
 		}
 	}()
 
-	// Initialize the channels
-	app.msgRecvChan = make(chan *discordgo.Message)
-	app.stopChan = make(chan chan error)
-	app.inputEventChan = make(chan termbox.Event)
-	app.stopPollEvents = make(chan chan bool)
-	app.logChan = make(chan string)
-
-	log.SetOutput(app)
-	log.Println("Started!")
-
-	err := termbox.Init()
-	if err != nil {
-		panic(err)
-	}
-	termbox.SetInputMode(termbox.InputAlt)
-
 	app.typingManager = TypingManager{
 		in: make(chan *discordgo.TypingStart),
 	}
@@ -147,18 +159,8 @@ func (app *App) Run() {
 	// Start polling events
 	go app.PollEvents()
 
-	// Check config
-	if app.config.LastChannel != "" {
-		app.selectedChannelId = app.config.LastChannel
-	}
-
-	if app.config.LastServer != "" {
-		app.selectedServerId = app.config.LastServer
-	}
-	if app.config.ListeningChannels != nil && len(app.config.ListeningChannels) > 0 {
-		app.listeningChannels = app.config.ListeningChannels
-	}
-
+	app.Init()
+	log.Println("Started!")
 	// Start login...
 	app.SetState(&StateLogin{app: app})
 
