@@ -1,3 +1,5 @@
 *.json
 *.exe
 *.log
+*.sublime-project
+*.sublime-workspace

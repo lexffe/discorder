@@ -23,6 +23,7 @@ func (s *StateSelectChannel) Enter() {
 		app:     s.app,
 		Header:  "Select a Channel (Space: mark, Enter: select)",
 		Options: options,
+		Footer:  "(Space): toggle channel, (a): Toggle all",
 	}
 
 	s.SetMarked()
@@ -30,7 +31,8 @@ func (s *StateSelectChannel) Enter() {
 func (s *StateSelectChannel) Exit() {}
 func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyEnter {
+		switch event.Key {
+		case termbox.KeyEnter:
 			state := s.app.session.State
 			state.RLock()
 			defer state.RUnlock()
@@ -58,7 +60,7 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 			}
 
 			s.app.SetState(&StateNormal{app: s.app})
-		} else if event.Key == termbox.KeySpace {
+		case termbox.KeySpace:
 			state := s.app.session.State
 			state.RLock()
 			defer state.RUnlock()
@@ -84,8 +86,29 @@ func (s *StateSelectChannel) HandleInput(event termbox.Event) {
 				s.app.ToggleListeningChannel(channel.ID)
 				s.SetMarked()
 			}
-		} else {
-			s.listSelection.HandleInput(event)
+
+		default:
+			switch event.Ch {
+			case 'a':
+				found := false
+				for _, v := range s.listSelection.marked {
+					if v == s.listSelection.curSelection {
+						found = true
+						break
+					}
+				}
+
+				if found {
+					s.app.listeningChannels = make([]string, 0)
+				} else {
+					for _, v := range s.app.selectedGuild.Channels {
+						s.app.AddListeningChannel(v.ID)
+					}
+				}
+				s.SetMarked()
+			default:
+				s.listSelection.HandleInput(event)
+			}
 		}
 	}
 }
