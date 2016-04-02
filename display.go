@@ -229,19 +229,25 @@ func DrawWindow(title, footer string, startX, startY, width, height int, bg term
 	footerSlice := []rune(footer)
 	footerStartPos := (width / 2) - (footerLen / 2)
 
+	_, tSizeY := termbox.Size()
+
 	for curX := 0; curX <= width; curX++ {
 		for curY := 0; curY <= height; curY++ {
 			realX := curX + startX
 			realY := curY + startY
 
 			char := ' '
-			if curX >= headerStartPos && curX < headerStartPos+headerLen && curY == 0 {
+
+			atTop := curY == 0 || realY == 0
+			atBottom := curY == height || realY == tSizeY-1
+
+			if curX >= headerStartPos && curX < headerStartPos+headerLen && atTop {
 				char = runeSlice[curX-headerStartPos]
-			} else if curX >= footerStartPos && curX < footerStartPos+footerLen && curY == height {
+			} else if curX >= footerStartPos && curX < footerStartPos+footerLen && atBottom {
 				char = footerSlice[curX-footerStartPos]
 			} else if curX == 0 || curX == width {
 				char = '|'
-			} else if curY == 0 || curY == height {
+			} else if atTop || atBottom {
 				char = '-'
 			}
 			termbox.SetCell(realX, realY, char, termbox.ColorMagenta, bg)
