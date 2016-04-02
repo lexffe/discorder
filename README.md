@@ -4,11 +4,11 @@ An interactive command line discord client (Would not reccomend for use atleast 
 
 ##Installing
 
-##### Latest Alpha
+#### Latest Alpha
 
 Try the latest alpha versio here: https://github.com/jonas747/discorder/releases/tag/v0.1.1
 
-#####compiling from repo
+####compiling from repo
 
 You need go and git installed
 
@@ -26,13 +26,22 @@ Yup, very much in development.
      + Maybe not so much in this early development stage where everything is still getting set up
  - Very early in development, a lot of missing features right now
  - Voice support will be added laaaaaater
+ - 
 
-What works:
+Current alpha release has the following implemented:
+
  - Sending/receiving messages
      + You also received the changes when they get edited and removed
  - Sending/receiving direct messages EXCEPT for initiating new conversations
  - State will be saved when you leave and restored when you open again
+ - Listen in on multiple channels at once!
+ - History is fetched of each channel you're listening on
 
+Latest git version has these things:
+ 
+ - @mention autocompletion
+ - Typing status, both receiving and sending
+ 
 Next on the list to be worked on is history, and the channel listening system mentioned above
 
 ## Usage
