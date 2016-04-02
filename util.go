@@ -100,7 +100,7 @@ func (app *App) HandleTextInput(event termbox.Event) {
 				return
 			} else {
 				runeSlice := []rune(app.currentTextBuffer)
-				newSlice := append(runeSlice[:app.currentCursorLocation], runeSlice[app.currentCursorLocation+1:]...)
+				newSlice := append(runeSlice[:app.currentCursorLocation-1], runeSlice[app.currentCursorLocation:]...)
 				app.currentTextBuffer = string(newSlice)
 				app.currentCursorLocation--
 			}
