@@ -11,9 +11,9 @@ import (
 
 const (
 	VERSION_MAJOR = 0
-	VERSION_MINOR = 1
-	VERSION_PATCH = 2
-	VERSION_NOTE  = "Git-Smelly"
+	VERSION_MINOR = 2
+	VERSION_PATCH = 0
+	VERSION_NOTE  = "Alpha"
 )
 
 var (
