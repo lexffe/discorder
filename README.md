@@ -1,12 +1,14 @@
 #Discorder
 
-An interactive command line discord client (Would not reccomend for use atleast before 0.1, 0.2 will be a lot more usable with history and other stuff)
+An interactive command line discord client, currently in it's alpha state, so bugs will be found.
 
-##Installing
+If you want to join my discord channel to ask questions or do whatever then here's a link https://discord.gg/0vYlUK2XBKlmxGrX
+
+##Installing/Running
 
 #### Latest Alpha
 
-Try the latest alpha versio here: https://github.com/jonas747/discorder/releases/tag/v0.1.1
+Try the latest alpha versio here: https://github.com/jonas747/discorder/releases/tag/v0.2.0
 
 ####compiling from repo
 
@@ -24,9 +26,7 @@ Yup, very much in development.
 
  - Should be light on resource usage
      + Maybe not so much in this early development stage where everything is still getting set up
- - Very early in development, a lot of missing features right now
  - Voice support will be added laaaaaater
- - 
 
 Current alpha release has the following implemented:
 
@@ -36,13 +36,8 @@ Current alpha release has the following implemented:
  - State will be saved when you leave and restored when you open again
  - Listen in on multiple channels at once!
  - History is fetched of each channel you're listening on
-
-Latest git version has these things:
- 
  - @mention autocompletion
- - Typing status, both receiving and sending
- 
-Next on the list to be worked on is history, and the channel listening system mentioned above
+ - Typing status, both receiving and sending 
 
 ## Usage
 
@@ -62,6 +57,12 @@ Controlls:
  - backspace: closes the active window if any
 
 ##Screenshots
+
+
+![Typing status](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-04-07T16%3A18%3A02%2B02%3A00.png)
+
+![Mention auto complete](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-04-07T16%3A19%3A10%2B02%3A00.png)
+
 
 ![Logging in](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T01%3A00%3A23%2B01%3A00.png)
 
