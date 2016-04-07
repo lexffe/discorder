@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/0xAX/notificator"
 	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
 	"log"
@@ -42,6 +43,8 @@ type App struct {
 	logFile         *os.File
 	logFileLock     sync.Mutex
 
+	notifications *notificator.Notificator
+
 	currentState State
 
 	config *Config
@@ -55,9 +58,14 @@ type App struct {
 func NewApp(config *Config, logPath string) *App {
 	logFile, err := os.Create(logPath)
 
+	notify := notificator.New(notificator.Options{
+		AppName: "Discorder",
+	})
+
 	a := &App{
 		//history: list.New(),
-		config: config,
+		config:        config,
+		notifications: notify,
 	}
 	if err == nil {
 		a.logFile = logFile
@@ -85,12 +93,25 @@ func (app *App) Login(user, password string) error {
 	session.State.MaxMessageCount = 100
 	app.session.AddHandler(app.Ready)
 	app.session.AddHandler(app.TypingStart)
+	app.session.AddHandler(app.messageCreate)
 	err = session.Open()
 	return err
 }
 
 func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	app.msgRecvChan <- m.Message
+	if m.Mentions != nil {
+		for _, v := range m.Mentions {
+			if v.ID == s.State.User.ID {
+				if app.notifications != nil {
+					author := "Unknown?"
+					if m.Author != nil {
+						author = m.Author.Username
+					}
+					app.notifications.Push(author, m.ContentWithMentionsReplaced(), "", notificator.UR_NORMAL)
+				}
+			}
+		}
+	}
 }
 
 func (app *App) Stop() error {
