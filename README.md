@@ -1,3 +1,9 @@
+#Dev branch
+
+You're on the dev branch.
+
+Currently workin on restructuring the application, so its not a plate of spaghett
+
 #Discorder
 
 An interactive command line discord client, currently in it's alpha state, so bugs will be found.
