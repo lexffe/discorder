@@ -118,56 +118,6 @@ type AttribPoint struct {
 
 var ResetAttribPoint = AttribPoint{termbox.ColorDefault, termbox.ColorDefault}
 
-// A Helper for drawing simple text, returns number of lines
-func SimpleSetText(startX, startY, width int, str string, fg, bg termbox.Attribute) int {
-	cells := GenCellSlice(str, map[int]AttribPoint{0: AttribPoint{fg, bg}})
-	return SetCells(cells, startX, startY, width, 0)
-}
-
-func GenCellSlice(str string, points map[int]AttribPoint) []termbox.Cell {
-	index := 0
-	curAttribs := ResetAttribPoint
-	cells := make([]termbox.Cell, utf8.RuneCountInString(str))
-	for _, ch := range str {
-		newAttribs, ok := points[index]
-		if ok {
-			curAttribs = newAttribs
-		}
-		cell := termbox.Cell{
-			Ch: ch,
-			Fg: curAttribs.fg,
-			Bg: curAttribs.bg,
-		}
-		cells[index] = cell
-		index++
-	}
-	return cells
-}
-
-// Returns number of lines
-func SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
-	x := 0
-	y := 0
-
-	for _, cell := range cells {
-		termbox.SetCell(x+startX, y+startY, cell.Ch, cell.Fg, cell.Bg)
-
-		x++
-		if x > width {
-			y++
-			x = 0
-			if height != 0 && y >= height {
-				return y
-			}
-		}
-	}
-	return y + 1
-}
-
-func HeightRequired(num, width int) int {
-	return int(math.Ceil(float64(num) / float64(width)))
-}
-
 func DrawHeader(header string) {
 	headerLen := utf8.RuneCountInString(header)
 	runeSlice := []rune(header)

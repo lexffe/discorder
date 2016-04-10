@@ -30,10 +30,10 @@ type App struct {
 
 	stopPollEvents chan chan bool
 
-	selectedServerId  string
-	selectedChannelId string
-	selectedGuild     *discordgo.Guild
-	selectedChannel   *discordgo.Channel
+	// selectedServerId  string
+	// selectedChannelId string
+	// selectedGuild     *discordgo.Guild
+	// selectedChannel   *discordgo.Channel
 
 	//history           *list.List
 	listeningChannels []string
@@ -43,16 +43,18 @@ type App struct {
 	logFile         *os.File
 	logFileLock     sync.Mutex
 
-	notifications *notificator.Notificator
+	entities []Entity
 
-	currentState State
+	// notifications *notificator.Notificator
 
-	config *Config
+	// currentState State
 
-	currentTextBuffer     string
-	currentCursorLocation int
+	// config *Config
 
-	curChatScroll int
+	// currentTextBuffer     string
+	// currentCursorLocation int
+
+	// curChatScroll int
 }
 
 func NewApp(config *Config, logPath string) *App {
@@ -258,15 +260,56 @@ func (app *App) HandleLogMessage(msg string) {
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyCtrlQ {
-			log.Println("Stopping...")
-			go app.Stop()
+	// if event.Type == termbox.EventKey {
+	// 	if event.Key == termbox.KeyCtrlQ {
+	// 		log.Println("Stopping...")
+	// 		go app.Stop()
+	// 	}
+	// }
+
+	// app.currentState.HandleInput(event)
+	// app.RefreshDisplay()
+
+	entities := app.GetAllEntities()
+	for _, entity := range entities {
+		inputHandler, ok := entity.(InputHandler)
+		if ok {
+			inputHandler.HandleInput(event)
+		}
+	}
+	app.Draw()
+}
+
+func (app *App) GetAllEntities() []Entity {
+	ret := make([]Entity, 0, len(app.entities))
+	for _, entity := range app.entities {
+		ret = append(ret, entity)
+		ret = append(ret, entity.Entities(true)...)
+
+	}
+}
+
+// Todo remove 10 layer lazy limit
+func (app *App) Draw() {
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+
+	// Build the layers
+	layers := make([][]Drawable, 10)
+
+	entities := app.GetAllEntities()
+	for _, entity := range entities {
+		drawable, ok := entity.(Drawable)
+		if ok {
+			layer := drawable.Layer()
+			layers[layer] = append(layers[layer], drawable)
 		}
 	}
 
-	app.currentState.HandleInput(event)
-	app.RefreshDisplay()
+	for i := 0; i < 10; i++ {
+		for _, drawable := range layers[i] {
+			drawable.Draw()
+		}
+	}
 }
 
 func (app *App) PollEvents() {
@@ -302,11 +345,6 @@ type DisplayMessage struct {
 	logMessage     *LogMessage
 	isLogMessage   bool
 	timestamp      time.Time
-}
-
-type LogMessage struct {
-	timestamp time.Time
-	content   string
 }
 
 // A target for optimisation when i get that far
