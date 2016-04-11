@@ -1,16 +1,43 @@
 package main
 
 import (
+	"github.com/jonas747/discorder/common"
+	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
 )
 
-type StateHelp struct {
-	app *App
+var HelpContent = []string{
+	"Keyboard shortcuts:",
+	"Ctrl-O: Help",
+	"Ctrl-S: Select server",
+	"Ctrl-G: Select channels",
+	"    Space: mark channel",
+	"    Enter: Select as send channel",
+	"Ctrl-P: Select private conversation",
+	"Ctrl-Q: Quit",
+	"Ctrl-J: Queries the history of the current channel ",
+	"Ctrl-L: Clear log messages",
+	"Up: Scroll up",
+	"Down: Scroll down",
+	"Backspace: Close current wnidow",
+	"--------------",
+	"You are using Discorder version " + VERSION,
+	"This is still in very early development, please report any bugs you find here",
+	"https://github.com/jonas747/discorder",
 }
 
-func (s *StateHelp) Enter() {}
-func (s *StateHelp) Exit()  {}
-func (s *StateHelp) RefreshDisplay() {
+type HelpWindow struct {
+	*ui.BaseEntity
+	App    *App
+	Window *ui.Window
+}
+
+func NewHelpWindow(app *App) *HelpWindow {
+	hw := &HelpWindow{
+		BaseEntity: &ui.BaseEntity{},
+		App:        app,
+	}
+
 	sizeX, sizeY := termbox.Size()
 
 	wWidth := 70
@@ -20,31 +47,35 @@ func (s *StateHelp) RefreshDisplay() {
 	startY := sizeY/2 - wHeight/2
 
 	curY := startY + 1
-	DrawWindow("Help", "Hmmm - Mr Smilery", startX, startY, wWidth, wHeight, termbox.ColorBlack)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Keyboard shortcuts:", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-O: Help", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-S: Select server", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-G: Select channels", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "    Space: mark channel", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "    Enter: Select as send channel (Also Mark)", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-P: Select private conversation", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-Q: Quit", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-J: Queries the history of the current channel (For debugging)", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Ctrl-L: Clear log messages", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Up: Scroll up", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Down: Scroll down", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "Backspace: Close current wnidow", termbox.ColorDefault, termbox.ColorDefault)
-	curY++
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "You are using Discorder version "+VERSION, termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "This is still in very early development, please report any bugs you find here", termbox.ColorDefault, termbox.ColorDefault)
-	curY += SimpleSetText(startX+1, curY, wWidth-2, "https://github.com/jonas747/discorder", termbox.ColorDefault, termbox.ColorDefault)
+
+	window := ui.NewWindow()
+	window.Title = "Help"
+	window.Footer = "Hmmm - Mr Smilery"
+	window.Transform.Position = common.NewVector2I(startX, startY)
+	window.Transform.Size = common.NewVector2I(wWidth, wHeight)
+
+	for _, v := range HelpContent {
+		text := ui.NewUIText()
+		text.Transform.AnchorMin = common.NewVector2I(0, 0)
+		text.Transform.AnchorMax = common.NewVector2I(1, 0)
+		text.Transform.Position = common.NewVector2I(0, curY)
+		text.Transform.Parent = window.Transform
+		text.Text = v
+		window.AddChild(text)
+	}
+	hw.AddChild(window)
+	hw.Window = window
+	return hw
 }
 
-func (s *StateHelp) HandleInput(event termbox.Event) {
+func (s *HelpWindow) Enter()   {}
+func (s *HelpWindow) Destroy() { s.DestroyChildren() }
+
+func (s *HelpWindow) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		switch event.Key {
 		case termbox.KeyBackspace, termbox.KeyBackspace2:
-			s.app.SetState(&StateNormal{app: s.app})
+			s.App.RemoveEntity(s)
 		}
 	}
 }

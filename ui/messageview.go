@@ -14,15 +14,20 @@ type MessageView struct {
 	DiscordState    *discordgo.State
 	DisplayMessages []*DisplayMessage
 
+	Guild       string
+	Channels    []string
+	ShowPrivate bool
+	Logs        []*common.LogMessage // Maybe move this?
+
 	MessageTexts  []*Text
 	CurChatScroll int
 }
 
 type DisplayMessage struct {
-	discordMessage *discordgo.Message
-	logMessage     *common.LogMessage
-	isLogMessage   bool
-	timestamp      time.Time
+	DiscordMessage *discordgo.Message
+	LogMessage     *common.LogMessage
+	IsLogMessage   bool
+	Timestamp      time.Time
 }
 
 func NewMessageView(state *discordgo.State) *MessageView {
@@ -32,6 +37,40 @@ func NewMessageView(state *discordgo.State) *MessageView {
 		DiscordState: state,
 	}
 	return mv
+}
+
+func (mv *MessageView) HandleInput(event termbox.Event) {
+	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
+		mv.BuildTexts()
+	}
+}
+
+func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *discordgo.Message) {
+	// Check if its private and if this messagegview shows private messages
+	pChannel, err := mv.DiscordState.PrivateChannel(msg.ChannelID)
+	if pChannel != nil && err != nil {
+		if mv.ShowPrivate {
+			mv.BuildTexts()
+		} else {
+			return
+		}
+	}
+
+	// Check if its a message were listening to
+	for _, v := range mv.Channels {
+		if v == msg.ChannelID {
+			mv.BuildTexts()
+			break
+		}
+	}
+}
+
+func (mv *MessageView) HandleMessageEdit(session *discordgo.Session, msg *discordgo.Message) {
+	mv.HandleMessageCreate(session, msg)
+}
+
+func (mv *MessageView) HandleMessageRemove(session *discordgo.Session, msg *discordgo.Message) {
+	mv.HandleMessageCreate(session, msg)
 }
 
 func (mv *MessageView) BuildTexts() {
@@ -59,12 +98,12 @@ func (mv *MessageView) BuildTexts() {
 		text := NewUIText()
 		text.Transform.Size = common.NewVector2F(rect.W, 0)
 
-		if item.isLogMessage {
+		if item.IsLogMessage {
 			//cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
-			text.Text = "Log: " + item.logMessage.Content
+			text.Text = "Log: " + item.LogMessage.Content
 			text.Attribs = map[int]AttribPair{0: AttribPair{termbox.ColorYellow, termbox.ColorDefault}}
 		} else {
-			msg := item.discordMessage
+			msg := item.DiscordMessage
 			if msg == nil {
 				continue
 			}
@@ -72,7 +111,7 @@ func (mv *MessageView) BuildTexts() {
 			if msg.Author != nil {
 				author = msg.Author.Username
 			}
-			ts := item.timestamp.Local().Format(time.Stamp) + " "
+			ts := item.Timestamp.Local().Format(time.Stamp) + " "
 			tsLen := utf8.RuneCountInString(ts)
 
 			authorLen := utf8.RuneCountInString(author)
@@ -125,10 +164,8 @@ func (mv *MessageView) BuildTexts() {
 // Builds a list of messages to display from all of the channels were listening to, pm's and the log
 func (mv *MessageView) BuildDisplayMessages(size int) {
 	// Ackquire the state, or create one if null (incase were starting)
-	var state *discordgo.State
-	if app.session != nil && app.session.State != nil {
-		state = app.session.State
-	} else {
+	state := mv.DiscordState
+	if state == nil {
 		state = discordgo.NewState()
 	}
 	state.RLock()
@@ -137,16 +174,18 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 	messages := make([]*DisplayMessage, size)
 
 	// Holds the start indexes in the newest message search
-	listeningIndexes := make([]int, len(app.listeningChannels))
+	listeningIndexes := make([]int, len(mv.Channels))
 	pmIndexes := make([]int, len(state.PrivateChannels))
 	// Init the slices with silly vals
-	for i := 0; i < len(app.listeningChannels); i++ {
+	for i := 0; i < len(mv.Channels); i++ {
 		listeningIndexes[i] = -10
 	}
-	for i := 0; i < len(state.PrivateChannels); i++ {
-		pmIndexes[i] = -10
+	if mv.ShowPrivate {
+		for i := 0; i < len(state.PrivateChannels); i++ {
+			pmIndexes[i] = -10
+		}
 	}
-	nextLogIndex := len(app.logBuffer) - 1
+	nextLogIndex := len(mv.Logs) - 1
 
 	// Get a sorted list
 	var lastMessage *DisplayMessage
@@ -159,11 +198,11 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		nextListeningStartIndex := 0 // And the actual next start index to use
 
 		// Check the channels were listening on
-		for k, listeningChannelId := range app.listeningChannels {
+		for k, listeningChannelId := range mv.Channels {
 			// Avoid deadlock since guildchannel also calls rlock, whch will block if there was a new message in the meantime causing lock to be called
 			// before that
 			state.RUnlock()
-			channel, err := state.GuildChannel(app.selectedServerId, listeningChannelId)
+			channel, err := state.GuildChannel(mv.Guild, listeningChannelId)
 			state.RLock()
 			if err != nil {
 				continue
@@ -171,7 +210,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 
 			newest, nextIndex := GetNewestMessageBefore(channel.Messages, beforeTime, listeningIndexes[k])
 
-			if newest != nil && (newestListening == nil || !newest.timestamp.Before(newestListening.timestamp)) {
+			if newest != nil && (newestListening == nil || !newest.Timestamp.Before(newestListening.Timestamp)) {
 				newestListening = newest
 				newestListeningIndex = k
 				nextListeningStartIndex = nextIndex
@@ -183,14 +222,16 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		nextPmStartIndex := 0 // And the actual next start index to use
 
 		// Check for newest pm's
-		for k, privateChannel := range state.PrivateChannels {
+		if mv.ShowPrivate {
+			for k, privateChannel := range state.PrivateChannels {
 
-			newest, nextIndex := GetNewestMessageBefore(privateChannel.Messages, beforeTime, pmIndexes[k])
+				newest, nextIndex := GetNewestMessageBefore(privateChannel.Messages, beforeTime, pmIndexes[k])
 
-			if newest != nil && (newestPm == nil || !newest.timestamp.Before(newestPm.timestamp)) {
-				newestPm = newest
-				newestPmIndex = k
-				nextPmStartIndex = nextIndex
+				if newest != nil && (newestPm == nil || !newest.Timestamp.Before(newestPm.Timestamp)) {
+					newestPm = newest
+					newestPmIndex = k
+					nextPmStartIndex = nextIndex
+				}
 			}
 		}
 
@@ -199,13 +240,13 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 
 		// Check the logerino
 		for j := nextLogIndex; j >= 0; j-- {
-			msg := app.logBuffer[j]
-			if !msg.timestamp.After(beforeTime) || beforeTime.IsZero() {
-				if newestLog == nil || !msg.timestamp.Before(newestLog.timestamp) {
+			msg := mv.Logs[j]
+			if !msg.Timestamp.After(beforeTime) || beforeTime.IsZero() {
+				if newestLog == nil || !msg.Timestamp.Before(newestLog.Timestamp) {
 					newestLog = &DisplayMessage{
-						logMessage:   msg,
-						timestamp:    msg.timestamp,
-						isLogMessage: true,
+						LogMessage:   msg,
+						Timestamp:    msg.Timestamp,
+						IsLogMessage: true,
 					}
 					newNextLogIndex = j - 1
 				}
@@ -214,33 +255,33 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		}
 
 		if newestListening != nil &&
-			(newestPm == nil || !newestListening.timestamp.Before(newestPm.timestamp)) &&
-			(newestLog == nil || !newestListening.timestamp.Before(newestLog.timestamp)) {
+			(newestPm == nil || !newestListening.Timestamp.Before(newestPm.Timestamp)) &&
+			(newestLog == nil || !newestListening.Timestamp.Before(newestLog.Timestamp)) {
 			messages[i] = newestListening
 			listeningIndexes[newestListeningIndex] = nextListeningStartIndex
 
 			lastMessage = newestListening
-			beforeTime = lastMessage.timestamp
+			beforeTime = lastMessage.Timestamp
 		} else if newestPm != nil &&
-			(newestListening == nil || !newestPm.timestamp.Before(newestListening.timestamp)) &&
-			(newestLog == nil || !newestPm.timestamp.Before(newestLog.timestamp)) {
+			(newestListening == nil || !newestPm.Timestamp.Before(newestListening.Timestamp)) &&
+			(newestLog == nil || !newestPm.Timestamp.Before(newestLog.Timestamp)) {
 
 			messages[i] = newestPm
 			pmIndexes[newestPmIndex] = nextPmStartIndex
 
 			lastMessage = newestPm
-			beforeTime = lastMessage.timestamp
+			beforeTime = lastMessage.Timestamp
 		} else if newestLog != nil {
 			messages[i] = newestLog
 			nextLogIndex = newNextLogIndex
 
 			lastMessage = newestLog
-			beforeTime = lastMessage.timestamp
+			beforeTime = lastMessage.Timestamp
 		} else {
 			break // No new shit!
 		}
 	}
-	app.displayMessages = messages
+	mv.DisplayMessages = messages
 }
 func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIndex int) (*DisplayMessage, int) {
 	if startIndex == -10 {
@@ -249,11 +290,11 @@ func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIn
 
 	for j := startIndex; j >= 0; j-- {
 		msg := msgs[j]
-		parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
+		parsedTimestamp, _ := time.Parse(common.DiscordTimeFormat, msg.Timestamp)
 		if !parsedTimestamp.After(before) || before.IsZero() { // Reason for !after is so that we still show all the messages with same timestamps
 			curNewestMessage := &DisplayMessage{
-				discordMessage: msg,
-				timestamp:      parsedTimestamp,
+				DiscordMessage: msg,
+				Timestamp:      parsedTimestamp,
 			}
 			return curNewestMessage, j - 1
 		}

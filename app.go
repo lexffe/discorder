@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/0xAX/notificator"
 	"github.com/bwmarrin/discordgo"
+	"github.com/jonas747/discorder/common"
+	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
 	"log"
 	"os"
@@ -13,15 +15,11 @@ import (
 	"time"
 )
 
-const (
-	DiscordTimeFormat = "2006-01-02T15:04:05-07:00"
-)
-
 type App struct {
 	running        bool
 	stopping       bool
 	stopChan       chan chan error
-	msgRecvChan    chan *discordgo.Message
+	msgRecvChan    chan *discordgo.Message // Unused atm...
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 	logChan        chan string
@@ -30,31 +28,14 @@ type App struct {
 
 	stopPollEvents chan chan bool
 
-	// selectedServerId  string
-	// selectedChannelId string
-	// selectedGuild     *discordgo.Guild
-	// selectedChannel   *discordgo.Channel
+	logBuffer   []*common.LogMessage
+	logFile     *os.File
+	logFileLock sync.Mutex
 
-	//history           *list.List
-	listeningChannels []string
+	entities []ui.Entity
 
-	displayMessages []*DisplayMessage
-	logBuffer       []*LogMessage
-	logFile         *os.File
-	logFileLock     sync.Mutex
-
-	entities []Entity
-
-	// notifications *notificator.Notificator
-
-	// currentState State
-
-	// config *Config
-
-	// currentTextBuffer     string
-	// currentCursorLocation int
-
-	// curChatScroll int
+	notifications *notificator.Notificator
+	config        *Config
 }
 
 func NewApp(config *Config, logPath string) *App {
@@ -65,7 +46,6 @@ func NewApp(config *Config, logPath string) *App {
 	})
 
 	a := &App{
-		//history: list.New(),
 		config:        config,
 		notifications: notify,
 	}
@@ -144,17 +124,6 @@ func (app *App) Init() {
 		panic(err)
 	}
 	termbox.SetInputMode(termbox.InputAlt)
-	// Check config
-	if app.config.LastChannel != "" {
-		app.selectedChannelId = app.config.LastChannel
-	}
-
-	if app.config.LastServer != "" {
-		app.selectedServerId = app.config.LastServer
-	}
-	if app.config.ListeningChannels != nil && len(app.config.ListeningChannels) > 0 {
-		app.listeningChannels = app.config.ListeningChannels
-	}
 }
 
 // Lsiten on the channels for incoming messages
@@ -185,16 +154,16 @@ func (app *App) Run() {
 	app.Init()
 	log.Println("Started!")
 	// Start login...
-	app.SetState(&StateLogin{app: app})
+	//app.SetState(&StateLogin{app: app})
 
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
 		select {
 		case errChan := <-app.stopChan:
 			app.running = false
-			app.config.LastServer = app.selectedServerId
-			app.config.LastChannel = app.selectedChannelId
-			app.config.ListeningChannels = app.listeningChannels
+			// app.config.LastServer = app.selectedServerId
+			// app.config.LastChannel = app.selectedChannelId
+			// app.config.ListeningChannels = app.listeningChannels
 			app.config.Save(configPath)
 			pollStopped := make(chan bool)
 			// Stop the event polling
@@ -211,27 +180,24 @@ func (app *App) Run() {
 			app.HandleLogMessage(msg)
 		case <-ticker.C:
 			if app.session != nil {
-				var err error
-				if app.selectedServerId != "" {
-					app.selectedGuild, err = app.session.State.Guild(app.selectedServerId)
-					if err != nil {
-						log.Println("App.Run: ", err)
-					}
-				}
-				if app.selectedChannelId != "" && app.selectedGuild != nil {
-					app.selectedChannel, err = app.session.State.GuildChannel(app.selectedServerId, app.selectedChannelId)
-					if err != nil {
-						var err2 error
-						app.selectedChannel, err2 = app.session.State.PrivateChannel(app.selectedChannelId)
-						if err2 != nil {
-							log.Println("App.Run: ", err, err2)
-						}
-					}
-				}
+				// var err error
+				// if app.selectedServerId != "" {
+				// 	app.selectedGuild, err = app.session.State.Guild(app.selectedServerId)
+				// 	if err != nil {
+				// 		log.Println("App.Run: ", err)
+				// 	}
+				// }
+				// if app.selectedChannelId != "" && app.selectedGuild != nil {
+				// 	app.selectedChannel, err = app.session.State.GuildChannel(app.selectedServerId, app.selectedChannelId)
+				// 	if err != nil {
+				// 		var err2 error
+				// 		app.selectedChannel, err2 = app.session.State.PrivateChannel(app.selectedChannelId)
+				// 		if err2 != nil {
+				// 			log.Println("App.Run: ", err, err2)
+				// 		}
+				// 	}
+				// }
 			}
-			_, size := termbox.Size()
-			app.BuildDisplayMessages(size + app.curChatScroll - 2)
-			app.RefreshDisplay()
 		}
 	}
 }
@@ -249,9 +215,9 @@ func (app *App) HandleLogMessage(msg string) {
 		if splitStr == "" {
 			continue
 		}
-		obj := &LogMessage{
-			timestamp: now,
-			content:   splitStr,
+		obj := &common.LogMessage{
+			Timestamp: now,
+			Content:   splitStr,
 		}
 		app.logBuffer = append(app.logBuffer, obj)
 	}
@@ -260,19 +226,16 @@ func (app *App) HandleLogMessage(msg string) {
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {
-	// if event.Type == termbox.EventKey {
-	// 	if event.Key == termbox.KeyCtrlQ {
-	// 		log.Println("Stopping...")
-	// 		go app.Stop()
-	// 	}
-	// }
-
-	// app.currentState.HandleInput(event)
-	// app.RefreshDisplay()
+	if event.Type == termbox.EventKey {
+		if event.Key == termbox.KeyCtrlQ {
+			log.Println("Stopping...")
+			go app.Stop()
+		}
+	}
 
 	entities := app.GetAllEntities()
 	for _, entity := range entities {
-		inputHandler, ok := entity.(InputHandler)
+		inputHandler, ok := entity.(ui.InputHandler)
 		if ok {
 			inputHandler.HandleInput(event)
 		}
@@ -280,13 +243,13 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 	app.Draw()
 }
 
-func (app *App) GetAllEntities() []Entity {
-	ret := make([]Entity, 0, len(app.entities))
+func (app *App) GetAllEntities() []ui.Entity {
+	ret := make([]ui.Entity, 0, len(app.entities))
 	for _, entity := range app.entities {
 		ret = append(ret, entity)
-		ret = append(ret, entity.Entities(true)...)
-
+		ret = append(ret, entity.Children(true)...)
 	}
+	return ret
 }
 
 // Todo remove 10 layer lazy limit
@@ -294,13 +257,13 @@ func (app *App) Draw() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	// Build the layers
-	layers := make([][]Drawable, 10)
+	layers := make([][]ui.Drawable, 10)
 
 	entities := app.GetAllEntities()
 	for _, entity := range entities {
-		drawable, ok := entity.(Drawable)
+		drawable, ok := entity.(ui.Drawable)
 		if ok {
-			layer := drawable.Layer()
+			layer := drawable.GetDrawLayer()
 			layers[layer] = append(layers[layer], drawable)
 		}
 	}
@@ -310,6 +273,32 @@ func (app *App) Draw() {
 			drawable.Draw()
 		}
 	}
+}
+
+func (app *App) RemoveEntity(ent ui.Entity) {
+	if app.entities == nil || len(app.entities) < 1 {
+		return
+	}
+
+	index := -1
+	for k, v := range app.entities {
+		if v == ent {
+			index = k
+			break
+		}
+	}
+
+	if index != -1 {
+		if index == len(app.entities)-1 {
+			app.entities = app.entities[:index-1]
+		} else {
+			app.entities = append(app.entities[:index], app.entities[index+1:]...)
+		}
+	}
+}
+
+func (app *App) AddEntity(ent ui.Entity) {
+	app.entities = append(app.entities, ent)
 }
 
 func (app *App) PollEvents() {
@@ -330,146 +319,6 @@ func (app *App) PollEvents() {
 	}
 }
 
-func (app *App) SetState(state State) {
-	oldState := app.currentState
-	if oldState != nil {
-		oldState.Exit()
-	}
-
-	app.currentState = state
-	state.Enter()
-}
-
-type DisplayMessage struct {
-	discordMessage *discordgo.Message
-	logMessage     *LogMessage
-	isLogMessage   bool
-	timestamp      time.Time
-}
-
-// A target for optimisation when i get that far
-// Also a target for cleaning up
-// Builds a list of messages to display from all of the channels were listening to, pm's and the log
-func (app *App) BuildDisplayMessages(size int) {
-	// Ackquire the state, or create one if null (incase were starting)
-	var state *discordgo.State
-	if app.session != nil && app.session.State != nil {
-		state = app.session.State
-	} else {
-		state = discordgo.NewState()
-	}
-	state.RLock()
-	defer state.RUnlock()
-
-	messages := make([]*DisplayMessage, size)
-
-	// Holds the start indexes in the newest message search
-	listeningIndexes := make([]int, len(app.listeningChannels))
-	pmIndexes := make([]int, len(state.PrivateChannels))
-	// Init the slices with silly vals
-	for i := 0; i < len(app.listeningChannels); i++ {
-		listeningIndexes[i] = -10
-	}
-	for i := 0; i < len(state.PrivateChannels); i++ {
-		pmIndexes[i] = -10
-	}
-	nextLogIndex := len(app.logBuffer) - 1
-
-	// Get a sorted list
-	var lastMessage *DisplayMessage
-	var beforeTime time.Time
-	for i := 0; i < size; i++ {
-		// Get newest message after "lastMessage", set it to curNewestMessage if its newer than that
-
-		var newestListening *DisplayMessage
-		newestListeningIndex := 0    // confusing, but the index of the indexes slice
-		nextListeningStartIndex := 0 // And the actual next start index to use
-
-		// Check the channels were listening on
-		for k, listeningChannelId := range app.listeningChannels {
-			// Avoid deadlock since guildchannel also calls rlock, whch will block if there was a new message in the meantime causing lock to be called
-			// before that
-			state.RUnlock()
-			channel, err := state.GuildChannel(app.selectedServerId, listeningChannelId)
-			state.RLock()
-			if err != nil {
-				continue
-			}
-
-			newest, nextIndex := GetNewestMessageBefore(channel.Messages, beforeTime, listeningIndexes[k])
-
-			if newest != nil && (newestListening == nil || !newest.timestamp.Before(newestListening.timestamp)) {
-				newestListening = newest
-				newestListeningIndex = k
-				nextListeningStartIndex = nextIndex
-			}
-		}
-
-		var newestPm *DisplayMessage
-		newestPmIndex := 0    // confusing, but the index of the indexes slice
-		nextPmStartIndex := 0 // And the actual next start index to use
-
-		// Check for newest pm's
-		for k, privateChannel := range state.PrivateChannels {
-
-			newest, nextIndex := GetNewestMessageBefore(privateChannel.Messages, beforeTime, pmIndexes[k])
-
-			if newest != nil && (newestPm == nil || !newest.timestamp.Before(newestPm.timestamp)) {
-				newestPm = newest
-				newestPmIndex = k
-				nextPmStartIndex = nextIndex
-			}
-		}
-
-		newNextLogIndex := 0
-		var newestLog *DisplayMessage
-
-		// Check the logerino
-		for j := nextLogIndex; j >= 0; j-- {
-			msg := app.logBuffer[j]
-			if !msg.timestamp.After(beforeTime) || beforeTime.IsZero() {
-				if newestLog == nil || !msg.timestamp.Before(newestLog.timestamp) {
-					newestLog = &DisplayMessage{
-						logMessage:   msg,
-						timestamp:    msg.timestamp,
-						isLogMessage: true,
-					}
-					newNextLogIndex = j - 1
-				}
-				break // Newest message after last since ordered
-			}
-		}
-
-		if newestListening != nil &&
-			(newestPm == nil || !newestListening.timestamp.Before(newestPm.timestamp)) &&
-			(newestLog == nil || !newestListening.timestamp.Before(newestLog.timestamp)) {
-			messages[i] = newestListening
-			listeningIndexes[newestListeningIndex] = nextListeningStartIndex
-
-			lastMessage = newestListening
-			beforeTime = lastMessage.timestamp
-		} else if newestPm != nil &&
-			(newestListening == nil || !newestPm.timestamp.Before(newestListening.timestamp)) &&
-			(newestLog == nil || !newestPm.timestamp.Before(newestLog.timestamp)) {
-
-			messages[i] = newestPm
-			pmIndexes[newestPmIndex] = nextPmStartIndex
-
-			lastMessage = newestPm
-			beforeTime = lastMessage.timestamp
-		} else if newestLog != nil {
-			messages[i] = newestLog
-			nextLogIndex = newNextLogIndex
-
-			lastMessage = newestLog
-			beforeTime = lastMessage.timestamp
-		} else {
-			break // No new shit!
-		}
-	}
-	app.displayMessages = messages
-}
-
 func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	log.Println("Received ready!")
 
@@ -477,38 +326,19 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	app.session.State.Ready = *r
 	app.session.State.Unlock()
 
-	for _, g := range r.Guilds {
-		for _, ch := range g.Channels {
-			for _, ls := range app.listeningChannels {
-				if ch.ID == ls {
-					go app.GetHistory(ls, 25, "", "")
-					break
-				}
-			}
-		}
-	}
+	// for _, g := range r.Guilds {
+	// 	for _, ch := range g.Channels {
+	// 		for _, ls := range app.listeningChannels {
+	// 			if ch.ID == ls {
+	// 				go app.GetHistory(ls, 25, "", "")
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// }
 	app.PrintWelcome()
 }
 
 func (app *App) PrintWelcome() {
 	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know!\n(Press ctrl-o For help)")
-}
-
-func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIndex int) (*DisplayMessage, int) {
-	if startIndex == -10 {
-		startIndex = len(msgs) - 1
-	}
-
-	for j := startIndex; j >= 0; j-- {
-		msg := msgs[j]
-		parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
-		if !parsedTimestamp.After(before) || before.IsZero() { // Reason for !after is so that we still show all the messages with same timestamps
-			curNewestMessage := &DisplayMessage{
-				discordMessage: msg,
-				timestamp:      parsedTimestamp,
-			}
-			return curNewestMessage, j - 1
-		}
-	}
-	return nil, 0
 }

@@ -1,12 +1,12 @@
 package ui
 
 import (
+	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
 )
 
 type Entity interface {
 	Children(recursive bool) []Entity
-	Init()
 	Destroy()
 }
 
@@ -35,11 +35,12 @@ func (b *BaseEntity) Children(recursive bool) []Entity {
 	return ret
 }
 
-func (b *BaseEntity) AddChild(child Entity) {
+func (b *BaseEntity) AddChild(children ...Entity) {
+
 	if b.entities == nil {
-		b.entities = []Entity{child}
+		b.entities = make([]Entity, 0, len(children))
 	} else {
-		b.entities = append(b.entities, child)
+		b.entities = append(b.entities, children...)
 	}
 }
 
@@ -90,4 +91,16 @@ type InputHandler interface {
 type Drawable interface {
 	GetDrawLayer() int
 	Draw()
+}
+
+type MessageCreateHandler interface {
+	HandleMessageCreate(session *discordgo.MessageCreate, msg *discordgo.Message)
+}
+
+type MessageEditHandler interface {
+	HandleMessageEdit(session *discordgo.MessageCreate, msg *discordgo.Message)
+}
+
+type MessageRemoveHandler interface {
+	HandleMessageRemove(session *discordgo.MessageCreate, msg *discordgo.Message)
 }
