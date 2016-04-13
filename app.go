@@ -19,7 +19,7 @@ type App struct {
 	running        bool
 	stopping       bool
 	stopChan       chan chan error
-	msgRecvChan    chan *discordgo.Message // Unused atm...
+	msgRecvChan    chan *discordgo.Message // Unused atm... remove?
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 	logChan        chan string
@@ -33,6 +33,8 @@ type App struct {
 	logFileLock sync.Mutex
 
 	entities []ui.Entity
+
+	ViewManager *ViewManager
 
 	notifications *notificator.Notificator
 	config        *Config
@@ -116,7 +118,6 @@ func (app *App) Init() {
 	app.inputEventChan = make(chan termbox.Event)
 	app.stopPollEvents = make(chan chan bool)
 	app.logChan = make(chan string)
-
 	log.SetOutput(app)
 
 	err := termbox.Init()
@@ -124,6 +125,9 @@ func (app *App) Init() {
 		panic(err)
 	}
 	termbox.SetInputMode(termbox.InputAlt)
+
+	app.ViewManager = NewViewManager(app)
+	app.AddEntity(app.ViewManager)
 }
 
 // Lsiten on the channels for incoming messages
@@ -152,10 +156,8 @@ func (app *App) Run() {
 	go app.PollEvents()
 
 	app.Init()
-	log.Println("Started!")
-	// Start login...
-	//app.SetState(&StateLogin{app: app})
-	app.AddEntity(NewLoginWindow(app))
+	log.Println("Initialized!")
+	app.ViewManager.OnInit()
 
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
@@ -237,7 +239,6 @@ func (app *App) GetAllEntities() []ui.Entity {
 
 // Todo remove 10 layer lazy limit
 func (app *App) Draw() {
-	log.Println("Starting draw")
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	// Build the layers
@@ -251,7 +252,6 @@ func (app *App) Draw() {
 			layers[layer] = append(layers[layer], drawable)
 		}
 	}
-	log.Println("Number of entities", len(entities))
 
 	for i := 0; i < 10; i++ {
 		for _, drawable := range layers[i] {
@@ -276,7 +276,7 @@ func (app *App) RemoveEntity(ent ui.Entity) {
 
 	if index != -1 {
 		if index == len(app.entities)-1 {
-			app.entities = app.entities[:index-1]
+			app.entities = app.entities[:index]
 		} else {
 			app.entities = append(app.entities[:index], app.entities[index+1:]...)
 		}
@@ -308,9 +308,9 @@ func (app *App) PollEvents() {
 func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	log.Println("Received ready!")
 
-	app.session.State.Lock()
-	app.session.State.Ready = *r
-	app.session.State.Unlock()
+	// app.session.State.Lock()
+	// app.session.State.Ready = *r
+	// app.session.State.Unlock()
 
 	// for _, g := range r.Guilds {
 	// 	for _, ch := range g.Channels {
@@ -322,6 +322,7 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	// 		}
 	// 	}
 	// }
+	app.ViewManager.OnReady()
 	app.PrintWelcome()
 }
 

@@ -80,7 +80,7 @@ func (mv *MessageView) BuildTexts() {
 
 	rect := mv.Transform.GetRect()
 
-	y := int(rect.W)
+	y := int(rect.H)
 	padding := 0
 
 	// Build it!!
@@ -101,7 +101,7 @@ func (mv *MessageView) BuildTexts() {
 		if item.IsLogMessage {
 			//cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
 			text.Text = "Log: " + item.LogMessage.Content
-			text.Attribs = map[int]AttribPair{0: AttribPair{termbox.ColorYellow, termbox.ColorDefault}}
+			//text.Attribs = map[int]AttribPair{0: AttribPair{termbox.ColorYellow, termbox.ColorDefault}}
 		} else {
 			msg := item.DiscordMessage
 			if msg == nil {
@@ -155,7 +155,7 @@ func (mv *MessageView) BuildTexts() {
 		lines := HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
 		y -= lines
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
-		//SetCells(cells, padding, y, sizex-1-padding*2, 0)
+		mv.AddChild(text)
 	}
 }
 
@@ -283,6 +283,19 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 	}
 	mv.DisplayMessages = messages
 }
+
+func (mv *MessageView) Destroy() { mv.DestroyChildren() }
+
+func (mv *MessageView) Draw() {
+	// Wrong place to do this
+	mv.BuildDisplayMessages(10)
+	mv.BuildTexts()
+}
+
+func (mv *MessageView) GetDrawLayer() int {
+	return 9
+}
+
 func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIndex int) (*DisplayMessage, int) {
 	if startIndex == -10 {
 		startIndex = len(msgs) - 1

@@ -30,24 +30,6 @@ type LoginWindow struct {
 }
 
 func NewLoginWindow(app *App) *LoginWindow {
-	// if s.app.config.Email != "" && s.app.config.Password != "" {
-	// 	s.currentlyLoggingIn = true
-
-	// 	err := s.app.Login(s.app.config.Email, s.app.config.Password)
-	// 	if err != nil {
-	// 		log.Println("Error logging in :", err)
-	// 	} else {
-	// 		s.app.SetState(&StateNormal{app: s.app})
-	// 	}
-	// 	s.currentlyLoggingIn = false
-	// } else {
-	// 	if s.app.config.Email != "" {
-	// 		s.curInputState = InputStatePassword
-	// 	} else {
-	// 		s.curInputState = InputStateEmail
-	// 	}
-	// }
-
 	window := ui.NewWindow()
 	window.Transform.AnchorMax = common.NewVector2F(0.5, 0.5)
 	window.Transform.AnchorMin = common.NewVector2F(0.5, 0.5)
@@ -95,8 +77,13 @@ func NewLoginWindow(app *App) *LoginWindow {
 		App:        app,
 	}
 	lw.AddChild(window)
-
 	return lw
+}
+
+func (lw *LoginWindow) CheckAutoLogin() {
+	if lw.App.config.Email != "" && lw.App.config.Password != "" {
+		lw.Trylogin(lw.App.config.Email, lw.App.config.Password)
+	}
 }
 
 func (lw *LoginWindow) Destroy() { lw.DestroyChildren() }
@@ -115,13 +102,14 @@ func (lw *LoginWindow) HandleInput(event termbox.Event) {
 				if lw.SavePassword {
 					lw.App.config.Password = pw
 				}
-				err := lw.App.Login(lw.App.config.Email, pw)
-				if err != nil {
-					log.Println("Error logging in: ", err)
-				} else {
-					lw.App.config.Save(configPath)
-					// TODO leave window cause we logged in and whatnot
-				}
+				lw.Trylogin(lw.App.config.Email, pw)
+				// err := lw.App.Login(lw.App.config.Email, pw)
+				// if err != nil {
+				// 	log.Println("Error logging in: ", err)
+				// } else {
+				// 	lw.App.config.Save(configPath)
+				// 	// TODO leave window cause we logged in and whatnot
+				// }
 			}
 		case termbox.KeyCtrlS:
 			if lw.CurInputState == InputStateEmail {
@@ -153,6 +141,6 @@ func (lw *LoginWindow) Trylogin(user, pw string) {
 		log.Println("Error logging in: ", err)
 	} else {
 		lw.App.config.Save(configPath)
-		// TODO leave window cause we logged in and whatnot
+		lw.App.RemoveEntity(lw)
 	}
 }

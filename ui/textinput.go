@@ -114,7 +114,6 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 
 func (ti *TextInput) Draw() {
 	if ti.Active {
-		log.Println("Drawing textinput", ti.Text.Transform.GetRect())
 		rect := ti.Transform.GetRect()
 		termbox.SetCursor(ti.CursorLocation+int(rect.X), int(rect.Y))
 	}

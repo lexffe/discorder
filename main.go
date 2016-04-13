@@ -41,6 +41,11 @@ func main() {
 
 	config = c
 
+	// Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
+	// logFile, _ := os.OpenFile("hmpf", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
+	// syscall.Dup2(int(logFile.Fd()), 1)
+	// syscall.Dup2(int(logFile.Fd()), 2)
+
 	application = NewApp(config, *flagLogPath)
 	application.Run()
 }
