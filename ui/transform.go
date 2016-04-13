@@ -18,6 +18,7 @@ type Transform struct {
 	Parent *Transform
 }
 
+// Incorrect.. will fix as i come by the silly mistakes
 func (t *Transform) GetRect() common.Rect {
 	parentRect := common.Rect{}
 	if t.Parent != nil {
@@ -30,7 +31,7 @@ func (t *Transform) GetRect() common.Rect {
 	ret := common.Rect{}
 
 	if t.AnchorMax.Y == t.AnchorMin.Y {
-		ret.Y = t.Position.Y + parentRect.Y
+		ret.Y = t.Position.Y + parentRect.Y + (t.AnchorMin.Y * parentRect.H)
 		ret.H = t.Size.Y
 	} else {
 		yOffsetMin := parentRect.H * t.AnchorMin.Y
@@ -40,14 +41,15 @@ func (t *Transform) GetRect() common.Rect {
 	}
 
 	if t.AnchorMax.X == t.AnchorMin.X {
-		ret.X = t.Position.X + parentRect.X
+		ret.X = t.Position.X + parentRect.X + (t.AnchorMin.X * parentRect.W)
 		ret.W = t.Size.X
 	} else {
 		xOffsetMin := parentRect.W * t.AnchorMin.X
 		xOffsetMax := parentRect.W * t.AnchorMax.X
-		ret.X = xOffsetMax + parentRect.Y + float32(t.Left)
+		ret.X = xOffsetMin + parentRect.X + float32(t.Left)
 		ret.W = xOffsetMax - xOffsetMin - float32(t.Right)
 	}
+
 	return ret
 }
 

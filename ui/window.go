@@ -11,6 +11,8 @@ type Window struct {
 	Title  string
 	Footer string
 
+	Layer int
+
 	Transform          *Transform
 	BorderBG, BorderFG termbox.Attribute
 	FillBG             termbox.Attribute
@@ -20,14 +22,14 @@ func NewWindow() *Window {
 	return &Window{
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
-		BorderBG:   termbox.ColorMagenta,
+		BorderBG:   termbox.ColorBlack | termbox.AttrBold,
 		BorderFG:   termbox.ColorWhite,
 		FillBG:     termbox.ColorBlack,
 	}
 }
 
 func (w *Window) GetDrawLayer() int {
-	return 5
+	return w.Layer
 }
 
 func (w *Window) Draw() {

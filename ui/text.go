@@ -26,7 +26,7 @@ type Text struct {
 	Layer int
 }
 
-func NewUIText() *Text {
+func NewText() *Text {
 	return &Text{
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},

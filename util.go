@@ -28,72 +28,72 @@ func (app *App) Write(p []byte) (n int, err error) {
 // func (app *App) HandleTextInput(event termbox.Event) {
 // 	if event.Type == termbox.EventKey {
 
-// 		switch event.Key {
+// 	switch event.Key {
 
-// 		case termbox.KeyArrowLeft:
+// 	case termbox.KeyArrowLeft:
+// 		app.currentCursorLocation--
+// 		if app.currentCursorLocation < 0 {
+// 			app.currentCursorLocation = 0
+// 		}
+// 	case termbox.KeyArrowRight:
+// 		app.currentCursorLocation++
+// 		bufLen := utf8.RuneCountInString(app.currentTextBuffer)
+// 		if app.currentCursorLocation > bufLen {
+// 			app.currentCursorLocation = bufLen
+// 		}
+// 	case termbox.KeyBackspace, termbox.KeyBackspace2:
+// 		bufLen := utf8.RuneCountInString(app.currentTextBuffer)
+// 		if bufLen == 0 {
+// 			return
+// 		}
+// 		if app.currentCursorLocation == bufLen {
+// 			_, size := utf8.DecodeLastRuneInString(app.currentTextBuffer)
 // 			app.currentCursorLocation--
-// 			if app.currentCursorLocation < 0 {
-// 				app.currentCursorLocation = 0
-// 			}
-// 		case termbox.KeyArrowRight:
-// 			app.currentCursorLocation++
-// 			bufLen := utf8.RuneCountInString(app.currentTextBuffer)
-// 			if app.currentCursorLocation > bufLen {
-// 				app.currentCursorLocation = bufLen
-// 			}
-// 		case termbox.KeyBackspace, termbox.KeyBackspace2:
-// 			bufLen := utf8.RuneCountInString(app.currentTextBuffer)
-// 			if bufLen == 0 {
-// 				return
-// 			}
-// 			if app.currentCursorLocation == bufLen {
-// 				_, size := utf8.DecodeLastRuneInString(app.currentTextBuffer)
-// 				app.currentCursorLocation--
-// 				app.currentTextBuffer = app.currentTextBuffer[:len(app.currentTextBuffer)-size]
-// 			} else if app.currentCursorLocation == 1 {
-// 				_, size := utf8.DecodeRuneInString(app.currentTextBuffer)
-// 				app.currentCursorLocation--
-// 				app.currentTextBuffer = app.currentTextBuffer[size:]
-// 			} else if app.currentCursorLocation == 0 {
-// 				return
-// 			} else {
-// 				runeSlice := []rune(app.currentTextBuffer)
-// 				newSlice := append(runeSlice[:app.currentCursorLocation-1], runeSlice[app.currentCursorLocation:]...)
-// 				app.currentTextBuffer = string(newSlice)
-// 				app.currentCursorLocation--
-// 			}
-// 		default:
-// 			char := event.Ch
-// 			if event.Key == termbox.KeySpace {
-// 				char = ' '
-// 			} else if event.Key == termbox.Key(0) && event.Mod == termbox.ModAlt && char == 0 {
-// 				char = '@' // Just temporary workaround for non american keyboards on windows
-// 				// So they're atleast able to log in
-// 			}
-
-// 			bufLen := utf8.RuneCountInString(app.currentTextBuffer)
-// 			if app.currentCursorLocation == bufLen {
-// 				app.currentTextBuffer += string(char)
-// 				app.currentCursorLocation++
-// 			} else if app.currentCursorLocation == 0 {
-// 				app.currentTextBuffer = string(char) + app.currentTextBuffer
-// 				app.currentCursorLocation++
-// 			} else {
-// 				bufSlice := []rune(app.currentTextBuffer)
-// 				bufCopy := ""
-
-// 				for i := 0; i < len(bufSlice); i++ {
-// 					if i == app.currentCursorLocation {
-// 						bufCopy += string(char)
-// 					}
-// 					bufCopy += string(bufSlice[i])
-// 				}
-// 				app.currentTextBuffer = bufCopy
-// 				app.currentCursorLocation++
-// 			}
+// 			app.currentTextBuffer = app.currentTextBuffer[:len(app.currentTextBuffer)-size]
+// 		} else if app.currentCursorLocation == 1 {
+// 			_, size := utf8.DecodeRuneInString(app.currentTextBuffer)
+// 			app.currentCursorLocation--
+// 			app.currentTextBuffer = app.currentTextBuffer[size:]
+// 		} else if app.currentCursorLocation == 0 {
+// 			return
+// 		} else {
+// 			runeSlice := []rune(app.currentTextBuffer)
+// 			newSlice := append(runeSlice[:app.currentCursorLocation-1], runeSlice[app.currentCursorLocation:]...)
+// 			app.currentTextBuffer = string(newSlice)
+// 			app.currentCursorLocation--
+// 		}
+// 	default:
+// 		char := event.Ch
+// 		if event.Key == termbox.KeySpace {
+// 			char = ' '
+// 		} else if event.Key == termbox.Key(0) && event.Mod == termbox.ModAlt && char == 0 {
+// 			char = '@' // Just temporary workaround for non american keyboards on windows
+// 			// So they're atleast able to log in
 // 		}
 
+// 		bufLen := utf8.RuneCountInString(app.currentTextBuffer)
+// 		if app.currentCursorLocation == bufLen {
+// 			app.currentTextBuffer += string(char)
+// 			app.currentCursorLocation++
+// 		} else if app.currentCursorLocation == 0 {
+// 			app.currentTextBuffer = string(char) + app.currentTextBuffer
+// 			app.currentCursorLocation++
+// 		} else {
+// 			bufSlice := []rune(app.currentTextBuffer)
+// 			bufCopy := ""
+
+// 			for i := 0; i < len(bufSlice); i++ {
+// 				if i == app.currentCursorLocation {
+// 					bufCopy += string(char)
+// 				}
+// 				bufCopy += string(bufSlice[i])
+// 			}
+// 			app.currentTextBuffer = bufCopy
+// 			app.currentCursorLocation++
+// 		}
 // 	}
+
+// }
 // }
 
 func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string) {

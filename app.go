@@ -155,6 +155,7 @@ func (app *App) Run() {
 	log.Println("Started!")
 	// Start login...
 	//app.SetState(&StateLogin{app: app})
+	app.AddEntity(NewLoginWindow(app))
 
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
@@ -179,25 +180,7 @@ func (app *App) Run() {
 		case msg := <-app.logChan:
 			app.HandleLogMessage(msg)
 		case <-ticker.C:
-			if app.session != nil {
-				// var err error
-				// if app.selectedServerId != "" {
-				// 	app.selectedGuild, err = app.session.State.Guild(app.selectedServerId)
-				// 	if err != nil {
-				// 		log.Println("App.Run: ", err)
-				// 	}
-				// }
-				// if app.selectedChannelId != "" && app.selectedGuild != nil {
-				// 	app.selectedChannel, err = app.session.State.GuildChannel(app.selectedServerId, app.selectedChannelId)
-				// 	if err != nil {
-				// 		var err2 error
-				// 		app.selectedChannel, err2 = app.session.State.PrivateChannel(app.selectedChannelId)
-				// 		if err2 != nil {
-				// 			log.Println("App.Run: ", err, err2)
-				// 		}
-				// 	}
-				// }
-			}
+			app.Draw()
 		}
 	}
 }
@@ -254,6 +237,7 @@ func (app *App) GetAllEntities() []ui.Entity {
 
 // Todo remove 10 layer lazy limit
 func (app *App) Draw() {
+	log.Println("Starting draw")
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	// Build the layers
@@ -267,12 +251,14 @@ func (app *App) Draw() {
 			layers[layer] = append(layers[layer], drawable)
 		}
 	}
+	log.Println("Number of entities", len(entities))
 
 	for i := 0; i < 10; i++ {
 		for _, drawable := range layers[i] {
 			drawable.Draw()
 		}
 	}
+	termbox.Flush()
 }
 
 func (app *App) RemoveEntity(ent ui.Entity) {

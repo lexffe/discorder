@@ -22,7 +22,6 @@ func (b *BaseEntity) Children(recursive bool) []Entity {
 
 	ret := make([]Entity, len(b.entities))
 	copy(ret, b.entities)
-
 	if recursive {
 		for _, entity := range b.entities {
 			children := entity.Children(true)
@@ -38,7 +37,8 @@ func (b *BaseEntity) Children(recursive bool) []Entity {
 func (b *BaseEntity) AddChild(children ...Entity) {
 
 	if b.entities == nil {
-		b.entities = make([]Entity, 0, len(children))
+		b.entities = make([]Entity, len(children))
+		copy(b.entities, children)
 	} else {
 		b.entities = append(b.entities, children...)
 	}

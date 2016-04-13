@@ -95,7 +95,7 @@ func (mv *MessageView) BuildTexts() {
 			continue
 		}
 
-		text := NewUIText()
+		text := NewText()
 		text.Transform.Size = common.NewVector2F(rect.W, 0)
 
 		if item.IsLogMessage {
