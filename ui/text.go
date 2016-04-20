@@ -21,16 +21,18 @@ type Text struct {
 	Mode int
 
 	Attribs map[int]AttribPair
-	BG, Fg  termbox.Attribute // Not used if Attribs is specified
+	BG, FG  termbox.Attribute // Not used if Attribs is specified
 
 	Layer int
 }
 
 func NewText() *Text {
-	return &Text{
+	t := &Text{
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
 	}
+	t.Self = t // See BaseEntity struct for why
+	return t
 }
 
 // Helper functions
@@ -57,7 +59,7 @@ func (t *Text) Draw() {
 		attribs = t.Attribs
 	} else {
 		attribs = map[int]AttribPair{
-			0: AttribPair{t.Fg, t.BG},
+			0: AttribPair{t.FG, t.BG},
 		}
 	}
 

@@ -19,13 +19,15 @@ type Window struct {
 }
 
 func NewWindow() *Window {
-	return &Window{
+	w := &Window{
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
 		BorderBG:   termbox.ColorBlack | termbox.AttrBold,
 		BorderFG:   termbox.ColorWhite,
 		FillBG:     termbox.ColorBlack,
 	}
+	w.Self = w // See BaseEntity struct for why
+	return w
 }
 
 func (w *Window) GetDrawLayer() int {
@@ -46,15 +48,15 @@ func (w *Window) Draw() {
 
 	_, tSizeY := termbox.Size()
 
-	for curX := 0; curX <= int(rect.W); curX++ {
-		for curY := 0; curY <= int(rect.H); curY++ {
+	for curX := -1; curX <= int(rect.W)+1; curX++ {
+		for curY := -1; curY <= int(rect.H)+1; curY++ {
 			realX := curX + int(rect.X)
 			realY := curY + int(rect.Y)
 
 			char := ' '
 
-			atTop := curY == 0 || realY == 0
-			atBottom := curY == int(rect.H) || realY == tSizeY-1
+			atTop := curY == -1 || realY == 0
+			atBottom := curY == int(rect.H)+1 || realY == tSizeY-1
 
 			var fg, bg termbox.Attribute
 			atBorder := false
@@ -62,7 +64,7 @@ func (w *Window) Draw() {
 				char = runeSlice[curX-headerStartPos]
 			} else if curX >= footerStartPos && curX < footerStartPos+footerLen && atBottom {
 				char = footerSlice[curX-footerStartPos]
-			} else if curX == 0 || curX == int(rect.W) {
+			} else if curX == -1 || curX == int(rect.W)+1 {
 				char = '|'
 				atBorder = true
 			} else if atTop || atBottom {

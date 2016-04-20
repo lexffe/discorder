@@ -32,7 +32,7 @@ type App struct {
 	logFile     *os.File
 	logFileLock sync.Mutex
 
-	entities []ui.Entity
+	entityContainer *ui.BaseEntity
 
 	ViewManager *ViewManager
 
@@ -48,8 +48,9 @@ func NewApp(config *Config, logPath string) *App {
 	})
 
 	a := &App{
-		config:        config,
-		notifications: notify,
+		config:          config,
+		notifications:   notify,
+		entityContainer: &ui.BaseEntity{},
 	}
 	if err == nil {
 		a.logFile = logFile
@@ -127,7 +128,7 @@ func (app *App) Init() {
 	termbox.SetInputMode(termbox.InputAlt)
 
 	app.ViewManager = NewViewManager(app)
-	app.AddEntity(app.ViewManager)
+	app.entityContainer.AddChild(app.ViewManager)
 }
 
 // Lsiten on the channels for incoming messages
@@ -229,24 +230,27 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 }
 
 func (app *App) GetAllEntities() []ui.Entity {
-	ret := make([]ui.Entity, 0, len(app.entities))
-	for _, entity := range app.entities {
-		ret = append(ret, entity)
-		ret = append(ret, entity.Children(true)...)
-	}
-	return ret
+	return app.entityContainer.Children(true)
 }
 
-// Todo remove 10 layer lazy limit
+// Todo remove 10 layer lazy limit... Maps?
 func (app *App) Draw() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
+	// Run predraw
+	app.entityContainer.RunFunc(func(e ui.Entity) {
+		updater, ok := e.(ui.PreDrawHandler)
+		if ok {
+			updater.PreDraw()
+		}
+	})
+
 	// Build the layers
-	layers := make([][]ui.Drawable, 10)
+	layers := make([][]ui.DrawHandler, 10)
 
 	entities := app.GetAllEntities()
 	for _, entity := range entities {
-		drawable, ok := entity.(ui.Drawable)
+		drawable, ok := entity.(ui.DrawHandler)
 		if ok {
 			layer := drawable.GetDrawLayer()
 			layers[layer] = append(layers[layer], drawable)
@@ -259,32 +263,6 @@ func (app *App) Draw() {
 		}
 	}
 	termbox.Flush()
-}
-
-func (app *App) RemoveEntity(ent ui.Entity) {
-	if app.entities == nil || len(app.entities) < 1 {
-		return
-	}
-
-	index := -1
-	for k, v := range app.entities {
-		if v == ent {
-			index = k
-			break
-		}
-	}
-
-	if index != -1 {
-		if index == len(app.entities)-1 {
-			app.entities = app.entities[:index]
-		} else {
-			app.entities = append(app.entities[:index], app.entities[index+1:]...)
-		}
-	}
-}
-
-func (app *App) AddEntity(ent ui.Entity) {
-	app.entities = append(app.entities, ent)
 }
 
 func (app *App) PollEvents() {

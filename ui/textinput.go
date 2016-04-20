@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
-	"log"
 	"unicode/utf8"
 )
 
@@ -26,6 +25,8 @@ func NewTextInput() *TextInput {
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
 	}
+	input.Self = input // See BaseEntity struct for why
+
 	t.Transform.Parent = input.Transform
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)
 	input.Text = t

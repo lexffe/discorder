@@ -38,20 +38,17 @@ func NewHelpWindow(app *App) *HelpWindow {
 		App:        app,
 	}
 
-	sizeX, sizeY := termbox.Size()
-
 	wWidth := 70
 	wHeight := 20
 
-	startX := sizeX/2 - wWidth/2
-	startY := sizeY/2 - wHeight/2
-
-	curY := startY + 1
+	curY := 1
 
 	window := ui.NewWindow()
 	window.Title = "Help"
 	window.Footer = "Hmmm - Mr Smilery"
-	window.Transform.Position = common.NewVector2I(startX, startY)
+	window.Transform.AnchorMax = common.NewVector2F(0.5, 0.5)
+	window.Transform.AnchorMin = common.NewVector2F(0.5, 0.5)
+	window.Transform.Position = common.NewVector2I(-(wWidth / 2), -(wHeight / 2))
 	window.Transform.Size = common.NewVector2I(wWidth, wHeight)
 
 	for _, v := range HelpContent {
@@ -61,6 +58,7 @@ func NewHelpWindow(app *App) *HelpWindow {
 		text.Transform.Position = common.NewVector2I(0, curY)
 		text.Transform.Parent = window.Transform
 		text.Text = v
+		curY += text.HeightRequired()
 		window.AddChild(text)
 	}
 	hw.AddChild(window)
@@ -72,10 +70,10 @@ func (s *HelpWindow) Enter()   {}
 func (s *HelpWindow) Destroy() { s.DestroyChildren() }
 
 func (s *HelpWindow) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		switch event.Key {
-		case termbox.KeyBackspace, termbox.KeyBackspace2:
-			s.App.RemoveEntity(s)
-		}
-	}
+	// if event.Type == termbox.EventKey {
+	// 	switch event.Key {
+	// 	case termbox.KeyBackspace, termbox.KeyBackspace2:
+	// 		s.App.entityContainer.RemoveChild(s, true)
+	// 	}
+	// }
 }

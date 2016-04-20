@@ -8,10 +8,24 @@ import (
 type Entity interface {
 	Children(recursive bool) []Entity
 	Destroy()
+	RunFunc(f func(e Entity)) // Runs f recorsively
 }
 
 type BaseEntity struct {
+	Self     Entity // To get around some struct embedding limitations, set to whatever is embedding this, This probably needs some redisigning
 	entities []Entity
+}
+
+// Run f recursively on all children
+func (b *BaseEntity) RunFunc(f func(e Entity)) {
+	if b.Self != nil {
+		f(b.Self)
+	}
+	if b.entities != nil && len(b.entities) > 0 {
+		for _, v := range b.entities {
+			v.RunFunc(f)
+		}
+	}
 }
 
 // Maybe reuse the slice...? probably miniscule performance hit to not...
@@ -64,7 +78,7 @@ func (b *BaseEntity) RemoveChild(child Entity, destroy bool) {
 
 	if index != -1 {
 		if index == len(b.entities)-1 {
-			b.entities = b.entities[:index-1]
+			b.entities = b.entities[:index]
 		} else {
 			b.entities = append(b.entities[:index], b.entities[index+1:]...)
 		}
@@ -88,7 +102,11 @@ type InputHandler interface {
 	HandleInput(event termbox.Event)
 }
 
-type Drawable interface {
+type PreDrawHandler interface {
+	PreDraw() // Ran before drawing, if you create any entities here then they wont get predraw called on them so only create simple entities
+}
+
+type DrawHandler interface {
 	GetDrawLayer() int
 	Draw()
 }

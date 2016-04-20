@@ -3,20 +3,27 @@ package main
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"github.com/nsf/termbox-go"
+	"log"
 	"unicode/utf8"
 )
 
 type ViewManager struct {
 	*ui.BaseEntity
-	App *App
-	mv  *ui.MessageView
+	App                 *App
+	mv                  *ui.MessageView
+	selectedMessageView *ui.MessageView
+	activeWindow        ui.Entity
+	input               *ui.TextInput
 }
 
 func NewViewManager(app *App) *ViewManager {
-	return &ViewManager{
+	mv := &ViewManager{
 		BaseEntity: &ui.BaseEntity{},
 		App:        app,
 	}
+	mv.Self = mv
+	return mv
 }
 
 func (v *ViewManager) OnInit() {
@@ -32,7 +39,7 @@ func (v *ViewManager) OnInit() {
 
 	// Launch the login
 	login := NewLoginWindow(v.App)
-	v.App.AddEntity(login)
+	v.App.entityContainer.AddChild(login)
 	login.CheckAutoLogin()
 }
 
@@ -51,13 +58,15 @@ func (v *ViewManager) OnReady() {
 	input := ui.NewTextInput()
 	input.Transform.AnchorMin = common.NewVector2F(0, 1)
 	input.Transform.AnchorMax = common.NewVector2F(1, 1)
+	input.Transform.Position.Y = -1
 	input.Active = true
 	v.AddChild(input)
+	v.input = input
 }
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }
 
-func (v *ViewManager) Draw() {
+func (v *ViewManager) PreDraw() {
 	if v.mv != nil {
 		v.mv.Logs = v.App.logBuffer
 	}
@@ -65,4 +74,39 @@ func (v *ViewManager) Draw() {
 
 func (v *ViewManager) GetDrawLayer() int {
 	return 0
+}
+
+func (v *ViewManager) HandleInput(event termbox.Event) {
+	if event.Type == termbox.EventKey {
+		switch event.Key {
+		case termbox.KeyCtrlG: // Select channel
+			if v.activeWindow != nil {
+				break
+			}
+		case termbox.KeyCtrlO: // Options
+			if v.activeWindow != nil {
+				break
+			}
+			hw := NewHelpWindow(v.App)
+			v.AddChild(hw)
+			v.activeWindow = hw
+			log.Println("Opening help")
+			v.input.Active = false
+		case termbox.KeyCtrlS: // Select server
+			if v.activeWindow != nil {
+				break
+			}
+			ssw := NewSelectServerWindow(v.App)
+			v.AddChild(ssw)
+			v.activeWindow = ssw
+			v.input.Active = false
+			log.Println("Opening server select window")
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
+			if v.activeWindow != nil {
+				v.RemoveChild(v.activeWindow, true)
+				v.activeWindow = nil
+				v.input.Active = true
+			}
+		}
+	}
 }

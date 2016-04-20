@@ -5,6 +5,25 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+// Set some default styles
+const (
+	DefaultListNormalBG = termbox.ColorDefault
+	DefaultListNormalFG = termbox.ColorDefault
+
+	DefaultListMarkedFG = termbox.ColorDefault
+	DefaultListMarkedBG = termbox.ColorYellow
+
+	DefaultListSelectedFG = termbox.ColorDefault
+	DefaultListSelectedBG = termbox.ColorCyan
+)
+
+type ListItem struct {
+	Str      string
+	Marked   bool
+	Selected bool
+	UserData interface{}
+}
+
 type ListWindow struct {
 	*BaseEntity
 	Transform *Transform
@@ -15,36 +34,126 @@ type ListWindow struct {
 	MarkedBG, MarkedFG     termbox.Attribute
 	SelectedBG, SelectedFG termbox.Attribute
 
-	Options []string
+	Options []ListItem
 
-	marked   []int
-	selected int
+	Selected int
 
 	texts []*Text
+	Dirty bool
 }
 
-func NewListWindow(options []string) *ListWindow {
+func NewListWindow() *ListWindow {
 	lw := &ListWindow{
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
-		Options:    options,
+		// Defaults
+		NormalFG:   DefaultListNormalFG,
+		NormalBG:   DefaultListNormalBG,
+		MarkedFG:   DefaultListMarkedFG,
+		MarkedBG:   DefaultListMarkedBG,
+		SelectedFG: DefaultListSelectedFG,
+		SelectedBG: DefaultListSelectedBG,
 	}
+	lw.Self = lw
 
 	window := NewWindow()
 	window.Transform.Parent = lw.Transform
 	window.Transform.AnchorMax = common.NewVector2F(1, 1)
-	lw.entities = append(lw.entities, window)
+	lw.AddChild(window)
 
 	lw.Window = window
 
 	return lw
 }
 
-func (lw *ListWindow) SetMarked(marked []int) {
+// Makes sure index is within len(options)
+func (lw *ListWindow) CheckBounds(index int) int {
+	if index < 0 {
+		return 0
+	}
+	if index >= len(lw.Options) {
+		return len(lw.Options) - 1
+	}
+	return index
+}
+
+func (lw *ListWindow) RemoveMarked(index int) {
+	index = lw.CheckBounds(index)
+	lw.Options[index].Marked = false
+
+	lw.Dirty = true
+}
+
+func (lw *ListWindow) AddMarked(index int) {
+	index = lw.CheckBounds(index)
+	lw.Options[index].Marked = true
+
+	lw.Dirty = true
 }
 
 func (lw *ListWindow) SetSelected(selected int) {
+	// Remove previous selection
+	if lw.Selected < len(lw.Options) && lw.Selected >= 0 {
+		lw.Options[lw.Selected].Selected = false
+	}
 
+	selected = lw.CheckBounds(selected)
+	lw.Options[selected].Selected = true
+	lw.Selected = selected
+
+	lw.Dirty = true
+}
+
+func (lw *ListWindow) SetOptionsString(options []string) {
+	lw.Options = make([]ListItem, len(options))
+	for k, v := range options {
+		lw.Options[k] = ListItem{
+			Str:      v,
+			Marked:   false,
+			Selected: false,
+		}
+		if k == lw.Selected {
+			lw.Options[k].Selected = true
+		}
+	}
+	lw.Dirty = true
+}
+
+func (lw *ListWindow) SetOptions(options []ListItem) {
+	lw.Options = options
+	lw.Dirty = true
+}
+
+func (lw *ListWindow) Rebuild() {
+	lw.ClearChildren()
+	lw.AddChild(lw.Window)
+
+	lw.texts = make([]*Text, len(lw.Options))
+
+	y := 0
+	for k, option := range lw.Options {
+		t := NewText()
+		t.Text = option.Str
+		t.Transform.Position.Y = float32(y)
+		t.Transform.AnchorMax.X = 1
+
+		y += t.HeightRequired()
+		lw.texts[k] = t
+		lw.Window.AddChild(t)
+		t.Transform.Parent = lw.Window.Transform
+
+		switch {
+		case option.Marked:
+			t.FG = lw.MarkedFG
+			t.BG = lw.MarkedBG
+		case option.Selected:
+			t.FG = lw.SelectedFG
+			t.BG = lw.SelectedBG
+		default:
+			t.FG = lw.NormalFG
+			t.BG = lw.NormalBG
+		}
+	}
 }
 
 func (lw *ListWindow) HandleInput(event termbox.Event) {
@@ -52,59 +161,17 @@ func (lw *ListWindow) HandleInput(event termbox.Event) {
 
 		switch event.Key {
 		case termbox.KeyArrowUp:
-			lw.selected--
-			if lw.selected < 0 {
-				lw.selected = 0
-			}
+			lw.SetSelected(lw.Selected - 1)
 		case termbox.KeyArrowDown:
-			lw.selected++
-			if lw.selected >= len(lw.Options) {
-				lw.selected = len(lw.Options) - 1
-			}
+			lw.SetSelected(lw.Selected + 1)
 		}
 	}
 }
 
 func (lw *ListWindow) Destroy() { lw.DestroyChildren() }
-func (lw *ListWindow) Init()    {}
-
-// type ListSelection struct {
-// 	app          *App
-// 	Options      []string
-// 	Header       string
-// 	Footer       string
-// 	curSelection int
-// 	marked       []int
-// }
-
-// func (s *ListSelection) HandleInput(event termbox.Event) {
-// 	if event.Type == termbox.EventKey {
-// 		if event.Key == termbox.KeyArrowUp {
-// 			s.curSelection--
-// 			if s.curSelection < 0 {
-// 				s.curSelection = 0
-// 			}
-// 		} else if event.Key == termbox.KeyArrowDown {
-// 			s.curSelection++
-// 			if s.curSelection >= len(s.Options) {
-// 				s.curSelection = len(s.Options) - 1
-// 			}
-// 		} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-// 			s.app.currentState = &StateNormal{app: s.app}
-// 		}
-// 	}
-// }
-
-// func (s *ListSelection) RefreshDisplay() {
-// 	if s.Header == "" {
-// 		s.Header = "Select an item"
-// 	}
-// 	if s.marked == nil {
-// 		s.marked = []int{}
-// 	}
-// 	CreateListWindow(s.Header, s.Footer, s.Options, s.curSelection, s.marked)
-// }
-
-// func (s *ListSelection) GetCurrentSelection() string {
-// 	return s.Options[s.curSelection]
-// }
+func (lw *ListWindow) PreDraw() {
+	if lw.Dirty {
+		lw.Rebuild()
+		lw.Dirty = false
+	}
+}

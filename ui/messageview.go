@@ -19,6 +19,8 @@ type MessageView struct {
 	ShowPrivate bool
 	Logs        []*common.LogMessage // Maybe move this?
 
+	Layer int
+
 	MessageTexts  []*Text
 	CurChatScroll int
 }
@@ -36,12 +38,13 @@ func NewMessageView(state *discordgo.State) *MessageView {
 		Transform:    &Transform{},
 		DiscordState: state,
 	}
+	mv.Self = mv // See BaseEntity struct for why
 	return mv
 }
 
 func (mv *MessageView) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
-		mv.BuildTexts()
+		mv.Update()
 	}
 }
 
@@ -50,7 +53,7 @@ func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *disc
 	pChannel, err := mv.DiscordState.PrivateChannel(msg.ChannelID)
 	if pChannel != nil && err != nil {
 		if mv.ShowPrivate {
-			mv.BuildTexts()
+			mv.Update()
 		} else {
 			return
 		}
@@ -59,7 +62,7 @@ func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *disc
 	// Check if its a message were listening to
 	for _, v := range mv.Channels {
 		if v == msg.ChannelID {
-			mv.BuildTexts()
+			mv.Update()
 			break
 		}
 	}
@@ -71,6 +74,12 @@ func (mv *MessageView) HandleMessageEdit(session *discordgo.Session, msg *discor
 
 func (mv *MessageView) HandleMessageRemove(session *discordgo.Session, msg *discordgo.Message) {
 	mv.HandleMessageCreate(session, msg)
+}
+
+func (mv *MessageView) Update() {
+	mv.BuildTexts()
+	h := mv.Transform.GetRect().H
+	mv.BuildDisplayMessages(int(h))
 }
 
 func (mv *MessageView) BuildTexts() {
@@ -155,6 +164,7 @@ func (mv *MessageView) BuildTexts() {
 		lines := HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
 		y -= lines
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
+		text.Layer = mv.Layer
 		mv.AddChild(text)
 	}
 }
@@ -286,9 +296,8 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 
 func (mv *MessageView) Destroy() { mv.DestroyChildren() }
 
-func (mv *MessageView) Draw() {
-	// Wrong place to do this
-	mv.BuildDisplayMessages(10)
+func (mv *MessageView) PreDraw() {
+	mv.BuildDisplayMessages(int(mv.Transform.GetRect().H))
 	mv.BuildTexts()
 }
 
