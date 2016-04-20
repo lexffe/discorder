@@ -22,15 +22,14 @@ type App struct {
 	msgRecvChan    chan *discordgo.Message // Unused atm... remove?
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
-	logChan        chan string
 
 	typingManager TypingManager
 
 	stopPollEvents chan chan bool
 
-	logBuffer   []*common.LogMessage
-	logFile     *os.File
-	logFileLock sync.Mutex
+	logBuffer []*common.LogMessage
+	logFile   *os.File
+	logLock   sync.Mutex
 
 	*ui.BaseEntity
 
@@ -118,7 +117,6 @@ func (app *App) Init() {
 	app.stopChan = make(chan chan error)
 	app.inputEventChan = make(chan termbox.Event)
 	app.stopPollEvents = make(chan chan bool)
-	app.logChan = make(chan string)
 	log.SetOutput(app)
 
 	err := termbox.Init()
@@ -180,8 +178,6 @@ func (app *App) Run() {
 			//app.HandleMessage(*msg)
 		case evt := <-app.inputEventChan:
 			app.HandleInputEvent(evt)
-		case msg := <-app.logChan:
-			app.HandleLogMessage(msg)
 		case <-ticker.C:
 			app.Draw()
 		}
@@ -195,8 +191,9 @@ func delayedInterrupt(d time.Duration) {
 
 func (app *App) HandleLogMessage(msg string) {
 	split := strings.Split(msg, "\n")
-
 	now := time.Now()
+
+	app.logLock.Lock()
 	for _, splitStr := range split {
 		if splitStr == "" {
 			continue
@@ -207,8 +204,10 @@ func (app *App) HandleLogMessage(msg string) {
 		}
 		app.logBuffer = append(app.logBuffer, obj)
 	}
-
-	//app.logFile.Write([]byte(msg))
+	if app.logFile != nil {
+		app.logFile.Write([]byte(msg)) // TODO: Move this somewhere else, to its own goroutine to avoid slowdowns
+	}
+	app.logLock.Unlock()
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {

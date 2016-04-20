@@ -103,6 +103,11 @@ func (lw *ListWindow) SetSelected(selected int) {
 	lw.Dirty = true
 }
 
+func (lw *ListWindow) GetSelected() ListItem {
+	index := lw.CheckBounds(lw.Selected)
+	return lw.Options[index]
+}
+
 func (lw *ListWindow) SetOptionsString(options []string) {
 	lw.Options = make([]ListItem, len(options))
 	for k, v := range options {

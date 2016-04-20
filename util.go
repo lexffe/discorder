@@ -10,18 +10,7 @@ import (
 // For logs
 func (app *App) Write(p []byte) (n int, err error) {
 	cop := string(p)
-
-	// since we might log from the same goroutine deadlocks may occour, should probably do a queue system or something instead...
-	go func() {
-		app.logChan <- cop
-	}()
-
-	if app.logFile != nil {
-		app.logFileLock.Lock()
-		defer app.logFileLock.Unlock()
-		app.logFile.Write(p)
-	}
-
+	app.HandleLogMessage(cop)
 	return len(p), nil
 }
 

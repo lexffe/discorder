@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
@@ -42,8 +43,9 @@ func NewSelectServerWindow(app *App, messageView *ui.MessageView) *ServerSelectW
 	}
 
 	listWindow := ui.NewListWindow()
-	listWindow.Transform.AnchorMin = common.NewVector2F(0.1, 0)
-	listWindow.Transform.AnchorMax = common.NewVector2F(0.9, 1)
+	listWindow.Transform.AnchorMin = common.NewVector2F(0.1, 0.5)
+	listWindow.Transform.AnchorMax = common.NewVector2F(0.9, 0.5)
+	listWindow.Transform.Size.Y = float32(len(options))
 	listWindow.Transform.Top = 1
 	listWindow.Transform.Bottom = 1
 	listWindow.SetOptions(options)
@@ -56,6 +58,11 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		switch event.Key {
 		case termbox.KeyEnter:
+			selected := ssw.listWindow.GetSelected()
+			userdata, ok := selected.UserData.(*discordgo.Guild)
+			if ok {
+				log.Println("Selected ", userdata.Name)
+			}
 			// state := ssw.app.session.State
 			// state.RLock()
 			// defer state.RUnlock()
