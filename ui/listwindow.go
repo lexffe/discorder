@@ -54,7 +54,6 @@ func NewListWindow() *ListWindow {
 		SelectedFG: DefaultListSelectedFG,
 		SelectedBG: DefaultListSelectedBG,
 	}
-	lw.Self = lw
 
 	window := NewWindow()
 	window.Transform.Parent = lw.Transform

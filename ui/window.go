@@ -26,7 +26,6 @@ func NewWindow() *Window {
 		BorderFG:   termbox.ColorWhite,
 		FillBG:     termbox.ColorBlack,
 	}
-	w.Self = w // See BaseEntity struct for why
 	return w
 }
 

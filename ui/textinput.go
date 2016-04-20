@@ -25,7 +25,6 @@ func NewTextInput() *TextInput {
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
 	}
-	input.Self = input // See BaseEntity struct for why
 
 	t.Transform.Parent = input.Transform
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)

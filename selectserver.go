@@ -9,14 +9,16 @@ import (
 
 type ServerSelectWindow struct {
 	*ui.BaseEntity
-	App        *App
-	listWindow *ui.ListWindow
+	App         *App
+	listWindow  *ui.ListWindow
+	messageView *ui.MessageView
 }
 
-func NewSelectServerWindow(app *App) *ServerSelectWindow {
+func NewSelectServerWindow(app *App, messageView *ui.MessageView) *ServerSelectWindow {
 	ssw := &ServerSelectWindow{
-		BaseEntity: &ui.BaseEntity{},
-		App:        app,
+		BaseEntity:  &ui.BaseEntity{},
+		App:         app,
+		messageView: messageView,
 	}
 
 	state := app.session.State

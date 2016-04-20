@@ -38,7 +38,6 @@ func NewMessageView(state *discordgo.State) *MessageView {
 		Transform:    &Transform{},
 		DiscordState: state,
 	}
-	mv.Self = mv // See BaseEntity struct for why
 	return mv
 }
 

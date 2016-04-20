@@ -32,7 +32,7 @@ type App struct {
 	logFile     *os.File
 	logFileLock sync.Mutex
 
-	entityContainer *ui.BaseEntity
+	*ui.BaseEntity
 
 	ViewManager *ViewManager
 
@@ -48,9 +48,9 @@ func NewApp(config *Config, logPath string) *App {
 	})
 
 	a := &App{
-		config:          config,
-		notifications:   notify,
-		entityContainer: &ui.BaseEntity{},
+		config:        config,
+		notifications: notify,
+		BaseEntity:    &ui.BaseEntity{},
 	}
 	if err == nil {
 		a.logFile = logFile
@@ -128,7 +128,7 @@ func (app *App) Init() {
 	termbox.SetInputMode(termbox.InputAlt)
 
 	app.ViewManager = NewViewManager(app)
-	app.entityContainer.AddChild(app.ViewManager)
+	app.AddChild(app.ViewManager)
 }
 
 // Lsiten on the channels for incoming messages
@@ -219,7 +219,7 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 		}
 	}
 
-	entities := app.GetAllEntities()
+	entities := app.Children(true)
 	for _, entity := range entities {
 		inputHandler, ok := entity.(ui.InputHandler)
 		if ok {
@@ -229,16 +229,12 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 	app.Draw()
 }
 
-func (app *App) GetAllEntities() []ui.Entity {
-	return app.entityContainer.Children(true)
-}
-
 // Todo remove 10 layer lazy limit... Maps?
 func (app *App) Draw() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
 	// Run predraw
-	app.entityContainer.RunFunc(func(e ui.Entity) {
+	ui.RunFunc(app, func(e ui.Entity) {
 		updater, ok := e.(ui.PreDrawHandler)
 		if ok {
 			updater.PreDraw()
@@ -248,7 +244,7 @@ func (app *App) Draw() {
 	// Build the layers
 	layers := make([][]ui.DrawHandler, 10)
 
-	entities := app.GetAllEntities()
+	entities := app.Children(true)
 	for _, entity := range entities {
 		drawable, ok := entity.(ui.DrawHandler)
 		if ok {
@@ -307,3 +303,5 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 func (app *App) PrintWelcome() {
 	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know!\n(Press ctrl-o For help)")
 }
+
+func (app *App) Destroy() { app.DestroyChildren() }

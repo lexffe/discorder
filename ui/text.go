@@ -31,7 +31,6 @@ func NewText() *Text {
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
 	}
-	t.Self = t // See BaseEntity struct for why
 	return t
 }
 

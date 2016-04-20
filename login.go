@@ -141,8 +141,6 @@ func (lw *LoginWindow) Trylogin(user, pw string) {
 		log.Println("Error logging in: ", err)
 	} else {
 		lw.App.config.Save(configPath)
-		log.Println(lw.App.entityContainer)
-		lw.App.entityContainer.RemoveChild(lw, true)
-		log.Println(lw.App.entityContainer)
+		lw.App.RemoveChild(lw, true)
 	}
 }

@@ -8,22 +8,20 @@ import (
 type Entity interface {
 	Children(recursive bool) []Entity
 	Destroy()
-	RunFunc(f func(e Entity)) // Runs f recorsively
 }
 
 type BaseEntity struct {
-	Self     Entity // To get around some struct embedding limitations, set to whatever is embedding this, This probably needs some redisigning
 	entities []Entity
 }
 
-// Run f recursively on all children
-func (b *BaseEntity) RunFunc(f func(e Entity)) {
-	if b.Self != nil {
-		f(b.Self)
-	}
-	if b.entities != nil && len(b.entities) > 0 {
-		for _, v := range b.entities {
-			v.RunFunc(f)
+// Runs f recursively and in order on e and its children
+// by in order it means it runs on parent first and children last
+func RunFunc(e Entity, f func(e Entity)) {
+	f(e)
+	children := e.Children(false) // We wanna make sure we do it in the proper order
+	if children != nil {
+		for _, child := range children {
+			RunFunc(child, f)
 		}
 	}
 }

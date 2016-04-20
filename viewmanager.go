@@ -22,7 +22,6 @@ func NewViewManager(app *App) *ViewManager {
 		BaseEntity: &ui.BaseEntity{},
 		App:        app,
 	}
-	mv.Self = mv
 	return mv
 }
 
@@ -39,7 +38,7 @@ func (v *ViewManager) OnInit() {
 
 	// Launch the login
 	login := NewLoginWindow(v.App)
-	v.App.entityContainer.AddChild(login)
+	v.App.AddChild(login)
 	login.CheckAutoLogin()
 }
 
@@ -96,7 +95,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			if v.activeWindow != nil {
 				break
 			}
-			ssw := NewSelectServerWindow(v.App)
+			ssw := NewSelectServerWindow(v.App, v.mv)
 			v.AddChild(ssw)
 			v.activeWindow = ssw
 			v.input.Active = false
