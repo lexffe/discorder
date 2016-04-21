@@ -1,28 +1,31 @@
-package ui
+package main
 
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/discorder/common"
+	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
 	"time"
 	"unicode/utf8"
 )
 
 type MessageView struct {
-	*BaseEntity
-	Transform       *Transform
+	*ui.BaseEntity
+	Transform       *ui.Transform
 	DiscordState    *discordgo.State
 	DisplayMessages []*DisplayMessage
 
-	Guild       string
-	Channels    []string
-	ShowPrivate bool
-	Logs        []*common.LogMessage // Maybe move this?
+	Channels       []string
+	ShowAllPrivate bool
+	Logs           []*common.LogMessage // Maybe move this?
 
 	Layer int
 
-	MessageTexts  []*Text
+	MessageTexts  []*ui.Text
 	CurChatScroll int
+
+	DisplayMessagesDirty bool // Rebuilds displaymessages on next draw if set
+	TextsDirty           bool // Rebuilds texts on next draw if set
 }
 
 type DisplayMessage struct {
@@ -34,16 +37,46 @@ type DisplayMessage struct {
 
 func NewMessageView(state *discordgo.State) *MessageView {
 	mv := &MessageView{
-		BaseEntity:   &BaseEntity{},
-		Transform:    &Transform{},
+		BaseEntity:   &ui.BaseEntity{},
+		Transform:    &ui.Transform{},
 		DiscordState: state,
 	}
 	return mv
 }
 
+func (mv *MessageView) AddChannel(channel string) {
+	for _, v := range mv.Channels {
+		if v == channel {
+			return
+		}
+	}
+	mv.Channels = append(mv.Channels, channel)
+	mv.DisplayMessagesDirty = true
+}
+
+func (mv *MessageView) RemoveChannel(channel string) {
+	index := -1
+	for k, v := range mv.Channels {
+		if channel == v {
+			index = k
+			break
+		}
+	}
+
+	if index == -1 {
+		return // no channel by that name
+	}
+
+	if index == len(mv.Channels)-1 {
+		mv.Channels = mv.Channels[:index]
+	} else {
+		mv.Channels = append(mv.Channels[:index], mv.Channels[index+1:]...)
+	}
+}
+
 func (mv *MessageView) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
-		mv.Update()
+		mv.TextsDirty = true //  ;)
 	}
 }
 
@@ -51,17 +84,14 @@ func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *disc
 	// Check if its private and if this messagegview shows private messages
 	pChannel, err := mv.DiscordState.PrivateChannel(msg.ChannelID)
 	if pChannel != nil && err != nil {
-		if mv.ShowPrivate {
-			mv.Update()
-		} else {
-			return
-		}
+		mv.DisplayMessagesDirty = true
+		return
 	}
 
 	// Check if its a message were listening to
 	for _, v := range mv.Channels {
 		if v == msg.ChannelID {
-			mv.Update()
+			mv.DisplayMessagesDirty = true
 			break
 		}
 	}
@@ -75,16 +105,10 @@ func (mv *MessageView) HandleMessageRemove(session *discordgo.Session, msg *disc
 	mv.HandleMessageCreate(session, msg)
 }
 
-func (mv *MessageView) Update() {
-	mv.BuildTexts()
-	h := mv.Transform.GetRect().H
-	mv.BuildDisplayMessages(int(h))
-}
-
 func (mv *MessageView) BuildTexts() {
 	// sizex, sizey := termbox.Size()
 	mv.ClearChildren()
-	mv.MessageTexts = make([]*Text, 0)
+	mv.MessageTexts = make([]*ui.Text, 0)
 
 	rect := mv.Transform.GetRect()
 
@@ -103,7 +127,7 @@ func (mv *MessageView) BuildTexts() {
 			continue
 		}
 
-		text := NewText()
+		text := ui.NewText()
 		text.Transform.Size = common.NewVector2F(rect.W, 0)
 
 		if item.IsLogMessage {
@@ -128,11 +152,11 @@ func (mv *MessageView) BuildTexts() {
 				errStr := "(error getting channel" + err.Error() + ") "
 				fullMsg := ts + errStr + author + ": " + msg.ContentWithMentionsReplaced()
 				errLen := utf8.RuneCountInString(errStr)
-				points := map[int]AttribPair{
-					0:                          AttribPair{termbox.ColorBlue, termbox.ColorRed},
-					tsLen:                      AttribPair{termbox.ColorWhite, termbox.ColorRed},
-					errLen + tsLen:             AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
-					errLen + authorLen + tsLen: AttribPair{},
+				points := map[int]ui.AttribPair{
+					0:                          ui.AttribPair{termbox.ColorBlue, termbox.ColorRed},
+					tsLen:                      ui.AttribPair{termbox.ColorWhite, termbox.ColorRed},
+					errLen + tsLen:             ui.AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
+					errLen + authorLen + tsLen: ui.AttribPair{},
 				}
 				text.Text = fullMsg
 				text.Attribs = points
@@ -146,21 +170,21 @@ func (mv *MessageView) BuildTexts() {
 
 				fullMsg := ts + "[" + name + "]" + author + ": " + msg.ContentWithMentionsReplaced()
 				channelLen := utf8.RuneCountInString(name) + 2
-				points := map[int]AttribPair{
-					0:                              AttribPair{termbox.ColorBlue, termbox.ColorDefault},
-					tsLen:                          AttribPair{termbox.ColorGreen, termbox.ColorDefault},
-					channelLen + tsLen:             AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
-					channelLen + authorLen + tsLen: AttribPair{},
+				points := map[int]ui.AttribPair{
+					0:                              ui.AttribPair{termbox.ColorBlue, termbox.ColorDefault},
+					tsLen:                          ui.AttribPair{termbox.ColorGreen, termbox.ColorDefault},
+					channelLen + tsLen:             ui.AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
+					channelLen + authorLen + tsLen: ui.AttribPair{},
 				}
 				if dm {
-					points[tsLen] = AttribPair{termbox.ColorMagenta, termbox.ColorDefault}
+					points[tsLen] = ui.AttribPair{termbox.ColorMagenta, termbox.ColorDefault}
 				}
 				text.Text = fullMsg
 				text.Attribs = points
 			}
 		}
 
-		lines := HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
+		lines := ui.HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
 		y -= lines
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
 		text.Layer = mv.Layer
@@ -189,7 +213,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 	for i := 0; i < len(mv.Channels); i++ {
 		listeningIndexes[i] = -10
 	}
-	if mv.ShowPrivate {
+	if mv.ShowAllPrivate {
 		for i := 0; i < len(state.PrivateChannels); i++ {
 			pmIndexes[i] = -10
 		}
@@ -211,7 +235,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 			// Avoid deadlock since guildchannel also calls rlock, whch will block if there was a new message in the meantime causing lock to be called
 			// before that
 			state.RUnlock()
-			channel, err := state.GuildChannel(mv.Guild, listeningChannelId)
+			channel, err := state.Channel(listeningChannelId)
 			state.RLock()
 			if err != nil {
 				continue
@@ -231,7 +255,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		nextPmStartIndex := 0 // And the actual next start index to use
 
 		// Check for newest pm's
-		if mv.ShowPrivate {
+		if mv.ShowAllPrivate {
 			for k, privateChannel := range state.PrivateChannels {
 
 				newest, nextIndex := GetNewestMessageBefore(privateChannel.Messages, beforeTime, pmIndexes[k])

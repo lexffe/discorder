@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"github.com/nsf/termbox-go"
 )
 
@@ -107,16 +106,4 @@ type PreDrawHandler interface {
 type DrawHandler interface {
 	GetDrawLayer() int
 	Draw()
-}
-
-type MessageCreateHandler interface {
-	HandleMessageCreate(session *discordgo.MessageCreate, msg *discordgo.Message)
-}
-
-type MessageEditHandler interface {
-	HandleMessageEdit(session *discordgo.MessageCreate, msg *discordgo.Message)
-}
-
-type MessageRemoveHandler interface {
-	HandleMessageRemove(session *discordgo.MessageCreate, msg *discordgo.Message)
 }

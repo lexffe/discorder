@@ -11,8 +11,8 @@ import (
 type ViewManager struct {
 	*ui.BaseEntity
 	App                 *App
-	mv                  *ui.MessageView
-	selectedMessageView *ui.MessageView
+	mv                  *MessageView
+	selectedMessageView *MessageView
 	activeWindow        ui.Entity
 	input               *ui.TextInput
 }
@@ -45,11 +45,11 @@ func (v *ViewManager) OnInit() {
 func (v *ViewManager) OnReady() {
 	// go into the main view
 
-	mv := ui.NewMessageView(v.App.session.State)
+	mv := NewMessageView(v.App.session.State)
 	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mv.Transform.Bottom = 2
 	mv.Transform.Top = 1
-	mv.ShowPrivate = true
+	mv.ShowAllPrivate = true
 	mv.Logs = v.App.logBuffer
 	v.AddChild(mv)
 	v.mv = mv

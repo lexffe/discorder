@@ -12,10 +12,11 @@ type ServerSelectWindow struct {
 	*ui.BaseEntity
 	App         *App
 	listWindow  *ui.ListWindow
-	messageView *ui.MessageView
+	messageView *MessageView
+	viewManager *ViewManager
 }
 
-func NewSelectServerWindow(app *App, messageView *ui.MessageView) *ServerSelectWindow {
+func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWindow {
 	ssw := &ServerSelectWindow{
 		BaseEntity:  &ui.BaseEntity{},
 		App:         app,
@@ -31,15 +32,15 @@ func NewSelectServerWindow(app *App, messageView *ui.MessageView) *ServerSelectW
 		return nil
 	}
 
-	options := make([]ui.ListItem, len(state.Guilds))
+	options := make([]*ui.ListItem, len(state.Guilds)+1)
 	for k, v := range state.Guilds {
-		options[k] = ui.ListItem{
+		options[k+1] = &ui.ListItem{
 			Str:      v.Name,
 			UserData: v,
 		}
-		if k == 0 {
-			options[k].Selected = true
-		}
+	}
+	options[0] = &ui.ListItem{
+		Str: "Direct Messages",
 	}
 
 	listWindow := ui.NewListWindow()
@@ -58,33 +59,21 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventKey {
 		switch event.Key {
 		case termbox.KeyEnter:
+			// The below does not strictly belong here does it?
 			selected := ssw.listWindow.GetSelected()
+
 			userdata, ok := selected.UserData.(*discordgo.Guild)
+
+			var window *ChannelSelectWindow
 			if ok {
-				log.Println("Selected ", userdata.Name)
+				window = NewChannelSelectWindow(ssw.App, ssw.messageView, userdata.ID)
+			} else {
+				window = NewChannelSelectWindow(ssw.App, ssw.messageView, "")
 			}
-			// state := ssw.app.session.State
-			// state.RLock()
-			// defer state.RUnlock()
 
-			// if ssw.listWindow >= len(state.Guilds) {
-			// 	log.Println("Guild list changed while selecting.. aborting")
-			// 	s.app.SetState(&StateNormal{app: s.app})
-			// 	return
-			// }
-
-			// guild := state.Guilds[s.listSelection.curSelection]
-			// if guild.Name != s.listSelection.GetCurrentSelection() {
-			// 	log.Println("Name mismatch, guild list changed")
-			// 	s.app.SetState(&StateNormal{app: s.app})
-			// 	return
-			// }
-
-			// s.app.selectedGuild = guild
-			// s.app.selectedServerId = guild.ID
-			// s.app.listeningChannels = make([]string, 0)
-			// s.app.SetState(&StateSelectChannel{app: s.app})
-
+			ssw.App.ViewManager.RemoveChild(ssw, true)
+			ssw.App.ViewManager.AddChild(window)
+			ssw.App.ViewManager.activeWindow = window
 		}
 	}
 }

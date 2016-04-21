@@ -34,7 +34,7 @@ type ListWindow struct {
 	MarkedBG, MarkedFG     termbox.Attribute
 	SelectedBG, SelectedFG termbox.Attribute
 
-	Options []ListItem
+	Options []*ListItem
 
 	Selected int
 
@@ -76,6 +76,16 @@ func (lw *ListWindow) CheckBounds(index int) int {
 	return index
 }
 
+func (lw *ListWindow) GetIndex(item *ListItem) int {
+	for k, v := range lw.Options {
+		if item == v {
+			return k
+		}
+	}
+
+	return -1
+}
+
 func (lw *ListWindow) RemoveMarked(index int) {
 	index = lw.CheckBounds(index)
 	lw.Options[index].Marked = false
@@ -91,6 +101,9 @@ func (lw *ListWindow) AddMarked(index int) {
 }
 
 func (lw *ListWindow) SetSelected(selected int) {
+	if len(lw.Options) < 1 {
+		return
+	}
 	// Remove previous selection
 	if lw.Selected < len(lw.Options) && lw.Selected >= 0 {
 		lw.Options[lw.Selected].Selected = false
@@ -103,15 +116,15 @@ func (lw *ListWindow) SetSelected(selected int) {
 	lw.Dirty = true
 }
 
-func (lw *ListWindow) GetSelected() ListItem {
+func (lw *ListWindow) GetSelected() *ListItem {
 	index := lw.CheckBounds(lw.Selected)
 	return lw.Options[index]
 }
 
 func (lw *ListWindow) SetOptionsString(options []string) {
-	lw.Options = make([]ListItem, len(options))
+	lw.Options = make([]*ListItem, len(options))
 	for k, v := range options {
-		lw.Options[k] = ListItem{
+		lw.Options[k] = &ListItem{
 			Str:      v,
 			Marked:   false,
 			Selected: false,
@@ -123,7 +136,7 @@ func (lw *ListWindow) SetOptionsString(options []string) {
 	lw.Dirty = true
 }
 
-func (lw *ListWindow) SetOptions(options []ListItem) {
+func (lw *ListWindow) SetOptions(options []*ListItem) {
 	lw.Options = options
 	lw.Dirty = true
 }
