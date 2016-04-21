@@ -2,9 +2,9 @@
 
 You're on the dev branch.
 
-Currently workin on restructuring the application, so its not a plate of spaghett
+Currently workin on rewriting the application, so that it's not a plate of spaghett
 
-It probably wont build atm, since its in the middle of the restructuring
+Currently not functional... so don't bother trying to build and run this branch
 
 #Discorder
 
