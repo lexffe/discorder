@@ -12,9 +12,12 @@ type ViewManager struct {
 	*ui.BaseEntity
 	App                 *App
 	mv                  *MessageView
-	selectedMessageView *MessageView
+	SelectedMessageView *MessageView
 	activeWindow        ui.Entity
+	inputHelper         *ui.Text
 	input               *ui.TextInput
+	readyReceived       bool
+	talkingChannel      string
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -44,8 +47,9 @@ func (v *ViewManager) OnInit() {
 
 func (v *ViewManager) OnReady() {
 	// go into the main view
+	v.readyReceived = true
 
-	mv := NewMessageView(v.App.session.State)
+	mv := NewMessageView(v.App)
 	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mv.Transform.Bottom = 2
 	mv.Transform.Top = 1
@@ -53,6 +57,7 @@ func (v *ViewManager) OnReady() {
 	mv.Logs = v.App.logBuffer
 	v.AddChild(mv)
 	v.mv = mv
+	v.SelectedMessageView = mv
 
 	input := ui.NewTextInput()
 	input.Transform.AnchorMin = common.NewVector2F(0, 1)
@@ -61,6 +66,25 @@ func (v *ViewManager) OnReady() {
 	input.Active = true
 	v.AddChild(input)
 	v.input = input
+
+	inputHelper := ui.NewText()
+	inputHelper.Transform.AnchorMax = common.NewVector2I(0, 1)
+	inputHelper.Transform.AnchorMin = common.NewVector2I(0, 1)
+	inputHelper.FG = termbox.ColorYellow | termbox.AttrBold
+	inputHelper.Text = "Select a channel to send to"
+	length := utf8.RuneCountInString(inputHelper.Text)
+	inputHelper.Transform.Size.X = float32(length)
+	inputHelper.Transform.Position.Y = -1
+	v.inputHelper = inputHelper
+	v.AddChild(inputHelper)
+
+	v.input.Transform.Left = length + 1
+}
+
+func (v *ViewManager) ApplyConfig() {
+	for _, channel := range v.App.config.ListeningChannels {
+		v.SelectedMessageView.AddChannel(channel)
+	}
 }
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }
@@ -69,13 +93,26 @@ func (v *ViewManager) PreDraw() {
 	if v.mv != nil {
 		v.mv.Logs = v.App.logBuffer
 	}
-}
 
-func (v *ViewManager) GetDrawLayer() int {
-	return 0
+	// Update the prompt
+	if v.talkingChannel != "" {
+		channel, err := v.App.session.State.Channel(v.talkingChannel)
+		name := v.talkingChannel
+		if channel != nil && err == nil {
+			name = channel.Name
+		}
+		v.inputHelper.Text = "Send to #" + name
+		length := utf8.RuneCountInString(v.inputHelper.Text)
+		v.inputHelper.Transform.Size.X = float32(length)
+		v.input.Transform.Left = length + 1
+	}
 }
 
 func (v *ViewManager) HandleInput(event termbox.Event) {
+	if !v.readyReceived {
+		return
+	}
+
 	if event.Type == termbox.EventKey {
 		switch event.Key {
 		case termbox.KeyCtrlG: // Select channel
@@ -106,6 +143,17 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				v.activeWindow = nil
 				v.input.Active = true
 			}
+		case termbox.KeyCtrlL:
+			v.App.logBuffer = []*common.LogMessage{}
+		case termbox.KeyEnter:
+			if v.talkingChannel == "" {
+				log.Println("you're trying to send a message to nobody buddy D:")
+				break
+			}
+			toSend := v.input.TextBuffer
+			v.input.TextBuffer = ""
+			v.input.CursorLocation = 0
+			v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
 		}
 	}
 }

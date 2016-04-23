@@ -5,6 +5,12 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	DefaultWindowBorderBG = termbox.ColorBlack
+	DefaultWindowBorderFG = termbox.ColorWhite
+	DefaultWindowFillBG   = termbox.ColorBlack
+)
+
 type Window struct {
 	*BaseEntity
 
@@ -22,9 +28,9 @@ func NewWindow() *Window {
 	w := &Window{
 		BaseEntity: &BaseEntity{},
 		Transform:  &Transform{},
-		BorderBG:   termbox.ColorBlack | termbox.AttrBold,
-		BorderFG:   termbox.ColorWhite,
-		FillBG:     termbox.ColorBlack,
+		BorderBG:   DefaultWindowBorderBG,
+		BorderFG:   DefaultWindowBorderFG,
+		FillBG:     DefaultWindowFillBG,
 	}
 	return w
 }

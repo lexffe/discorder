@@ -160,12 +160,12 @@ func (lw *ListWindow) Rebuild() {
 		t.Transform.Parent = lw.Window.Transform
 
 		switch {
-		case option.Marked:
-			t.FG = lw.MarkedFG
-			t.BG = lw.MarkedBG
 		case option.Selected:
 			t.FG = lw.SelectedFG
 			t.BG = lw.SelectedBG
+		case option.Marked:
+			t.FG = lw.MarkedFG
+			t.BG = lw.MarkedBG
 		default:
 			t.FG = lw.NormalFG
 			t.BG = lw.NormalBG

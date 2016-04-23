@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+const (
+	WindowTextBG = termbox.ColorBlack
+)
+
 type App struct {
 	running        bool
 	stopping       bool
@@ -165,7 +169,9 @@ func (app *App) Run() {
 			app.running = false
 			// app.config.LastServer = app.selectedServerId
 			// app.config.LastChannel = app.selectedChannelId
-			// app.config.ListeningChannels = app.listeningChannels
+			if app.ViewManager != nil && app.ViewManager.SelectedMessageView != nil {
+				app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
+			}
 			app.config.Save(configPath)
 			pollStopped := make(chan bool)
 			// Stop the event polling

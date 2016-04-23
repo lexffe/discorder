@@ -21,6 +21,7 @@ type LoginWindow struct {
 	EmailInput    *ui.TextInput
 
 	Footer *ui.Text
+	Helper *ui.Text
 
 	SavePassword       bool
 	currentlyLoggingIn bool
@@ -36,6 +37,14 @@ func NewLoginWindow(app *App) *LoginWindow {
 	window.Transform.Size = common.NewVector2I(50, 10)
 	window.Transform.Position = common.NewVector2I(-25, -5)
 	window.Title = "Login"
+
+	helper := ui.NewText()
+	helper.Text = "Enter Email"
+	helper.Transform.Parent = window.Transform
+	helper.Transform.Position = common.NewVector2I(1, 2)
+	helper.Transform.Size = common.NewVector2I(45, 1)
+	helper.Layer = 5
+	window.AddChild(helper)
 
 	mailInput := ui.NewTextInput()
 	mailInput.Transform.Parent = window.Transform
@@ -75,6 +84,7 @@ func NewLoginWindow(app *App) *LoginWindow {
 		PWInput:    pwInput,
 		EmailInput: mailInput,
 		App:        app,
+		Helper:     helper,
 	}
 	lw.AddChild(window)
 	return lw
@@ -142,5 +152,16 @@ func (lw *LoginWindow) Trylogin(user, pw string) {
 	} else {
 		lw.App.config.Save(configPath)
 		lw.App.RemoveChild(lw, true)
+	}
+}
+
+func (lw *LoginWindow) PreDraw() {
+	if lw.Helper == nil {
+		return
+	}
+	if lw.CurInputState == InputStateEmail {
+		lw.Helper.Text = "Enter Email"
+	} else {
+		lw.Helper.Text = "Enter Password"
 	}
 }

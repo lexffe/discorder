@@ -20,9 +20,10 @@ type ChannelSelectWindow struct {
 // If guild is empty, selects private channel
 func NewChannelSelectWindow(app *App, mv *MessageView, guild string) *ChannelSelectWindow {
 	csw := &ChannelSelectWindow{
-		BaseEntity: &ui.BaseEntity{},
-		App:        app,
-		Guild:      guild,
+		BaseEntity:  &ui.BaseEntity{},
+		App:         app,
+		Guild:       guild,
+		messageView: mv,
 	}
 	if guild == "" {
 		csw.private = true
@@ -62,6 +63,14 @@ func NewChannelSelectWindow(app *App, mv *MessageView, guild string) *ChannelSel
 		if k == 0 {
 			item.Selected = true
 		}
+
+		// Check if we are listening to it
+		for _, listeningChannel := range mv.Channels {
+			if listeningChannel == v.ID {
+				item.Marked = true
+			}
+		}
+
 		options = append(options, item)
 	}
 
@@ -82,9 +91,10 @@ func (csw *ChannelSelectWindow) HandleInput(event termbox.Event) {
 		switch event.Key {
 		case termbox.KeyEnter:
 			selected := csw.listWindow.GetSelected()
-			userdata, ok := selected.UserData.(*discordgo.Guild)
+			userdata, ok := selected.UserData.(*discordgo.Channel)
 			if ok {
 				log.Println("Selected ", userdata.Name)
+				csw.App.ViewManager.talkingChannel = userdata.ID
 			}
 		case termbox.KeySpace:
 			selected := csw.listWindow.GetSelected()
@@ -97,6 +107,17 @@ func (csw *ChannelSelectWindow) HandleInput(event termbox.Event) {
 func (csw *ChannelSelectWindow) TogggleMarked(item *ui.ListItem) {
 	item.Marked = !item.Marked
 	csw.listWindow.Dirty = true
+
+	channel, ok := item.UserData.(*discordgo.Channel)
+	if !ok {
+		return
+	}
+
+	if item.Marked {
+		csw.messageView.AddChannel(channel.ID)
+	} else {
+		csw.messageView.RemoveChannel(channel.ID)
+	}
 	// Reflect changes to messageview
 }
 

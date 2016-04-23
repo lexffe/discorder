@@ -11,7 +11,6 @@ type Config struct {
 	Password  string `json:"password"`
 	AuthToken string `json:"authToken"` // Not used currently, but planned
 
-	LastServer        string   `json:"lastServer"`
 	LastChannel       string   `json:"lastChannel"`
 	ListeningChannels []string `json:"listeningChannels"`
 }

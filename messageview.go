@@ -12,7 +12,7 @@ import (
 type MessageView struct {
 	*ui.BaseEntity
 	Transform       *ui.Transform
-	DiscordState    *discordgo.State
+	App             *App
 	DisplayMessages []*DisplayMessage
 
 	Channels       []string
@@ -35,23 +35,37 @@ type DisplayMessage struct {
 	Timestamp      time.Time
 }
 
-func NewMessageView(state *discordgo.State) *MessageView {
+func NewMessageView(app *App) *MessageView {
 	mv := &MessageView{
-		BaseEntity:   &ui.BaseEntity{},
-		Transform:    &ui.Transform{},
-		DiscordState: state,
+		BaseEntity: &ui.BaseEntity{},
+		Transform:  &ui.Transform{},
+		App:        app,
 	}
 	return mv
 }
 
 func (mv *MessageView) AddChannel(channel string) {
-	for _, v := range mv.Channels {
-		if v == channel {
-			return
+	if mv.Channels == nil {
+		mv.Channels = []string{channel}
+	} else {
+		for _, v := range mv.Channels {
+			if v == channel {
+				return
+			}
 		}
+		mv.Channels = append(mv.Channels, channel)
 	}
-	mv.Channels = append(mv.Channels, channel)
+
 	mv.DisplayMessagesDirty = true
+
+	discordChannel, err := mv.App.session.State.Channel(channel)
+	if err != nil {
+		return
+	}
+	// Grab some history
+	if len(discordChannel.Messages) < 10 {
+		mv.App.GetHistory(channel, 10, "", "")
+	}
 }
 
 func (mv *MessageView) RemoveChannel(channel string) {
@@ -82,7 +96,7 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 
 func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *discordgo.Message) {
 	// Check if its private and if this messagegview shows private messages
-	pChannel, err := mv.DiscordState.PrivateChannel(msg.ChannelID)
+	pChannel, err := mv.App.session.State.PrivateChannel(msg.ChannelID)
 	if pChannel != nil && err != nil {
 		mv.DisplayMessagesDirty = true
 		return
@@ -147,7 +161,7 @@ func (mv *MessageView) BuildTexts() {
 			tsLen := utf8.RuneCountInString(ts)
 
 			authorLen := utf8.RuneCountInString(author)
-			channel, err := mv.DiscordState.Channel(msg.ChannelID)
+			channel, err := mv.App.session.State.Channel(msg.ChannelID)
 			if err != nil {
 				errStr := "(error getting channel" + err.Error() + ") "
 				fullMsg := ts + errStr + author + ": " + msg.ContentWithMentionsReplaced()
@@ -192,12 +206,13 @@ func (mv *MessageView) BuildTexts() {
 	}
 }
 
+// TODO: Merge private and normal channels to make this a little big ligther
 // A target for optimisation when i get that far
 // Also a target for cleaning up
 // Builds a list of messages to display from all of the channels were listening to, pm's and the log
 func (mv *MessageView) BuildDisplayMessages(size int) {
 	// Ackquire the state, or create one if null (incase were starting)
-	state := mv.DiscordState
+	state := mv.App.session.State
 	if state == nil {
 		state = discordgo.NewState()
 	}
@@ -237,7 +252,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 			state.RUnlock()
 			channel, err := state.Channel(listeningChannelId)
 			state.RLock()
-			if err != nil {
+			if err != nil || (channel.IsPrivate && mv.ShowAllPrivate) {
 				continue
 			}
 

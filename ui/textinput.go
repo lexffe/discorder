@@ -79,6 +79,9 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 			char = '@' // Just temporary workaround for non american keyboards on windows
 			// So they're atleast able to log in
 		}
+		if char == 0 {
+			return
+		}
 
 		bufLen := utf8.RuneCountInString(ti.TextBuffer)
 		if ti.CursorLocation == bufLen {
@@ -101,7 +104,9 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 			ti.CursorLocation++
 		}
 	}
+}
 
+func (ti *TextInput) PreDraw() {
 	if ti.MaskInput {
 		ti.Text.Text = ""
 		for _, _ = range ti.TextBuffer {
