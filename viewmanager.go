@@ -10,14 +10,15 @@ import (
 
 type ViewManager struct {
 	*ui.BaseEntity
-	App                 *App
-	mv                  *MessageView
-	SelectedMessageView *MessageView
-	activeWindow        ui.Entity
-	inputHelper         *ui.Text
-	input               *ui.TextInput
-	readyReceived       bool
-	talkingChannel      string
+	App                  *App
+	mv                   *MessageView
+	SelectedMessageView  *MessageView
+	activeWindow         ui.Entity
+	inputHelper          *ui.Text
+	input                *ui.TextInput
+	readyReceived        bool
+	talkingChannel       string
+	mentionAutocompleter *MentionAutoCompletion
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -51,7 +52,7 @@ func (v *ViewManager) OnReady() {
 
 	mv := NewMessageView(v.App)
 	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
-	mv.Transform.Bottom = 2
+	mv.Transform.Bottom = 3
 	mv.Transform.Top = 1
 	mv.ShowAllPrivate = true
 	mv.Logs = v.App.logBuffer
@@ -79,6 +80,12 @@ func (v *ViewManager) OnReady() {
 	v.AddChild(inputHelper)
 
 	v.input.Transform.Left = length + 1
+
+	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, input)
+	v.mentionAutocompleter.Transform.AnchorMin.Y = 1
+	v.mentionAutocompleter.Transform.AnchorMax = common.NewVector2I(1, 1)
+	v.mentionAutocompleter.Transform.Position.Y = -2
+	v.AddChild(v.mentionAutocompleter)
 }
 
 func (v *ViewManager) ApplyConfig() {
@@ -150,10 +157,18 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				log.Println("you're trying to send a message to nobody buddy D:")
 				break
 			}
-			toSend := v.input.TextBuffer
-			v.input.TextBuffer = ""
-			v.input.CursorLocation = 0
-			v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
+
+			if v.mentionAutocompleter.isAutocompletingMention {
+				if v.mentionAutocompleter.PerformAutocompleteMention() {
+					v.mentionAutocompleter.isAutocompletingMention = false
+				}
+			} else {
+				toSend := v.input.TextBuffer
+				v.input.TextBuffer = ""
+				v.input.CursorLocation = 0
+				v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
+			}
+
 		}
 	}
 }
