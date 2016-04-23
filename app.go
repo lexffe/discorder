@@ -27,7 +27,7 @@ type App struct {
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 
-	typingManager TypingManager
+	typingManager *TypingManager
 
 	stopPollEvents chan chan bool
 
@@ -150,7 +150,7 @@ func (app *App) Run() {
 		}
 	}()
 
-	app.typingManager = TypingManager{
+	app.typingManager = &TypingManager{
 		in: make(chan *discordgo.TypingStart),
 	}
 	go app.typingManager.Run()
@@ -171,6 +171,7 @@ func (app *App) Run() {
 			// app.config.LastChannel = app.selectedChannelId
 			if app.ViewManager != nil && app.ViewManager.SelectedMessageView != nil {
 				app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
+				app.config.LastChannel = app.ViewManager.talkingChannel
 			}
 			app.config.Save(configPath)
 			pollStopped := make(chan bool)

@@ -100,7 +100,7 @@ type InputHandler interface {
 }
 
 type PreDrawHandler interface {
-	PreDraw() // Ran before drawing, if you create any entities here then they wont get predraw called on them so only create simple entities
+	PreDraw() // Ran before drawing, for example add or remove children
 }
 
 type DrawHandler interface {

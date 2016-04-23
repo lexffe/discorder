@@ -86,12 +86,21 @@ func (v *ViewManager) OnReady() {
 	v.mentionAutocompleter.Transform.AnchorMax = common.NewVector2I(1, 1)
 	v.mentionAutocompleter.Transform.Position.Y = -2
 	v.AddChild(v.mentionAutocompleter)
+
+	typingDisplay := NewTypingDisplay(v.App)
+	typingDisplay.Transform.AnchorMin.Y = 1
+	typingDisplay.Transform.AnchorMax = common.NewVector2I(1, 1)
+	typingDisplay.Transform.Position.Y = -2
+	v.AddChild(typingDisplay)
+
+	v.ApplyConfig()
 }
 
 func (v *ViewManager) ApplyConfig() {
 	for _, channel := range v.App.config.ListeningChannels {
 		v.SelectedMessageView.AddChannel(channel)
 	}
+	v.talkingChannel = v.App.config.LastChannel
 }
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }

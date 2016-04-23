@@ -78,8 +78,9 @@ func NewChannelSelectWindow(app *App, mv *MessageView, guild string) *ChannelSel
 	listWindow.Transform.AnchorMin = common.NewVector2F(0.1, 0.5)
 	listWindow.Transform.AnchorMax = common.NewVector2F(0.9, 0.5)
 	listWindow.Transform.Size.Y = float32(len(options))
-	listWindow.Transform.Top = 1
-	listWindow.Transform.Bottom = 1
+
+	listWindow.Transform.Position.Y = -float32(len(options)) / 2
+
 	listWindow.SetOptions(options)
 	csw.listWindow = listWindow
 	csw.AddChild(listWindow)

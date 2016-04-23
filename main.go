@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,7 +15,7 @@ const (
 	VERSION_MAJOR = 0
 	VERSION_MINOR = 3
 	VERSION_PATCH = 0
-	VERSION_NOTE  = "Git-silly"
+	VERSION_NOTE  = "Git-lemony"
 )
 
 var (
@@ -41,10 +43,10 @@ func main() {
 
 	config = c
 
-	// Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
-	// logFile, _ := os.OpenFile("hmpf", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
-	// syscall.Dup2(int(logFile.Fd()), 1)
-	// syscall.Dup2(int(logFile.Fd()), 2)
+	//Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
+	logFile, _ := os.OpenFile("hmpf", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
+	syscall.Dup2(int(logFile.Fd()), 1)
+	syscall.Dup2(int(logFile.Fd()), 2)
 
 	application = NewApp(config, *flagLogPath)
 	application.Run()
@@ -96,12 +98,19 @@ func (t *TypingManager) Run() {
 func (t *TypingManager) GetTyping(filter []string) []*discordgo.TypingStart {
 	out := make([]*discordgo.TypingStart, 0)
 	t.Lock()
-OUTER:
-	for _, typing := range t.typing {
-		for _, filterItem := range filter {
-			if typing.t.ChannelID == filterItem {
-				out = append(out, typing.t)
-				continue OUTER
+	if len(filter) == 0 {
+		out = make([]*discordgo.TypingStart, len(t.typing))
+		for k, typing := range t.typing {
+			out[k] = typing.t
+		}
+	} else {
+	OUTER:
+		for _, typing := range t.typing {
+			for _, filterItem := range filter {
+				if typing.t.ChannelID == filterItem {
+					out = append(out, typing.t)
+					continue OUTER
+				}
 			}
 		}
 	}
