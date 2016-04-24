@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
+	"unicode/utf8"
 )
 
 // Set some default styles
@@ -141,13 +142,32 @@ func (lw *ListWindow) SetOptions(options []*ListItem) {
 	lw.Dirty = true
 }
 
+func (lw *ListWindow) OptionsHeight() int {
+	h := 0
+	rect := lw.Transform.GetRect()
+	for _, v := range lw.Options {
+		h += HeightRequired(utf8.RuneCountInString(v.Str), int(rect.W))
+	}
+	return h
+}
+
 func (lw *ListWindow) Rebuild() {
-	lw.ClearChildren()
-	lw.AddChild(lw.Window)
+	//lw.ClearChildren()
+	//lw.AddChild(lw.Window)
+	lw.Window.ClearChildren()
 
 	lw.texts = make([]*Text, len(lw.Options))
 
+	requiredHeight := lw.OptionsHeight()
+	rect := lw.Transform.GetRect()
+	_, termSizeY := termbox.Size()
+
 	y := 0
+	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
+		// If window is taller then scroll
+		y = int(float64(requiredHeight)*(float64(len(lw.Options)-lw.Selected)/float64(len(lw.Options)))) - int(rect.H/2)
+	}
+
 	for k, option := range lw.Options {
 		t := NewText()
 		t.Text = option.Str
@@ -182,6 +202,8 @@ func (lw *ListWindow) HandleInput(event termbox.Event) {
 		case termbox.KeyArrowDown:
 			lw.SetSelected(lw.Selected + 1)
 		}
+	} else if event.Type == termbox.EventResize {
+		lw.Dirty = true
 	}
 }
 

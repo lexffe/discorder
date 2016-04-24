@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
@@ -16,6 +17,7 @@ type ViewManager struct {
 	activeWindow         ui.Entity
 	inputHelper          *ui.Text
 	input                *ui.TextInput
+	debugText            *ui.Text
 	readyReceived        bool
 	talkingChannel       string
 	mentionAutocompleter *MentionAutoCompletion
@@ -39,6 +41,15 @@ func (v *ViewManager) OnInit() {
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
 	header.Transform.Position.X = float32(-(hw / 2))
 	v.AddChild(header)
+
+	debugBar := ui.NewText()
+	debugBar.Text = "debug"
+	debugBar.Transform.AnchorMin = common.NewVector2F(0, 0)
+	debugBar.Transform.AnchorMax = common.NewVector2F(1, 0)
+	debugBar.Transform.Position.Y = 1
+	debugBar.Layer = 9
+	v.AddChild(debugBar)
+	v.debugText = debugBar
 
 	// Launch the login
 	login := NewLoginWindow(v.App)
@@ -122,6 +133,9 @@ func (v *ViewManager) PreDraw() {
 		v.inputHelper.Transform.Size.X = float32(length)
 		v.input.Transform.Left = length + 1
 	}
+
+	children := v.App.Children(true)
+	v.debugText.Text = fmt.Sprintf("Number of entities %d", len(children))
 }
 
 func (v *ViewManager) HandleInput(event termbox.Event) {
