@@ -64,21 +64,12 @@ func (b *BaseEntity) RemoveChild(child Entity, destroy bool) {
 		child.Destroy()
 	}
 
-	index := -1
 	for k, v := range b.entities {
 		if v == child {
-			index = k
+			b.entities = append(b.entities[:k], b.entities[k+1:]...)
 			break
 		}
 
-	}
-
-	if index != -1 {
-		if index == len(b.entities)-1 {
-			b.entities = b.entities[:index]
-		} else {
-			b.entities = append(b.entities[:index], b.entities[index+1:]...)
-		}
 	}
 }
 
