@@ -49,6 +49,33 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 		}
 		app.ViewManager.notificationsManager.AddMessageNotification(m.Message)
 	}
+
+	// Check if we should ack the message
+	msgVisible := false
+
+	channel, err := app.session.State.Channel(m.ChannelID)
+	if err != nil {
+		log.Println("Error getting channel", err)
+	}
+
+	if channel != nil && channel.IsPrivate && app.ViewManager.mv.ShowAllPrivate {
+		msgVisible = true
+	} else {
+		for _, c := range app.ViewManager.mv.Channels {
+			if c == m.ChannelID {
+				msgVisible = true
+				break
+			}
+		}
+	}
+
+	if msgVisible {
+		if m.Author != nil {
+			if m.Author.ID != app.session.State.User.ID {
+				app.ackRoutine.In <- m.Message
+			}
+		}
+	}
 }
 
 func (app *App) messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
@@ -83,6 +110,10 @@ func (app *App) userSettingsUpdated(s *discordgo.Session, u *discordgo.UserSetti
 	// }
 }
 
-func (app *App) TypingStart(s *discordgo.Session, t *discordgo.TypingStart) {
+func (app *App) typingStart(s *discordgo.Session, t *discordgo.TypingStart) {
 	app.typingManager.in <- t
+}
+
+func (app *App) guildCreated(s *discordgo.Session, g *discordgo.GuildCreate) {
+	log.Println("Guild created!", g.Guild)
 }

@@ -28,6 +28,7 @@ type App struct {
 	inputEventChan chan termbox.Event
 
 	typingManager *TypingManager
+	ackRoutine    *AckRoutine
 
 	stopPollEvents chan chan bool
 
@@ -91,13 +92,14 @@ func (app *App) Login(user, password string) error {
 
 	app.session.AddHandler(app.Ready)
 
-	app.session.AddHandler(app.TypingStart)
+	app.session.AddHandler(app.typingStart)
 	app.session.AddHandler(app.messageCreate)
 	app.session.AddHandler(app.messageDelete)
 	app.session.AddHandler(app.messageUpdate)
 	app.session.AddHandler(app.messageAck)
 	app.session.AddHandler(app.guildSettingsUpdated)
 	app.session.AddHandler(app.userSettingsUpdated)
+	app.session.AddHandler(app.guildCreated)
 
 	err = session.Open()
 	return err
@@ -132,6 +134,14 @@ func (app *App) Init() {
 
 	app.ViewManager = NewViewManager(app)
 	app.AddChild(app.ViewManager)
+
+	app.typingManager = &TypingManager{
+		in: make(chan *discordgo.TypingStart),
+	}
+	go app.typingManager.Run()
+
+	app.ackRoutine = NewAckRoutine(app)
+	go app.ackRoutine.Run()
 }
 
 // Lsiten on the channels for incoming messages
@@ -150,11 +160,6 @@ func (app *App) Run() {
 			os.Exit(1)
 		}
 	}()
-
-	app.typingManager = &TypingManager{
-		in: make(chan *discordgo.TypingStart),
-	}
-	go app.typingManager.Run()
 
 	// Start polling events
 	go app.PollEvents()
@@ -179,6 +184,7 @@ func (app *App) Run() {
 			// Stop the event polling
 			go delayedInterrupt(10 * time.Millisecond) // might not work 100% all cases? should probably replace
 			app.stopPollEvents <- pollStopped
+			app.ackRoutine.Stop <- true
 			<-pollStopped
 			errChan <- nil
 			return

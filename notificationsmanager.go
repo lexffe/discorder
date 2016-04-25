@@ -15,7 +15,7 @@ type NotificationsManager struct {
 	App       *App
 	text      *ui.Text
 
-	activeNotifications []*discordgo.Message
+	unread map[string]int
 }
 
 func NewNotificationsManager(app *App) *NotificationsManager {
@@ -37,10 +37,11 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 
 func (nm *NotificationsManager) PreDraw() {
 	str := ""
-	if len(nm.activeNotifications) > 0 {
-		str = fmt.Sprintf("%d Unread: ", len(nm.activeNotifications))
-		for i, v := range nm.activeNotifications {
-			channel, err := nm.App.session.State.Channel(v.ChannelID)
+	if len(nm.unread) > 0 {
+		total := 0
+		for k, v := range nm.unread {
+			total += v
+			channel, err := nm.App.session.State.Channel(k)
 			if err != nil {
 				log.Println("Error getting channel:", err)
 				continue
@@ -52,31 +53,19 @@ func (nm *NotificationsManager) PreDraw() {
 				continue
 			}
 
-			author := "Unknown?"
-			if v.Author != nil {
-				author = v.Author.Username
-			}
-			str += fmt.Sprintf("%s/%s@%s", guild.Name, GetChannelNameOrRecipient(channel), author)
-			if i != len(nm.activeNotifications)-1 {
-				str += ", "
-			}
+			str += fmt.Sprintf("%s/%s: %d, ", guild.Name, GetChannelNameOrRecipient(channel), v)
 		}
+		str = str[:len(str)-1]
+		str = fmt.Sprintf("Unread messages: %d (%s)", total, str)
 	}
 	nm.text.Text = str
 }
 
 func (nm *NotificationsManager) AddMessageNotification(msg *discordgo.Message) {
-	log.Println("Added a notification")
-	nm.activeNotifications = append(nm.activeNotifications, msg)
+	nm.unread[msg.ChannelID]++
 }
 
-func (nm *NotificationsManager) RemoveMessageNotification(msg *discordgo.Message) bool {
-	for i, v := range nm.activeNotifications {
-		if v.ID == msg.ID {
-			nm.activeNotifications = append(nm.activeNotifications[:i], nm.activeNotifications[i+1:]...)
-			return true
-		}
-	}
-	return false
+func (nm *NotificationsManager) RemoveMessageNotification(msg *discordgo.Message) {
+	nm.unread[msg.ChannelID]--
 }
 func (nm *NotificationsManager) Destroy() { nm.DestroyChildren() }
