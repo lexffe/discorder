@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
 	"log"
 )

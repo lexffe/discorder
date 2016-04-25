@@ -50,7 +50,7 @@ func SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
 		termbox.SetCell(x+startX, y+startY, cell.Ch, cell.Fg, cell.Bg)
 
 		x++
-		if x > width {
+		if x >= width {
 			y++
 			x = 0
 			if height != 0 && y >= height {

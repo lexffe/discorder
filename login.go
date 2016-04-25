@@ -20,6 +20,8 @@ type LoginWindow struct {
 	PWInput       *ui.TextInput
 	EmailInput    *ui.TextInput
 
+	loggingIn bool
+
 	Footer *ui.Text
 	Helper *ui.Text
 
@@ -146,13 +148,19 @@ func (lw *LoginWindow) HandleInput(event termbox.Event) {
 }
 
 func (lw *LoginWindow) Trylogin(user, pw string) {
+	log.Println("Attempting login...")
+
+	lw.loggingIn = true
+	lw.App.Draw()
+
 	err := lw.App.Login(lw.App.config.Email, pw)
 	if err != nil {
 		log.Println("Error logging in: ", err)
 	} else {
-		lw.App.config.Save(configPath)
+		lw.App.config.Save(*configPath)
 		lw.App.RemoveChild(lw, true)
 	}
+	lw.loggingIn = false
 }
 
 func (lw *LoginWindow) PreDraw() {
@@ -163,5 +171,9 @@ func (lw *LoginWindow) PreDraw() {
 		lw.Helper.Text = "Enter Email"
 	} else {
 		lw.Helper.Text = "Enter Password"
+	}
+
+	if lw.loggingIn {
+		lw.Helper.Text = "Logging in..."
 	}
 }

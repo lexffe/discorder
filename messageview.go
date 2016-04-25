@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
 	"time"
 	"unicode/utf8"
@@ -200,6 +200,9 @@ func (mv *MessageView) BuildTexts() {
 
 		lines := ui.HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
 		y -= lines
+		if y < 0 {
+			break
+		}
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
 		text.Layer = mv.Layer
 		mv.AddChild(text)
@@ -335,7 +338,11 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 func (mv *MessageView) Destroy() { mv.DestroyChildren() }
 
 func (mv *MessageView) PreDraw() {
-	mv.BuildDisplayMessages(int(mv.Transform.GetRect().H))
+	h := int(mv.Transform.GetRect().H)
+	if h < 0 {
+		h = 0
+	}
+	mv.BuildDisplayMessages(h)
 	mv.BuildTexts()
 }
 

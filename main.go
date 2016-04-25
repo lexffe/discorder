@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/jonas747/discordgo"
 )
 
 const (
@@ -27,18 +27,20 @@ var (
 	application *App
 	config      *Config
 
-	configPath  = "discorder.json"
-	flagLogPath = flag.String("log", "discorder.log", "Path to output logs")
+	configPath       = flag.String("config", "discorder.json", "Path to the config file")
+	flagLogPath      = flag.String("log", "discorder.log", "Path to output logs")
+	flagDebugEnabled = flag.Bool("debug", false, "Set to enable debuging mode")
+	flagDumpAPI      = flag.Bool("dumpapi", false, "Set to enable debug in discordgo")
 )
 
 func main() {
 	flag.Parse()
 
-	c, err := LoadConfig(configPath)
+	c, err := LoadConfig(*configPath)
 	if err != nil {
 		c = &Config{}
 		fmt.Println("Failed to open config, creating new one")
-		c.Save(configPath)
+		c.Save(*configPath)
 	}
 
 	config = c

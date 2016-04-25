@@ -12,6 +12,8 @@ Try the latest alpha versio here: https://github.com/jonas747/discorder/releases
 
 ####compiling from repo
 
+The current git version is very broken at the moment, use one of the releases.
+
 You need go and git installed
 
 run this command: `go get -u github.com/jonas747/discorder`

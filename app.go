@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/0xAX/notificator"
-	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
 	"log"
 	"os"
@@ -41,11 +41,11 @@ type App struct {
 
 	notifications *notificator.Notificator
 	config        *Config
+	settings      *discordgo.Settings
+	guildSettings []*discordgo.UserGuildSettings
 }
 
 func NewApp(config *Config, logPath string) *App {
-	logFile, err := os.Create(logPath)
-
 	notify := notificator.New(notificator.Options{
 		AppName: "Discorder",
 	})
@@ -55,9 +55,14 @@ func NewApp(config *Config, logPath string) *App {
 		notifications: notify,
 		BaseEntity:    &ui.BaseEntity{},
 	}
-	if err == nil {
-		a.logFile = logFile
+
+	if *flagDebugEnabled {
+		logFile, err := os.Create(logPath)
+		if err == nil {
+			a.logFile = logFile
+		}
 	}
+
 	return a
 }
 
@@ -73,33 +78,29 @@ func (app *App) Login(user, password string) error {
 
 	app.session = session
 
+	if *flagDumpAPI {
+		session.Debug = true
+	}
+
 	if err != nil {
 		return err
 	}
 
 	session.StateEnabled = true
 	session.State.MaxMessageCount = 100
+
 	app.session.AddHandler(app.Ready)
+
 	app.session.AddHandler(app.TypingStart)
 	app.session.AddHandler(app.messageCreate)
+	app.session.AddHandler(app.messageDelete)
+	app.session.AddHandler(app.messageUpdate)
+	app.session.AddHandler(app.messageAck)
+	app.session.AddHandler(app.guildSettingsUpdated)
+	app.session.AddHandler(app.userSettingsUpdated)
+
 	err = session.Open()
 	return err
-}
-
-func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Mentions != nil {
-		for _, v := range m.Mentions {
-			if v.ID == s.State.User.ID {
-				if app.notifications != nil {
-					author := "Unknown?"
-					if m.Author != nil {
-						author = m.Author.Username
-					}
-					app.notifications.Push(author, m.ContentWithMentionsReplaced(), "", notificator.UR_NORMAL)
-				}
-			}
-		}
-	}
 }
 
 func (app *App) Stop() error {
@@ -173,10 +174,10 @@ func (app *App) Run() {
 				app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
 				app.config.LastChannel = app.ViewManager.talkingChannel
 			}
-			app.config.Save(configPath)
+			app.config.Save(*configPath)
 			pollStopped := make(chan bool)
 			// Stop the event polling
-			go delayedInterrupt(1 * time.Millisecond) // might not work 100% all cases? should probably replace
+			go delayedInterrupt(10 * time.Millisecond) // might not work 100% all cases? should probably replace
 			app.stopPollEvents <- pollStopped
 			<-pollStopped
 			errChan <- nil
@@ -283,27 +284,6 @@ func (app *App) PollEvents() {
 		}
 		app.inputEventChan <- evt
 	}
-}
-
-func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
-	log.Println("Received ready!")
-
-	// app.session.State.Lock()
-	// app.session.State.Ready = *r
-	// app.session.State.Unlock()
-
-	// for _, g := range r.Guilds {
-	// 	for _, ch := range g.Channels {
-	// 		for _, ls := range app.listeningChannels {
-	// 			if ch.ID == ls {
-	// 				go app.GetHistory(ls, 25, "", "")
-	// 				break
-	// 			}
-	// 		}
-	// 	}
-	// }
-	app.ViewManager.OnReady()
-	app.PrintWelcome()
 }
 
 func (app *App) PrintWelcome() {

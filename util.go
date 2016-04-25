@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"github.com/jonas747/discorder/common"
+	"github.com/jonas747/discordgo"
 	"log"
 	"time"
 )
@@ -97,6 +97,69 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 	log.Println("History processing completed!")
 }
 
-func (app *App) TypingStart(s *discordgo.Session, t *discordgo.TypingStart) {
-	app.typingManager.in <- t
+func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
+	channel, err := app.session.Channel(channelId)
+	if err != nil {
+		log.Println("Error getting channel from state", err)
+		return nil
+	}
+
+	if channel.IsPrivate {
+		return &ChannelNotificationSettings{Notifications: ChannelNotificationsAll}
+	}
+
+	for _, gs := range app.guildSettings {
+		if gs.GuildID == channel.GuildID {
+
+			cn := &ChannelNotificationSettings{
+				Notifications:    gs.MessageNotifications,
+				Muted:            gs.Muted,
+				SurpressEveryone: gs.SupressEveryone,
+			}
+			if gs.Muted {
+				return cn
+			}
+			for _, override := range gs.ChannelOverrides {
+				if override.ChannelID == channel.ID {
+					cn.Notifications = override.MessageNotifications
+					cn.Muted = override.Muted
+					break
+				}
+			}
+			return cn
+		}
+	}
+
+	// Use default guild settings
+	guild, err := app.session.Guild(channel.GuildID)
+	if err != nil {
+		log.Println("Error getting guild from state", err)
+		return nil
+	}
+	return &ChannelNotificationSettings{
+		Notifications: guild.DefaultMessageNotifications,
+	}
+}
+
+const (
+	ChannelNotificationsAll      = 0
+	ChannelNotificationsMentions = 1
+	ChannelNotificationsNothing  = 2
+)
+
+type ChannelNotificationSettings struct {
+	Notifications    int // 0 all, 1 mentions, 2 nothing
+	Muted            bool
+	SurpressEveryone bool
+}
+
+func GetChannelNameOrRecipient(channel *discordgo.Channel) string {
+	if channel.IsPrivate {
+		if channel.Recipient != nil {
+			return channel.Recipient.Username
+		} else {
+			return "Recipient is nil!?"
+		}
+	}
+	return channel.Name
 }

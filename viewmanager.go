@@ -21,6 +21,7 @@ type ViewManager struct {
 	readyReceived        bool
 	talkingChannel       string
 	mentionAutocompleter *MentionAutoCompletion
+	notificationsManager *NotificationsManager
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -42,14 +43,16 @@ func (v *ViewManager) OnInit() {
 	header.Transform.Position.X = float32(-(hw / 2))
 	v.AddChild(header)
 
-	debugBar := ui.NewText()
-	debugBar.Text = "debug"
-	debugBar.Transform.AnchorMin = common.NewVector2F(0, 0)
-	debugBar.Transform.AnchorMax = common.NewVector2F(1, 0)
-	debugBar.Transform.Position.Y = 1
-	debugBar.Layer = 9
-	v.AddChild(debugBar)
-	v.debugText = debugBar
+	if *flagDebugEnabled {
+		debugBar := ui.NewText()
+		debugBar.Text = "debug"
+		debugBar.Transform.AnchorMin = common.NewVector2F(0, 0)
+		debugBar.Transform.AnchorMax = common.NewVector2F(1, 0)
+		debugBar.Transform.Position.Y = 2
+		debugBar.Layer = 9
+		v.AddChild(debugBar)
+		v.debugText = debugBar
+	}
 
 	// Launch the login
 	login := NewLoginWindow(v.App)
@@ -64,12 +67,15 @@ func (v *ViewManager) OnReady() {
 	mv := NewMessageView(v.App)
 	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mv.Transform.Bottom = 3
-	mv.Transform.Top = 1
+	mv.Transform.Top = 2
 	mv.ShowAllPrivate = true
 	mv.Logs = v.App.logBuffer
 	v.AddChild(mv)
 	v.mv = mv
 	v.SelectedMessageView = mv
+	if *flagDebugEnabled {
+		mv.Transform.Top = 3
+	}
 
 	input := ui.NewTextInput()
 	input.Transform.AnchorMin = common.NewVector2F(0, 1)
@@ -104,7 +110,13 @@ func (v *ViewManager) OnReady() {
 	typingDisplay.Transform.Position.Y = -2
 	v.AddChild(typingDisplay)
 
+	v.notificationsManager = NewNotificationsManager(v.App)
+	v.notificationsManager.Transform.AnchorMax.X = 1
+	v.notificationsManager.Transform.Position.Y = 1
+	v.AddChild(v.notificationsManager)
+
 	v.ApplyConfig()
+
 }
 
 func (v *ViewManager) ApplyConfig() {
@@ -134,8 +146,10 @@ func (v *ViewManager) PreDraw() {
 		v.input.Transform.Left = length + 1
 	}
 
-	children := v.App.Children(true)
-	v.debugText.Text = fmt.Sprintf("Number of entities %d", len(children))
+	if *flagDebugEnabled {
+		children := v.App.Children(true)
+		v.debugText.Text = fmt.Sprintf("Number of entities %d", len(children))
+	}
 }
 
 func (v *ViewManager) HandleInput(event termbox.Event) {
