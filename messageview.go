@@ -69,22 +69,11 @@ func (mv *MessageView) AddChannel(channel string) {
 }
 
 func (mv *MessageView) RemoveChannel(channel string) {
-	index := -1
 	for k, v := range mv.Channels {
 		if channel == v {
-			index = k
+			mv.Channels = append(mv.Channels[:k], mv.Channels[k+1:]...)
 			break
 		}
-	}
-
-	if index == -1 {
-		return // no channel by that name
-	}
-
-	if index == len(mv.Channels)-1 {
-		mv.Channels = mv.Channels[:index]
-	} else {
-		mv.Channels = append(mv.Channels[:index], mv.Channels[index+1:]...)
 	}
 }
 
