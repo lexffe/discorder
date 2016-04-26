@@ -94,6 +94,9 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 		}
 	}
 	channel.Messages = newMessages
+	if len(resp) > 0 {
+		app.ackRoutine.In <- resp[0]
+	}
 	log.Println("History processing completed!")
 }
 
@@ -139,6 +142,15 @@ func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNoti
 	return &ChannelNotificationSettings{
 		Notifications: guild.DefaultMessageNotifications,
 	}
+}
+
+// Compare readstate's last_message to channel's last_message and if theres new show so
+// Also number of mentions
+// Take notifications settings into mind also
+func (app *App) GetStartNotifications() {
+	// readStates := app.session.State.ReadState
+	// for _, state := range readStates {
+	// }
 }
 
 const (
