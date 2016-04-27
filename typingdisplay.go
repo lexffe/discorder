@@ -34,7 +34,7 @@ func NewTypingDisplay(app *App) *TypingDisplay {
 }
 
 func (t *TypingDisplay) PreDraw() {
-	typing := t.App.typingManager.GetTyping([]string{})
+	typing := t.App.typingRoutine.GetTyping([]string{})
 
 	if len(typing) > 0 {
 

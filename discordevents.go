@@ -117,7 +117,7 @@ func (app *App) userSettingsUpdated(s *discordgo.Session, u *discordgo.UserSetti
 }
 
 func (app *App) typingStart(s *discordgo.Session, t *discordgo.TypingStart) {
-	app.typingManager.in <- t
+	app.typingRoutine.typingEvtIn <- t
 }
 
 func (app *App) guildCreated(s *discordgo.Session, g *discordgo.GuildCreate) {

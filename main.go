@@ -7,9 +7,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"sync"
 	"syscall"
-	"time"
 
 	"github.com/jonas747/discordgo"
 )
@@ -48,80 +46,16 @@ func main() {
 
 	config = c
 
-	//Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
-	logFile, _ := os.OpenFile("hmpf", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
-	syscall.Dup2(int(logFile.Fd()), 1)
-	syscall.Dup2(int(logFile.Fd()), 2)
-	go RunPProf()
+	if *flagDebugEnabled {
+		//Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
+		logFile, _ := os.OpenFile("discorder_stdout_stderr.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
+		syscall.Dup2(int(logFile.Fd()), 1)
+		syscall.Dup2(int(logFile.Fd()), 2)
+		go RunPProf()
+	}
 
 	application = NewApp(config, *flagLogPath)
 	application.Run()
-}
-
-type TypingWrapper struct {
-	t    *discordgo.TypingStart
-	last time.Time
-}
-
-type TypingManager struct {
-	sync.Mutex
-	in     chan *discordgo.TypingStart
-	typing []*TypingWrapper
-}
-
-func (t *TypingManager) Run() {
-	ticker := time.NewTicker(5 * time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			t.Lock()
-			newTyping := make([]*TypingWrapper, 0)
-			for _, v := range t.typing {
-				if time.Since(v.last) < 5*time.Second {
-					newTyping = append(newTyping, v)
-				}
-			}
-			t.typing = newTyping
-			t.Unlock()
-		case typingEvt := <-t.in:
-			t.Lock()
-			found := false
-			for _, v := range t.typing {
-				if v.t.ChannelID == typingEvt.ChannelID && v.t.UserID == typingEvt.UserID {
-					v.last = time.Now()
-					found = true
-					break
-				}
-			}
-			if !found {
-				t.typing = append(t.typing, &TypingWrapper{t: typingEvt, last: time.Now()})
-			}
-			t.Unlock()
-		}
-	}
-}
-
-func (t *TypingManager) GetTyping(filter []string) []*discordgo.TypingStart {
-	out := make([]*discordgo.TypingStart, 0)
-	t.Lock()
-	if len(filter) == 0 {
-		out = make([]*discordgo.TypingStart, len(t.typing))
-		for k, typing := range t.typing {
-			out[k] = typing.t
-		}
-	} else {
-	OUTER:
-		for _, typing := range t.typing {
-			for _, filterItem := range filter {
-				if typing.t.ChannelID == filterItem {
-					out = append(out, typing.t)
-					continue OUTER
-				}
-			}
-		}
-	}
-	t.Unlock()
-	return out
 }
 
 func RunPProf() {

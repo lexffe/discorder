@@ -27,7 +27,7 @@ type App struct {
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 
-	typingManager *TypingManager
+	typingRoutine *TypingRoutine
 	ackRoutine    *AckRoutine
 
 	stopPollEvents chan chan bool
@@ -140,10 +140,8 @@ func (app *App) init() {
 	app.ViewManager = NewViewManager(app)
 	app.AddChild(app.ViewManager)
 
-	app.typingManager = &TypingManager{
-		in: make(chan *discordgo.TypingStart),
-	}
-	go app.typingManager.Run()
+	app.typingRoutine = NewTypingRoutine(app)
+	go app.typingRoutine.Run()
 
 	app.ackRoutine = NewAckRoutine(app)
 	go app.ackRoutine.Run()
