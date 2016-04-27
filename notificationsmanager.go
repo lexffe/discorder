@@ -69,3 +69,8 @@ func (nm *NotificationsManager) RemoveMessageNotification(msg *discordgo.Message
 	nm.unread[msg.ChannelID]--
 }
 func (nm *NotificationsManager) Destroy() { nm.DestroyChildren() }
+
+type NotificationSource struct {
+	Type int
+	Id   string
+}

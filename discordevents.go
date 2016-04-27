@@ -20,7 +20,8 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 	// 	log.Println("Error retrieving channel from state", err)
 	// 	return
 	// }
-
+	app.Lock()
+	defer app.Unlock()
 	settings := app.GetNotificationSettingsForChannel(m.ChannelID)
 
 	author := "Unknown?"

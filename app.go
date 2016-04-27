@@ -20,10 +20,10 @@ const (
 )
 
 type App struct {
+	sync.RWMutex
 	running        bool
 	stopping       bool
 	stopChan       chan chan error
-	msgRecvChan    chan *discordgo.Message // Unused atm... remove?
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 
@@ -68,6 +68,8 @@ func NewApp(config *Config, logPath string) *App {
 }
 
 func (app *App) Login(user, password string) error {
+	app.Lock()
+	defer app.Unlock()
 	var session *discordgo.Session
 	var err error
 	if app.session != nil {
@@ -106,19 +108,25 @@ func (app *App) Login(user, password string) error {
 }
 
 func (app *App) Stop() error {
+	app.Lock()
+
 	if app.stopping {
+		app.Unlock()
 		return nil
 	}
 	app.stopping = true
 	errChan := make(chan error)
 	if app.running {
+		app.Unlock()
 		app.stopChan <- errChan
 		return <-errChan
 	}
+
+	app.Unlock()
 	return nil
 }
 
-func (app *App) Init() {
+func (app *App) init() {
 	// Initialize the channels
 	app.msgRecvChan = make(chan *discordgo.Message)
 	app.stopChan = make(chan chan error)
@@ -147,8 +155,10 @@ func (app *App) Init() {
 // Lsiten on the channels for incoming messages
 func (app *App) Run() {
 	// Some initialization
+	app.Lock()
 	if app.running {
 		log.Println("Tried to run app while already running")
+		app.Unlock()
 		return
 	}
 	app.running = true
@@ -164,14 +174,16 @@ func (app *App) Run() {
 	// Start polling events
 	go app.PollEvents()
 
-	app.Init()
+	app.init()
 	log.Println("Initialized!")
 	app.ViewManager.OnInit()
+	app.Unlock()
 
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
 		select {
 		case errChan := <-app.stopChan:
+			app.Lock()
 			app.running = false
 			// app.config.LastServer = app.selectedServerId
 			// app.config.LastChannel = app.selectedChannelId
@@ -179,21 +191,28 @@ func (app *App) Run() {
 				app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
 				app.config.LastChannel = app.ViewManager.talkingChannel
 			}
+
 			app.config.Save(*configPath)
 			pollStopped := make(chan bool)
+
 			// Stop the event polling
 			go delayedInterrupt(10 * time.Millisecond) // might not work 100% all cases? should probably replace
+
+			app.Unlock()
 			app.stopPollEvents <- pollStopped
 			app.ackRoutine.Stop <- true
 			<-pollStopped
+
 			errChan <- nil
 			return
-		case _ = <-app.msgRecvChan:
-			//app.HandleMessage(*msg)
 		case evt := <-app.inputEventChan:
+			app.Lock()
 			app.HandleInputEvent(evt)
+			app.Unlock()
 		case <-ticker.C:
+			app.Lock()
 			app.Draw()
+			app.Unlock()
 		}
 	}
 }

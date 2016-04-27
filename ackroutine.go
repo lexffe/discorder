@@ -118,7 +118,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	a.SetReadState(msg)
 }
 
-// Sets the last read message
+// Sets the last read message, should also undo notifications bound to this channel and readstate?
 func (a *AckRoutine) SetReadState(msg *discordgo.Message) {
 	found := false
 	for _, v := range a.App.session.State.ReadState {
