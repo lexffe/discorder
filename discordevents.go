@@ -7,6 +7,8 @@ import (
 )
 
 func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
+	app.Lock()
+	defer app.Unlock()
 	log.Println("Received ready from discord!")
 
 	app.settings = r.Settings
@@ -48,35 +50,43 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 		if app.notifications != nil {
 			app.notifications.Push(author, m.ContentWithMentionsReplaced(), "", notificator.UR_NORMAL)
 		}
-		app.ViewManager.notificationsManager.AddMessageNotification(m.Message)
+		app.ViewManager.notificationsManager.AddMention(m.Message)
 	}
 
-	// Check if we should ack the message
-	msgVisible := false
-
+	// Update last message
 	channel, err := app.session.State.Channel(m.ChannelID)
 	if err != nil {
 		log.Println("Error getting channel", err)
-	}
-
-	if channel != nil && channel.IsPrivate && app.ViewManager.mv.ShowAllPrivate {
-		msgVisible = true
 	} else {
-		for _, c := range app.ViewManager.mv.Channels {
-			if c == m.ChannelID {
-				msgVisible = true
-				break
-			}
-		}
+		channel.LastMessageID = m.ID
 	}
 
-	if msgVisible {
-		if m.Author != nil {
-			if m.Author.ID != app.session.State.User.ID {
-				app.ackRoutine.In <- m.Message
-			}
-		}
-	}
+	// Check if we should ack the message, moved this to messageview for now
+	// msgVisible := false
+
+	// channel, err := app.session.State.Channel(m.ChannelID)
+	// if err != nil {
+	// 	log.Println("Error getting channel", err)
+	// }
+	// if channel != nil && channel.IsPrivate && app.ViewManager.mv.ShowAllPrivate {
+	// 	msgVisible = true
+	// } else {
+	// 	for _, c := range app.ViewManager.mv.Channels {
+	// 		if c == m.ChannelID {
+	// 			msgVisible = true
+	// 			break
+	// 		}
+	// 	}
+	// }
+
+	// if msgVisible {
+	// 	if m.Author != nil {
+	// 		if m.Author.ID != app.session.State.User.ID {
+	// 			app.ackRoutine.In <- m.Message
+	// 		}
+	// 	}
+	// }
+
 }
 
 func (app *App) messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
@@ -88,7 +98,8 @@ func (app *App) messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) 
 }
 
 func (app *App) messageAck(s *discordgo.Session, a *discordgo.MessageAck) {
-
+	log.Println("Received ack!")
+	app.ViewManager.notificationsManager.HandleAck(a)
 }
 
 func (app *App) guildSettingsUpdated(s *discordgo.Session, a *discordgo.UserGuildSettingsUpdate) {

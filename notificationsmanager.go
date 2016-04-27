@@ -14,8 +14,6 @@ type NotificationsManager struct {
 	Transform *ui.Transform
 	App       *App
 	text      *ui.Text
-
-	unread map[string]int
 }
 
 func NewNotificationsManager(app *App) *NotificationsManager {
@@ -37,40 +35,114 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 
 func (nm *NotificationsManager) PreDraw() {
 	str := ""
-	if len(nm.unread) > 0 {
+
+	nm.App.session.State.RLock()
+	defer nm.App.session.State.RUnlock()
+
+	readStates := nm.App.session.State.ReadState
+
+	if len(readStates) > 0 {
 		total := 0
-		for k, v := range nm.unread {
-			total += v
-			channel, err := nm.App.session.State.Channel(k)
+
+		for _, v := range readStates {
+			if v.MentionCount == 0 {
+				continue
+			}
+
+			total += v.MentionCount
+			nm.App.session.State.RUnlock() // 2 read locks in same goroutines can cause deadlock
+			channel, err := nm.App.session.State.Channel(v.ID)
+			nm.App.session.State.RLock()
 			if err != nil {
 				log.Println("Error getting channel:", err)
 				continue
 			}
+			if channel.IsPrivate {
+				str += fmt.Sprintf("@%s: %d, ", channel.Recipient, v.MentionCount)
+				continue
+			}
 
+			nm.App.session.State.RUnlock() // 2 read locks in same goroutines can cause deadlock
 			guild, err := nm.App.session.State.Guild(channel.GuildID)
+			nm.App.session.State.RLock()
 			if err != nil {
 				log.Println("Error getting guild:", err)
 				continue
 			}
 
-			str += fmt.Sprintf("%s/%s: %d, ", guild.Name, GetChannelNameOrRecipient(channel), v)
+			str += fmt.Sprintf("%s/%s: %d, ", guild.Name, GetChannelNameOrRecipient(channel), v.MentionCount)
 		}
-		str = str[:len(str)-1]
-		str = fmt.Sprintf("Unread messages: %d (%s)", total, str)
+		if str != "" {
+			str = str[:len(str)-2]
+			str = fmt.Sprintf("Mentions: %d (%s)", total, str)
+		}
 	}
 	nm.text.Text = str
 }
 
-func (nm *NotificationsManager) AddMessageNotification(msg *discordgo.Message) {
-	nm.unread[msg.ChannelID]++
+func (nm *NotificationsManager) AddMention(msg *discordgo.Message) {
+	found := false
+
+	state := nm.App.session.State
+	state.Lock()
+	defer state.Unlock()
+
+	for _, v := range state.ReadState {
+		if v.ID == msg.ChannelID {
+			v.MentionCount += 1
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		state.ReadState = append(state.ReadState, &discordgo.ReadState{
+			ID:            msg.ChannelID,
+			MentionCount:  1,
+			LastMessageID: "",
+		})
+	}
 }
 
-func (nm *NotificationsManager) RemoveMessageNotification(msg *discordgo.Message) {
-	nm.unread[msg.ChannelID]--
+func (nm *NotificationsManager) HandleAck(a *discordgo.MessageAck) {
+	// du di da
+
+	state := nm.App.session.State
+	state.Lock()
+	defer state.Unlock()
+
+	var rs *discordgo.ReadState
+	for _, v := range state.ReadState {
+		if v.ID == a.ChannelID {
+			rs = v
+			break
+		}
+	}
+
+	if rs == nil {
+		rs = &discordgo.ReadState{
+			ID:            a.ChannelID,
+			LastMessageID: a.MessageID,
+		}
+		state.ReadState = append(state.ReadState, rs)
+	}
+	state.Unlock()
+	channel, err := state.Channel(rs.ID)
+	state.Lock()
+	if err != nil {
+		log.Println("Failed getting channel in HandleAck... bad")
+		return
+	}
+
+	if channel.LastMessageID == a.MessageID {
+		rs.MentionCount = 0
+	}
 }
+
 func (nm *NotificationsManager) Destroy() { nm.DestroyChildren() }
 
 type NotificationSource struct {
-	Type int
-	Id   string
+	ChannelId string
+	LastRead  string
+	Count     int
 }

@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"sync"
 	"syscall"
@@ -39,7 +42,7 @@ func main() {
 	c, err := LoadConfig(*configPath)
 	if err != nil {
 		c = &Config{}
-		fmt.Println("Failed to open config, creating new one")
+		log.Println("Failed to open config, creating new one")
 		c.Save(*configPath)
 	}
 
@@ -49,6 +52,7 @@ func main() {
 	logFile, _ := os.OpenFile("hmpf", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
 	syscall.Dup2(int(logFile.Fd()), 1)
 	syscall.Dup2(int(logFile.Fd()), 2)
+	go RunPProf()
 
 	application = NewApp(config, *flagLogPath)
 	application.Run()
@@ -118,4 +122,8 @@ func (t *TypingManager) GetTyping(filter []string) []*discordgo.TypingStart {
 	}
 	t.Unlock()
 	return out
+}
+
+func RunPProf() {
+	log.Println(http.ListenAndServe("localhost:6060", nil))
 }

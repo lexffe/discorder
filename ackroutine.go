@@ -109,11 +109,16 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 		return
 	}
 
+	channel, _ := a.App.session.State.Channel(msg.ChannelID)
+	msgStr := msg.ChannelID
+	if channel != nil {
+		msgStr = GetChannelNameOrRecipient(channel)
+	}
 	err = a.App.session.ChannelMessageAck(msg.ChannelID, msg.ID)
 	if err != nil {
 		log.Println("Error sending ack: ", err)
 	}
-	log.Println("Send ack!", msg.ChannelID, msg.ID)
+	log.Println("Send ack!", msgStr, msg.ID)
 
 	a.SetReadState(msg)
 }

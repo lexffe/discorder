@@ -192,6 +192,12 @@ func (mv *MessageView) BuildTexts() {
 		if y < 0 {
 			break
 		}
+
+		// Send ack
+		if !item.IsLogMessage {
+			mv.App.ackRoutine.In <- item.DiscordMessage
+		}
+
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
 		text.Layer = mv.Layer
 		mv.AddChild(text)

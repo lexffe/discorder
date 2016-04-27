@@ -68,8 +68,6 @@ func NewApp(config *Config, logPath string) *App {
 }
 
 func (app *App) Login(user, password string) error {
-	app.Lock()
-	defer app.Unlock()
 	var session *discordgo.Session
 	var err error
 	if app.session != nil {
@@ -128,7 +126,6 @@ func (app *App) Stop() error {
 
 func (app *App) init() {
 	// Initialize the channels
-	app.msgRecvChan = make(chan *discordgo.Message)
 	app.stopChan = make(chan chan error)
 	app.inputEventChan = make(chan termbox.Event)
 	app.stopPollEvents = make(chan chan bool)

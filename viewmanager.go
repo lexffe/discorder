@@ -135,12 +135,24 @@ func (v *ViewManager) PreDraw() {
 
 	// Update the prompt
 	if v.talkingChannel != "" {
+		preStr := "Send to"
+
 		channel, err := v.App.session.State.Channel(v.talkingChannel)
 		name := v.talkingChannel
+
 		if channel != nil && err == nil {
 			name = channel.Name
+			if !channel.IsPrivate {
+				guild, err := v.App.session.State.Guild(channel.GuildID)
+				if err == nil {
+					preStr += " " + guild.Name + "/"
+				} else {
+					preStr += " " + channel.GuildID + "/"
+				}
+			}
 		}
-		v.inputHelper.Text = "Send to #" + name
+
+		v.inputHelper.Text = preStr + "#" + name
 		length := utf8.RuneCountInString(v.inputHelper.Text)
 		v.inputHelper.Transform.Size.X = float32(length)
 		v.input.Transform.Left = length + 1
