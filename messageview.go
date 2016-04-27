@@ -5,6 +5,7 @@ import (
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
+	"log"
 	"time"
 	"unicode/utf8"
 )
@@ -83,7 +84,9 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 	}
 }
 
-func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *discordgo.Message) {
+func (mv *MessageView) HandleMessageCreate(msg *discordgo.Message) {
+	log.Println("Handling stuff")
+
 	// Check if its private and if this messagegview shows private messages
 	pChannel, err := mv.App.session.State.PrivateChannel(msg.ChannelID)
 	if pChannel != nil && err != nil {
@@ -100,12 +103,12 @@ func (mv *MessageView) HandleMessageCreate(session *discordgo.Session, msg *disc
 	}
 }
 
-func (mv *MessageView) HandleMessageEdit(session *discordgo.Session, msg *discordgo.Message) {
-	mv.HandleMessageCreate(session, msg)
+func (mv *MessageView) HandleMessageEdit(msg *discordgo.Message) {
+	mv.HandleMessageCreate(msg)
 }
 
-func (mv *MessageView) HandleMessageRemove(session *discordgo.Session, msg *discordgo.Message) {
-	mv.HandleMessageCreate(session, msg)
+func (mv *MessageView) HandleMessageRemove(msg *discordgo.Message) {
+	mv.HandleMessageCreate(msg)
 }
 
 func (mv *MessageView) BuildTexts() {

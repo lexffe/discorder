@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/0xAX/notificator"
+	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"log"
 )
@@ -61,40 +62,33 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 		channel.LastMessageID = m.ID
 	}
 
-	// Check if we should ack the message, moved this to messageview for now
-	// msgVisible := false
-
-	// channel, err := app.session.State.Channel(m.ChannelID)
-	// if err != nil {
-	// 	log.Println("Error getting channel", err)
-	// }
-	// if channel != nil && channel.IsPrivate && app.ViewManager.mv.ShowAllPrivate {
-	// 	msgVisible = true
-	// } else {
-	// 	for _, c := range app.ViewManager.mv.Channels {
-	// 		if c == m.ChannelID {
-	// 			msgVisible = true
-	// 			break
-	// 		}
-	// 	}
-	// }
-
-	// if msgVisible {
-	// 	if m.Author != nil {
-	// 		if m.Author.ID != app.session.State.User.ID {
-	// 			app.ackRoutine.In <- m.Message
-	// 		}
-	// 	}
-	// }
-
+	// Emit event
+	ui.RunFunc(app, func(e ui.Entity) {
+		cast, ok := e.(MessageCreateHandler)
+		if ok {
+			cast.HandleMessageCreate(m.Message)
+		}
+	})
 }
 
 func (app *App) messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
-
+	// Emit event
+	ui.RunFunc(app, func(e ui.Entity) {
+		cast, ok := e.(MessageUpdateHandler)
+		if ok {
+			cast.HandleMessageUpdate(m.Message)
+		}
+	})
 }
 
 func (app *App) messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
-
+	// Emit event
+	ui.RunFunc(app, func(e ui.Entity) {
+		cast, ok := e.(MessageRemoveHandler)
+		if ok {
+			cast.HandleMessageRemove(m.Message)
+		}
+	})
 }
 
 func (app *App) messageAck(s *discordgo.Session, a *discordgo.MessageAck) {

@@ -4,14 +4,14 @@ import (
 	"github.com/jonas747/discordgo"
 )
 
-type SubbedMessageCreateHandler interface {
-	HandleSubbedMessageCreate(m *discordgo.Message)
+type MessageCreateHandler interface {
+	HandleMessageCreate(m *discordgo.Message)
 }
 
-type SubbedMessageUpdateHandler interface {
-	HandleSubbedMessageUpdate(m *discordgo.Message)
+type MessageUpdateHandler interface {
+	HandleMessageUpdate(m *discordgo.Message)
 }
 
-type SubbedMessageRemoveHandler interface {
-	HandleSubbedMessageRemove(m *discordgo.Message)
+type MessageRemoveHandler interface {
+	HandleMessageRemove(m *discordgo.Message)
 }
