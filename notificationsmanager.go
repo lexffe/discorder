@@ -58,7 +58,7 @@ func (nm *NotificationsManager) PreDraw() {
 				continue
 			}
 			if channel.IsPrivate {
-				str += fmt.Sprintf("@%s: %d, ", channel.Recipient, v.MentionCount)
+				str += fmt.Sprintf("@%s: %d, ", channel.Recipient.Username, v.MentionCount)
 				continue
 			}
 

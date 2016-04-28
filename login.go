@@ -115,13 +115,6 @@ func (lw *LoginWindow) HandleInput(event termbox.Event) {
 					lw.App.config.Password = pw
 				}
 				lw.Trylogin(lw.App.config.Email, pw)
-				// err := lw.App.Login(lw.App.config.Email, pw)
-				// if err != nil {
-				// 	log.Println("Error logging in: ", err)
-				// } else {
-				// 	lw.App.config.Save(configPath)
-				// 	// TODO leave window cause we logged in and whatnot
-				// }
 			}
 		case termbox.KeyCtrlS:
 			if lw.CurInputState == InputStateEmail {
@@ -157,6 +150,7 @@ func (lw *LoginWindow) Trylogin(user, pw string) {
 	if err != nil {
 		log.Println("Error logging in: ", err)
 	} else {
+		log.Println("Logged in!")
 		lw.App.config.Save(*configPath)
 		lw.App.RemoveChild(lw, true)
 	}

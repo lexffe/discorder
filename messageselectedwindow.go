@@ -54,11 +54,42 @@ func (mw *MessageSelectedWindow) HandleInput(event termbox.Event) {
 			option := mw.listWindow.Selected
 			switch option {
 			case 0:
-				log.Println("Should message", GetMessageAuthor(mw.msg))
+				if mw.msg.Author == nil {
+					log.Println("Sorry it appears that theres no author for this message? e.e")
+				} else {
+					log.Println("Should message", GetMessageAuthor(mw.msg))
+					mw.InitiateConvo(mw.msg.Author.ID)
+				}
 			default:
 				log.Println("This hasn't been implemented yet :(")
 			}
 			mw.App.ViewManager.CloseActiveWindow()
 		}
 	}
+}
+
+func (mw *MessageSelectedWindow) InitiateConvo(userId string) {
+	// Check private channels first
+	state := mw.App.session.State
+	state.RLock()
+	for _, v := range state.PrivateChannels {
+		if v.Recipient.ID == userId {
+			mw.App.ViewManager.mv.AddChannel(v.ID)
+			mw.App.ViewManager.talkingChannel = v.ID
+			state.RUnlock()
+			return
+		}
+	}
+	state.RUnlock()
+
+	// Create one then
+	channel, err := mw.App.session.UserChannelCreate(userId)
+	if err != nil {
+		log.Println("Error creating userchannel", err)
+		return
+	}
+	state.ChannelAdd(channel)
+
+	mw.App.ViewManager.mv.AddChannel(channel.ID)
+	mw.App.ViewManager.talkingChannel = channel.ID
 }

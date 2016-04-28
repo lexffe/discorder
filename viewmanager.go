@@ -139,13 +139,13 @@ func (v *ViewManager) PreDraw() {
 
 	// Update the prompt
 	if v.talkingChannel != "" {
-		preStr := "Send to"
+		preStr := "Send to "
 
 		channel, err := v.App.session.State.Channel(v.talkingChannel)
 		name := v.talkingChannel
 
 		if channel != nil && err == nil {
-			name = channel.Name
+			name = GetChannelNameOrRecipient(channel)
 			if !channel.IsPrivate {
 				guild, err := v.App.session.State.Guild(channel.GuildID)
 				if err == nil {

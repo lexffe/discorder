@@ -114,11 +114,11 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 		case termbox.KeyHome, termbox.KeyEnd:
 			mv.Selected = 0
 		case termbox.KeyEnter:
-			if mv.Selected > len(mv.DisplayMessages) {
+			if mv.Selected-1 >= len(mv.DisplayMessages) || mv.Selected == 0 {
 				return
 			}
 
-			selectedDisplayMsg := mv.DisplayMessages[mv.Selected]
+			selectedDisplayMsg := mv.DisplayMessages[mv.Selected-1]
 			if selectedDisplayMsg.IsLogMessage {
 				return
 			}

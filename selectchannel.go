@@ -94,7 +94,7 @@ func (csw *ChannelSelectWindow) HandleInput(event termbox.Event) {
 			selected := csw.listWindow.GetSelected()
 			userdata, ok := selected.UserData.(*discordgo.Channel)
 			if ok {
-				log.Println("Selected ", userdata.Name)
+				log.Println("Selected ", GetChannelNameOrRecipient(userdata))
 				csw.App.ViewManager.talkingChannel = userdata.ID
 			}
 		case termbox.KeySpace:

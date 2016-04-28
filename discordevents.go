@@ -28,30 +28,35 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 	settings := app.GetNotificationSettingsForChannel(m.ChannelID)
 
 	author := "Unknown?"
+	authorId := ""
 	if m.Author != nil { // Yes this does happen...
 		author = m.Author.Username
+		authorId = m.Author.ID
 	}
 
-	shouldNotify := false
+	if authorId != app.session.State.User.ID {
 
-	if !settings.Muted && settings.Notifications == ChannelNotificationsAll {
-		shouldNotify = true
-	} else if !settings.Muted && settings.Notifications == ChannelNotificationsMentions {
-		for _, v := range m.Mentions {
-			if v.ID == s.State.User.ID {
-				shouldNotify = true
-				break
+		shouldNotify := false
+
+		if !settings.Muted && settings.Notifications == ChannelNotificationsAll {
+			shouldNotify = true
+		} else if !settings.Muted && settings.Notifications == ChannelNotificationsMentions {
+			for _, v := range m.Mentions {
+				if v.ID == s.State.User.ID {
+					shouldNotify = true
+					break
+				}
 			}
+		} else if !settings.SurpressEveryone && m.MentionEveryone {
+			shouldNotify = true
 		}
-	} else if !settings.SurpressEveryone && m.MentionEveryone {
-		shouldNotify = true
-	}
 
-	if shouldNotify {
-		if app.notifications != nil {
-			app.notifications.Push(author, m.ContentWithMentionsReplaced(), "", notificator.UR_NORMAL)
+		if shouldNotify {
+			if app.notifications != nil {
+				app.notifications.Push(author, m.ContentWithMentionsReplaced(), "", notificator.UR_NORMAL)
+			}
+			app.ViewManager.notificationsManager.AddMention(m.Message)
 		}
-		app.ViewManager.notificationsManager.AddMention(m.Message)
 	}
 
 	// Update last message
