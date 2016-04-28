@@ -169,6 +169,9 @@ func (mv *MessageView) BuildTexts() {
 	y := int(rect.H)
 	padding := 0
 
+	now := time.Now()
+	thisYear, thisMonth, thisDay := now.Date()
+
 	// Build it!!
 	for k, item := range mv.DisplayMessages {
 		//var cells []termbox.Cell
@@ -198,7 +201,16 @@ func (mv *MessageView) BuildTexts() {
 			if msg.Author != nil {
 				author = msg.Author.Username
 			}
-			ts := item.Timestamp.Local().Format(time.Stamp) + " "
+
+			ts := ""
+
+			thenYear, thenMonth, thenDay := item.Timestamp.Date()
+			if thisYear == thenYear && thisMonth == thenMonth && thisDay == thenDay {
+				ts = item.Timestamp.Local().Format("15:04:05")
+			} else {
+				ts = item.Timestamp.Local().Format(time.Stamp)
+			}
+			ts += " "
 			tsLen := utf8.RuneCountInString(ts)
 
 			authorLen := utf8.RuneCountInString(author)
@@ -221,6 +233,10 @@ func (mv *MessageView) BuildTexts() {
 				if name == "" {
 					name = "Direct Message"
 					dm = true
+				}
+				guild, err := mv.App.session.State.Guild(channel.GuildID)
+				if err == nil {
+					name = guild.Name + "/#" + name
 				}
 
 				fullMsg := ts + "[" + name + "]" + author + ": " + msg.ContentWithMentionsReplaced()
