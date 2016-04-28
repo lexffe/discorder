@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
-	"log"
 	"time"
 	"unicode/utf8"
 )
@@ -22,8 +22,11 @@ type MessageView struct {
 
 	Layer int
 
-	MessageTexts  []*ui.Text
-	CurChatScroll int
+	MessageContainer *ui.SimpleEntity
+	MessageTexts     []*ui.Text
+	ScrollText       *ui.Text
+
+	Selected int
 
 	DisplayMessagesDirty bool // Rebuilds displaymessages on next draw if set
 	TextsDirty           bool // Rebuilds texts on next draw if set
@@ -38,10 +41,24 @@ type DisplayMessage struct {
 
 func NewMessageView(app *App) *MessageView {
 	mv := &MessageView{
-		BaseEntity: &ui.BaseEntity{},
-		Transform:  &ui.Transform{},
-		App:        app,
+		BaseEntity:       &ui.BaseEntity{},
+		Transform:        &ui.Transform{},
+		App:              app,
+		MessageContainer: ui.NewSimpleEntity(),
 	}
+
+	t := ui.NewText()
+	t.Transform.Parent = mv.Transform
+	t.Transform.AnchorMin.Y = 1
+	t.Transform.AnchorMax = common.NewVector2I(1, 1)
+	t.Layer = 9
+	t.BG = termbox.ColorYellow
+
+	mv.AddChild(t)
+	mv.ScrollText = t
+
+	mv.AddChild(mv.MessageContainer)
+
 	return mv
 }
 
@@ -81,12 +98,43 @@ func (mv *MessageView) RemoveChannel(channel string) {
 func (mv *MessageView) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
 		mv.TextsDirty = true //  ;)
+
+		if mv.App.ViewManager.activeWindow != nil {
+			return
+		}
+
+		switch event.Key {
+		case termbox.KeyArrowUp:
+			mv.Selected += 1
+		case termbox.KeyArrowDown:
+			mv.Selected -= 1
+			if mv.Selected < 0 {
+				mv.Selected = 0
+			}
+		case termbox.KeyHome, termbox.KeyEnd:
+			mv.Selected = 0
+		case termbox.KeyEnter:
+			if mv.Selected > len(mv.DisplayMessages) {
+				return
+			}
+
+			selectedDisplayMsg := mv.DisplayMessages[mv.Selected]
+			if selectedDisplayMsg.IsLogMessage {
+				return
+			}
+			msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
+			mv.App.ViewManager.AddChild(msw)
+			mv.App.ViewManager.activeWindow = msw
+		}
+		if mv.Selected != 0 {
+			mv.App.ViewManager.input.Active = false
+		} else {
+			mv.App.ViewManager.input.Active = true
+		}
 	}
 }
 
 func (mv *MessageView) HandleMessageCreate(msg *discordgo.Message) {
-	log.Println("Handling stuff")
-
 	// Check if its private and if this messagegview shows private messages
 	pChannel, err := mv.App.session.State.PrivateChannel(msg.ChannelID)
 	if pChannel != nil && err != nil {
@@ -113,7 +161,7 @@ func (mv *MessageView) HandleMessageRemove(msg *discordgo.Message) {
 
 func (mv *MessageView) BuildTexts() {
 	// sizex, sizey := termbox.Size()
-	mv.ClearChildren()
+	mv.MessageContainer.ClearChildren()
 	mv.MessageTexts = make([]*ui.Text, 0)
 
 	rect := mv.Transform.GetRect()
@@ -129,7 +177,8 @@ func (mv *MessageView) BuildTexts() {
 			continue
 		}
 
-		if k < mv.CurChatScroll {
+		scroll := mv.Selected - int(rect.H/2)
+		if k < scroll {
 			continue
 		}
 
@@ -201,9 +250,19 @@ func (mv *MessageView) BuildTexts() {
 			mv.App.ackRoutine.In <- item.DiscordMessage
 		}
 
+		if mv.Selected == k+1 {
+			if item.IsLogMessage {
+				text.BG = termbox.ColorBlue | termbox.AttrBold
+			} else {
+				for k, v := range text.Attribs {
+					text.Attribs[k] = ui.AttribPair{v.Fg, termbox.ColorBlue | termbox.AttrBold}
+				}
+			}
+		}
+
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
 		text.Layer = mv.Layer
-		mv.AddChild(text)
+		mv.MessageContainer.AddChild(text)
 	}
 }
 
@@ -340,7 +399,15 @@ func (mv *MessageView) PreDraw() {
 	if h < 0 {
 		h = 0
 	}
-	mv.BuildDisplayMessages(h)
+
+	if mv.Selected == 0 {
+		mv.ScrollText.Disabled = true
+	} else {
+		mv.ScrollText.Disabled = false
+		mv.ScrollText.Text = fmt.Sprintf("Scroll: %d", mv.Selected)
+	}
+
+	mv.BuildDisplayMessages(h + mv.Selected)
 	mv.BuildTexts()
 }
 

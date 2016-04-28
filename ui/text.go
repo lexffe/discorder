@@ -14,6 +14,7 @@ const (
 
 type Text struct {
 	*BaseEntity
+	Disabled bool // won't draw then
 
 	Transform *Transform
 	Text      string
@@ -51,6 +52,10 @@ func (t *Text) GetDrawLayer() int {
 }
 
 func (t *Text) Draw() {
+	if t.Disabled {
+		return
+	}
+
 	rect := t.Transform.GetRect()
 
 	var attribs map[int]AttribPair
@@ -72,4 +77,4 @@ func (t *Text) HeightRequired() int {
 	return int(math.Ceil(float64(num) / float64(rect.W)))
 }
 
-func (t *Text) Destroy() {}
+func (t *Text) Destroy() { t.DestroyChildren() }

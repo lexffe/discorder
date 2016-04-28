@@ -175,3 +175,10 @@ func GetChannelNameOrRecipient(channel *discordgo.Channel) string {
 	}
 	return channel.Name
 }
+
+func GetMessageAuthor(msg *discordgo.Message) string {
+	if msg.Author != nil {
+		return msg.Author.Username
+	}
+	return "Unknwon?"
+}

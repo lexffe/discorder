@@ -86,6 +86,18 @@ func (b *BaseEntity) DestroyChildren() {
 	}
 }
 
+type SimpleEntity struct {
+	*BaseEntity
+}
+
+func NewSimpleEntity() *SimpleEntity {
+	return &SimpleEntity{
+		BaseEntity: &BaseEntity{},
+	}
+}
+
+func (s *SimpleEntity) Destroy() { s.DestroyChildren() }
+
 type InputHandler interface {
 	HandleInput(event termbox.Event)
 }

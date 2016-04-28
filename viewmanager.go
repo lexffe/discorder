@@ -9,6 +9,7 @@ import (
 	"unicode/utf8"
 )
 
+// TODO: Clean this pile of ... up
 type ViewManager struct {
 	*ui.BaseEntity
 	App                  *App
@@ -130,7 +131,10 @@ func (v *ViewManager) Destroy() { v.DestroyChildren() }
 
 func (v *ViewManager) PreDraw() {
 	if v.mv != nil {
-		v.mv.Logs = v.App.logBuffer
+		if len(v.mv.Logs) != len(v.App.logBuffer) {
+			v.mv.Logs = v.App.logBuffer
+			v.mv.DisplayMessagesDirty = true
+		}
 	}
 
 	// Update the prompt
@@ -202,6 +206,10 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 		case termbox.KeyCtrlL:
 			v.App.logBuffer = []*common.LogMessage{}
 		case termbox.KeyEnter:
+			if v.mv.Selected != 0 {
+				break
+			}
+
 			if v.talkingChannel == "" {
 				log.Println("you're trying to send a message to nobody buddy D:")
 				break
@@ -219,5 +227,16 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			}
 
 		}
+	}
+}
+
+func (v *ViewManager) CloseActiveWindow() {
+	if v.activeWindow != nil {
+		v.RemoveChild(v.activeWindow, true)
+		v.activeWindow = nil
+	}
+
+	if v.mv.Selected == 0 {
+		v.input.Active = true
 	}
 }
