@@ -14,7 +14,20 @@ func (app *App) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string) {
+// If ran from another goroutine, lock should be true
+// gonna turn this into its own history manager later with a queue and everything
+func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string, lock bool) {
+	defer func() {
+		if lock {
+			app.Lock()
+		}
+		delete(app.fetchingHistory, channelId)
+		app.ViewManager.mv.DisplayMessagesDirty = true
+		if lock {
+			app.Unlock()
+		}
+	}()
+
 	state := app.session.State
 	channel, err := state.Channel(channelId)
 	if err != nil {
@@ -32,23 +45,49 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 	state.Lock()
 	defer state.Unlock()
 
-	newMessages := make([]*discordgo.Message, 0)
-
 	if len(channel.Messages) < 1 && len(resp) > 0 {
 		for i := len(resp) - 1; i >= 0; i-- {
 			channel.Messages = append(channel.Messages, resp[i])
 		}
 		return
 	} else if len(resp) < 1 {
+		if beforeId != "" {
+			if lock {
+				state.Unlock() // Also need to unlock this to avoid deadlocks
+				app.Lock()
+			}
+			//log.Println("Set first message")
+			app.firstMessages[channelId] = beforeId
+			if lock {
+				app.Unlock()
+				state.Lock() // And lock it again
+			}
+		}
 		return
 	}
 
+	if len(resp) < limit {
+		// Looks like we've hit the first message of the channel
+		if lock {
+			state.Unlock() // Also need to unlock this to avoid deadlocks
+			app.Lock()
+		}
+		newFirst := resp[len(resp)-1].ID
+		app.firstMessages[channelId] = newFirst
+
+		if lock {
+			app.Unlock()
+			state.Lock() // And lock it again
+		}
+	}
+
+	newMessages := make([]*discordgo.Message, 0)
 	nextNewMessageIndex := len(resp) - 1
 	nextOldMessageIndex := 0
 
 	for {
-		newOut := false
-		oldOut := false
+		newOut := false // new (response) is oob
+		oldOut := false // old (current channel history) is oob
 		var nextOldMessage *discordgo.Message
 		if nextOldMessageIndex >= len(channel.Messages) {
 			oldOut = true
@@ -181,4 +220,12 @@ func GetMessageAuthor(msg *discordgo.Message) string {
 		return msg.Author.Username
 	}
 	return "Unknwon?"
+}
+
+func (app *App) IsFirstChannelMessage(channelId, msgId string) bool {
+	first, _ := app.firstMessages[channelId]
+	if first == msgId {
+		return true
+	}
+	return false
 }

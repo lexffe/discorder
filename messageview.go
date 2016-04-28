@@ -6,6 +6,7 @@ import (
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
+	"log"
 	"time"
 	"unicode/utf8"
 )
@@ -82,7 +83,8 @@ func (mv *MessageView) AddChannel(channel string) {
 	}
 	// Grab some history
 	if len(discordChannel.Messages) < 10 {
-		mv.App.GetHistory(channel, 10, "", "")
+		mv.App.fetchingHistory[channel] = true
+		go mv.App.GetHistory(channel, 10, "", "", true)
 	}
 }
 
@@ -106,13 +108,16 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 		switch event.Key {
 		case termbox.KeyArrowUp:
 			mv.Selected += 1
+			mv.DisplayMessagesDirty = true
 		case termbox.KeyArrowDown:
 			mv.Selected -= 1
 			if mv.Selected < 0 {
 				mv.Selected = 0
 			}
+			mv.DisplayMessagesDirty = true
 		case termbox.KeyHome, termbox.KeyEnd:
 			mv.Selected = 0
+			mv.DisplayMessagesDirty = true
 		case termbox.KeyEnter:
 			if mv.Selected-1 >= len(mv.DisplayMessages) || mv.Selected == 0 {
 				return
@@ -332,7 +337,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 				continue
 			}
 
-			newest, nextIndex := GetNewestMessageBefore(channel.Messages, beforeTime, listeningIndexes[k])
+			newest, nextIndex := mv.GetNewestMessageBefore(channel, beforeTime, listeningIndexes[k])
 
 			if newest != nil && (newestListening == nil || !newest.Timestamp.Before(newestListening.Timestamp)) {
 				newestListening = newest
@@ -349,7 +354,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		if mv.ShowAllPrivate {
 			for k, privateChannel := range state.PrivateChannels {
 
-				newest, nextIndex := GetNewestMessageBefore(privateChannel.Messages, beforeTime, pmIndexes[k])
+				newest, nextIndex := mv.GetNewestMessageBefore(privateChannel, beforeTime, pmIndexes[k])
 
 				if newest != nil && (newestPm == nil || !newest.Timestamp.Before(newestPm.Timestamp)) {
 					newestPm = newest
@@ -422,20 +427,26 @@ func (mv *MessageView) PreDraw() {
 		mv.ScrollText.Disabled = false
 		mv.ScrollText.Text = fmt.Sprintf("Scroll: %d", mv.Selected)
 	}
-
-	mv.BuildDisplayMessages(h + mv.Selected)
-	mv.BuildTexts()
+	if mv.DisplayMessagesDirty {
+		mv.BuildDisplayMessages(h + mv.Selected)
+		mv.BuildTexts()
+		mv.DisplayMessagesDirty = false
+		mv.TextsDirty = false
+	} else if mv.TextsDirty {
+		mv.BuildTexts()
+		mv.TextsDirty = false
+	}
 }
 
 func (mv *MessageView) GetDrawLayer() int {
 	return 9
 }
 
-func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIndex int) (*DisplayMessage, int) {
+func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before time.Time, startIndex int) (*DisplayMessage, int) {
+	msgs := channel.Messages
 	if startIndex == -10 {
 		startIndex = len(msgs) - 1
 	}
-
 	for j := startIndex; j >= 0; j-- {
 		msg := msgs[j]
 		parsedTimestamp, _ := time.Parse(common.DiscordTimeFormat, msg.Timestamp)
@@ -447,5 +458,20 @@ func GetNewestMessageBefore(msgs []*discordgo.Message, before time.Time, startIn
 			return curNewestMessage, j - 1
 		}
 	}
+
+	if len(msgs) > 0 {
+		name := GetChannelNameOrRecipient(channel)
+		oldest := msgs[0]
+		if !mv.App.IsFirstChannelMessage(channel.ID, oldest.ID) {
+			// Grab history
+			current, _ := mv.App.fetchingHistory[channel.ID]
+			if !current {
+				log.Println("Should grab history for ", name)
+				mv.App.fetchingHistory[channel.ID] = true
+				go mv.App.GetHistory(channel.ID, 10, oldest.ID, "", true)
+			}
+		}
+	}
+
 	return nil, 0
 }

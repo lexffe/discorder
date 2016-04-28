@@ -40,10 +40,12 @@ type App struct {
 
 	ViewManager *ViewManager
 
-	notifications *notificator.Notificator
-	config        *Config
-	settings      *discordgo.Settings
-	guildSettings []*discordgo.UserGuildSettings
+	notifications   *notificator.Notificator
+	config          *Config
+	settings        *discordgo.Settings
+	guildSettings   []*discordgo.UserGuildSettings
+	firstMessages   map[string]string
+	fetchingHistory map[string]bool
 }
 
 func NewApp(config *Config, logPath string) *App {
@@ -52,9 +54,11 @@ func NewApp(config *Config, logPath string) *App {
 	})
 
 	a := &App{
-		config:        config,
-		notifications: notify,
-		BaseEntity:    &ui.BaseEntity{},
+		config:          config,
+		notifications:   notify,
+		BaseEntity:      &ui.BaseEntity{},
+		firstMessages:   make(map[string]string),
+		fetchingHistory: make(map[string]bool),
 	}
 
 	if *flagDebugEnabled {
