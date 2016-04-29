@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
-	"unicode/utf8"
 )
 
 // Set some default styles
@@ -146,7 +145,7 @@ func (lw *ListWindow) OptionsHeight() int {
 	h := 0
 	rect := lw.Transform.GetRect()
 	for _, v := range lw.Options {
-		h += HeightRequired(utf8.RuneCountInString(v.Str), int(rect.W))
+		h += HeightRequired(v.Str, int(rect.W))
 	}
 	return h
 }

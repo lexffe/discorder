@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/nsf/termbox-go"
-	"math"
 	"unicode/utf8"
 )
 
@@ -47,9 +46,13 @@ func SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
 	y := 0
 
 	for _, cell := range cells {
-		termbox.SetCell(x+startX, y+startY, cell.Ch, cell.Fg, cell.Bg)
+		if cell.Ch != '\n' {
+			termbox.SetCell(x+startX, y+startY, cell.Ch, cell.Fg, cell.Bg)
+			x++
+		} else {
+			x = width
+		}
 
-		x++
 		if x >= width {
 			y++
 			x = 0
@@ -62,6 +65,20 @@ func SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
 }
 
 // Returns the number of lines required
-func HeightRequired(num, width int) int {
-	return int(math.Ceil(float64(num) / float64(width)))
+func HeightRequired(str string, width int) int {
+	x := 0
+	y := 1
+	for _, v := range str {
+		if v == '\n' {
+			y++
+			x = 0
+		} else {
+			x++
+			if x >= width {
+				x = 0
+				y++
+			}
+		}
+	}
+	return y
 }

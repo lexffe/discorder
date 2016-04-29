@@ -27,7 +27,7 @@ type MessageView struct {
 	MessageTexts     []*ui.Text
 	ScrollText       *ui.Text
 
-	Selected int
+	ScrollAmount int
 
 	DisplayMessagesDirty bool // Rebuilds displaymessages on next draw if set
 	TextsDirty           bool // Rebuilds texts on next draw if set
@@ -107,31 +107,32 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 
 		switch event.Key {
 		case termbox.KeyArrowUp:
-			mv.Selected += 1
+			mv.ScrollAmount += 1
 			mv.DisplayMessagesDirty = true
 		case termbox.KeyArrowDown:
-			mv.Selected -= 1
-			if mv.Selected < 0 {
-				mv.Selected = 0
+			mv.ScrollAmount -= 1
+			if mv.ScrollAmount < 0 {
+				mv.ScrollAmount = 0
 			}
 			mv.DisplayMessagesDirty = true
 		case termbox.KeyHome, termbox.KeyEnd:
-			mv.Selected = 0
+			mv.ScrollAmount = 0
 			mv.DisplayMessagesDirty = true
 		case termbox.KeyEnter:
-			if mv.Selected-1 >= len(mv.DisplayMessages) || mv.Selected == 0 {
+			if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
 				return
 			}
 
-			selectedDisplayMsg := mv.DisplayMessages[mv.Selected-1]
-			if selectedDisplayMsg.IsLogMessage {
+			text := mv.MessageTexts[0]
+			selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
+			if !ok || selectedDisplayMsg.IsLogMessage {
 				return
 			}
 			msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
 			mv.App.ViewManager.AddChild(msw)
 			mv.App.ViewManager.activeWindow = msw
 		}
-		if mv.Selected != 0 {
+		if mv.ScrollAmount != 0 {
 			mv.App.ViewManager.input.Active = false
 		} else {
 			mv.App.ViewManager.input.Active = true
@@ -171,22 +172,18 @@ func (mv *MessageView) BuildTexts() {
 
 	rect := mv.Transform.GetRect()
 
-	y := int(rect.H)
+	realScroll := mv.ScrollAmount
+	y := int(rect.H) + realScroll
 	padding := 0
 
 	now := time.Now()
 	thisYear, thisMonth, thisDay := now.Date()
 
+	isFirst := true
+
 	// Build it!!
-	for k, item := range mv.DisplayMessages {
-		//var cells []termbox.Cell
-
+	for _, item := range mv.DisplayMessages {
 		if item == nil {
-			continue
-		}
-
-		scroll := mv.Selected - int(rect.H/2)
-		if k < scroll {
 			continue
 		}
 
@@ -208,7 +205,6 @@ func (mv *MessageView) BuildTexts() {
 			}
 
 			ts := ""
-
 			thenYear, thenMonth, thenDay := item.Timestamp.Date()
 			if thisYear == thenYear && thisMonth == thenMonth && thisDay == thenDay {
 				ts = item.Timestamp.Local().Format("15:04:05")
@@ -220,50 +216,52 @@ func (mv *MessageView) BuildTexts() {
 
 			authorLen := utf8.RuneCountInString(author)
 			channel, err := mv.App.session.State.Channel(msg.ChannelID)
+			channelName := "???"
+			isPrivate := false
 			if err != nil {
-				errStr := "(error getting channel" + err.Error() + ") "
-				fullMsg := ts + errStr + author + ": " + msg.ContentWithMentionsReplaced()
-				errLen := utf8.RuneCountInString(errStr)
-				points := map[int]ui.AttribPair{
-					0:                          ui.AttribPair{termbox.ColorBlue, termbox.ColorRed},
-					tsLen:                      ui.AttribPair{termbox.ColorWhite, termbox.ColorRed},
-					errLen + tsLen:             ui.AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
-					errLen + authorLen + tsLen: ui.AttribPair{},
-				}
-				text.Text = fullMsg
-				text.Attribs = points
+				log.Println("Error getting channel", err)
 			} else {
-				name := channel.Name
-				dm := false
-				if name == "" {
-					name = "Direct Message"
-					dm = true
+				channelName = channel.Name
+				isPrivate = channel.IsPrivate
+				if !isPrivate {
+					guild, err := mv.App.session.State.Guild(channel.GuildID)
+					if err == nil {
+						channelName = guild.Name + "/#" + channelName
+					}
 				}
-				guild, err := mv.App.session.State.Guild(channel.GuildID)
-				if err == nil {
-					name = guild.Name + "/#" + name
-				}
-
-				fullMsg := ts + "[" + name + "]" + author + ": " + msg.ContentWithMentionsReplaced()
-				channelLen := utf8.RuneCountInString(name) + 2
-				points := map[int]ui.AttribPair{
-					0:                              ui.AttribPair{termbox.ColorBlue, termbox.ColorDefault},
-					tsLen:                          ui.AttribPair{termbox.ColorGreen, termbox.ColorDefault},
-					channelLen + tsLen:             ui.AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
-					channelLen + authorLen + tsLen: ui.AttribPair{},
-				}
-				if dm {
-					points[tsLen] = ui.AttribPair{termbox.ColorMagenta, termbox.ColorDefault}
-				}
-				text.Text = fullMsg
-				text.Attribs = points
 			}
+
+			if isPrivate {
+				channelName = "Direct Message"
+			}
+
+			fullMsg := ts + "[" + channelName + "]" + author + ": " + msg.ContentWithMentionsReplaced()
+			channelLen := utf8.RuneCountInString(channelName) + 2
+			points := map[int]ui.AttribPair{
+				0:                              ui.AttribPair{termbox.ColorBlue, termbox.ColorDefault},
+				tsLen:                          ui.AttribPair{termbox.ColorGreen, termbox.ColorDefault},
+				channelLen + tsLen:             ui.AttribPair{termbox.ColorCyan | termbox.AttrBold, termbox.ColorDefault},
+				channelLen + authorLen + tsLen: ui.AttribPair{},
+			}
+			if isPrivate {
+				points[tsLen] = ui.AttribPair{termbox.ColorMagenta, termbox.ColorDefault}
+			}
+			text.Text = fullMsg
+			text.Attribs = points
 		}
 
-		lines := ui.HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
+		lines := text.HeightRequired()
+		//lines := ui.HeightRequired(utf8.RuneCountInString(text.Text), int(rect.W)-padding*2)
 		y -= lines
 		if y < 0 {
-			break
+			if y+lines > 0 {
+				toSkip := -y
+				text.SkipLines = toSkip
+			} else {
+				break
+			}
+		} else if y > int(rect.H) {
+			continue
 		}
 
 		// Send ack
@@ -271,7 +269,7 @@ func (mv *MessageView) BuildTexts() {
 			mv.App.ackRoutine.In <- item.DiscordMessage
 		}
 
-		if mv.Selected == k+1 {
+		if mv.ScrollAmount != 0 && isFirst {
 			if item.IsLogMessage {
 				text.BG = termbox.ColorBlue | termbox.AttrBold
 			} else {
@@ -279,11 +277,17 @@ func (mv *MessageView) BuildTexts() {
 					text.Attribs[k] = ui.AttribPair{v.Fg, termbox.ColorBlue | termbox.AttrBold}
 				}
 			}
+			isFirst = false
 		}
 
 		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
 		text.Layer = mv.Layer
+		text.Userdata = item
+		mv.MessageTexts = append(mv.MessageTexts, text)
 		mv.MessageContainer.AddChild(text)
+		if y < 0 {
+			break
+		}
 	}
 }
 
@@ -421,14 +425,14 @@ func (mv *MessageView) PreDraw() {
 		h = 0
 	}
 
-	if mv.Selected == 0 {
+	if mv.ScrollAmount == 0 {
 		mv.ScrollText.Disabled = true
 	} else {
 		mv.ScrollText.Disabled = false
-		mv.ScrollText.Text = fmt.Sprintf("Scroll: %d", mv.Selected)
+		mv.ScrollText.Text = fmt.Sprintf("Scroll: %d", mv.ScrollAmount)
 	}
 	if mv.DisplayMessagesDirty {
-		mv.BuildDisplayMessages(h + mv.Selected)
+		mv.BuildDisplayMessages(h + mv.ScrollAmount)
 		mv.BuildTexts()
 		mv.DisplayMessagesDirty = false
 		mv.TextsDirty = false

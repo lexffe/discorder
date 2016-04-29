@@ -47,7 +47,7 @@ func main() {
 	config = c
 
 	if *flagDebugEnabled {
-		//Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
+		// Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
 		logFile, _ := os.OpenFile("discorder_stdout_stderr.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
 		syscall.Dup2(int(logFile.Fd()), 1)
 		syscall.Dup2(int(logFile.Fd()), 2)

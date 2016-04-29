@@ -2,8 +2,6 @@ package ui
 
 import (
 	"github.com/nsf/termbox-go"
-	"math"
-	"unicode/utf8"
 )
 
 const (
@@ -19,12 +17,15 @@ type Text struct {
 	Transform *Transform
 	Text      string
 
+	SkipLines int
+
 	Mode int
 
 	Attribs map[int]AttribPair
 	BG, FG  termbox.Attribute // Not used if Attribs is specified
 
-	Layer int
+	Layer    int
+	Userdata interface{}
 }
 
 func NewText() *Text {
@@ -67,14 +68,47 @@ func (t *Text) Draw() {
 		}
 	}
 
-	cellSlice := GenCellSlice(t.Text, attribs)
-	SetCells(cellSlice, int(rect.X), int(rect.Y), int(rect.W), int(rect.H))
+	// The actual drawing happens here
+	x := 0
+	y := 0
+	i := 0
+	skip := t.SkipLines
+	height := int(rect.H)
+	width := int(rect.W)
+	var curAttribs AttribPair
+	for _, char := range t.Text {
+		newAttribs, ok := attribs[i]
+		if ok {
+			curAttribs = newAttribs
+		}
+
+		if char != '\n' {
+			if skip <= 0 {
+				termbox.SetCell(x+int(rect.X), y+int(rect.Y), char, curAttribs.Fg, curAttribs.Bg)
+			}
+			x++
+		} else {
+			x = width
+		}
+
+		if x >= width {
+			skip--
+			y++
+			x = 0
+			if height != 0 && y >= height {
+				return
+			}
+		}
+		i++
+	}
+
+	// cellSlice := GenCellSlice(t.Text, attribs)
+	// SetCells(cellSlice, int(rect.X), int(rect.Y), int(rect.W), int(rect.H))
 }
 
 func (t *Text) HeightRequired() int {
 	rect := t.Transform.GetRect()
-	num := utf8.RuneCountInString(t.Text)
-	return int(math.Ceil(float64(num) / float64(rect.W)))
+	return HeightRequired(t.Text, int(rect.W))
 }
 
 func (t *Text) Destroy() { t.DestroyChildren() }

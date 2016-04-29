@@ -82,6 +82,8 @@ func (v *ViewManager) OnReady() {
 	input.Transform.AnchorMin = common.NewVector2F(0, 1)
 	input.Transform.AnchorMax = common.NewVector2F(1, 1)
 	input.Transform.Position.Y = -1
+	input.Layer = 5
+	input.Text.Layer = 5
 	input.Active = true
 	v.AddChild(input)
 	v.input = input
@@ -91,6 +93,7 @@ func (v *ViewManager) OnReady() {
 	inputHelper.Transform.AnchorMin = common.NewVector2I(0, 1)
 	inputHelper.FG = termbox.ColorYellow | termbox.AttrBold
 	inputHelper.Text = "Select a channel to send to"
+	inputHelper.Layer = 5
 	length := utf8.RuneCountInString(inputHelper.Text)
 	inputHelper.Transform.Size.X = float32(length)
 	inputHelper.Transform.Position.Y = -1
@@ -206,7 +209,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 		case termbox.KeyCtrlL:
 			v.App.logBuffer = []*common.LogMessage{}
 		case termbox.KeyEnter:
-			if v.mv.Selected != 0 {
+			if v.mv.ScrollAmount != 0 {
 				break
 			}
 
@@ -236,7 +239,7 @@ func (v *ViewManager) CloseActiveWindow() {
 		v.activeWindow = nil
 	}
 
-	if v.mv.Selected == 0 {
+	if v.mv.ScrollAmount == 0 {
 		v.input.Active = true
 	}
 }
