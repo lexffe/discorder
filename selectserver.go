@@ -8,6 +8,11 @@ import (
 	"log"
 )
 
+const (
+	ServerSelectTitle  = "Select a server"
+	ServerSelectFooter = "(Space) Toggle whole server, (enter) select"
+)
+
 type ServerSelectWindow struct {
 	*ui.BaseEntity
 	App         *App
@@ -59,7 +64,8 @@ func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWind
 	listWindow.Transform.AnchorMin = common.NewVector2F(0.1, 0.5)
 	listWindow.Transform.AnchorMax = common.NewVector2F(0.9, 0.5)
 	listWindow.Transform.Size.Y = float32(len(options))
-
+	listWindow.Window.Footer = ServerSelectFooter
+	listWindow.Window.Title = ServerSelectTitle
 	listWindow.Transform.Position.X = -float32(len(options)) / 2
 
 	listWindow.SetOptions(options)
@@ -87,6 +93,33 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 			ssw.App.ViewManager.RemoveChild(ssw, true)
 			ssw.App.ViewManager.AddChild(window)
 			ssw.App.ViewManager.activeWindow = window
+		case termbox.KeySpace:
+			// The below does not strictly belong here does it?
+			selected := ssw.listWindow.GetSelected()
+			userdata, ok := selected.UserData.(*discordgo.Guild)
+			if !ok {
+				break
+			}
+			toggleTo := true
+		OUTER:
+			for _, v := range userdata.Channels {
+				for _, c := range ssw.messageView.Channels {
+					if v.ID == c {
+						toggleTo = false
+						break OUTER
+					}
+				}
+			}
+
+			for _, v := range userdata.Channels {
+				if toggleTo {
+					ssw.messageView.AddChannel(v.ID)
+					selected.Marked = true
+				} else {
+					ssw.messageView.RemoveChannel(v.ID)
+					selected.Marked = false
+				}
+			}
 		}
 	}
 }
