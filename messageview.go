@@ -91,6 +91,7 @@ func (mv *MessageView) AddChannel(channel string) {
 		if !mv.App.IsFirstChannelMessage(discordChannel.ID, firstId) {
 			mv.App.fetchingHistory[channel] = true
 			go mv.App.GetHistory(channel, 10, "", "", true)
+			log.Println(GetChannelNameOrRecipient(discordChannel) + " history")
 		}
 
 	}

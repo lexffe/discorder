@@ -128,6 +128,7 @@ func (v *ViewManager) ApplyConfig() {
 		v.SelectedMessageView.AddChannel(channel)
 	}
 	v.talkingChannel = v.App.config.LastChannel
+	v.SelectedMessageView.ShowAllPrivate = v.App.config.AllPrivateMode
 }
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }

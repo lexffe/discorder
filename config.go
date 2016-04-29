@@ -28,11 +28,10 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 func (c *Config) Save(path string) error {
-
-	encoded, err := json.MarshalIndent(c)
+	eencoded, err := json.MarshalIndent(c, "", "	")
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(path, encoded, os.FileMode(0755))
+	return ioutil.WriteFile(path, eencoded, os.FileMode(0755))
 }
