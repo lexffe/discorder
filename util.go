@@ -26,7 +26,9 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 		if lock {
 			app.Unlock()
 		}
-		log.Println("History processing complete")
+		if *flagDebugEnabled {
+			log.Println("History processing complete")
+		}
 	}()
 
 	state := app.session.State

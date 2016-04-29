@@ -153,17 +153,17 @@ func (v *ViewManager) PreDraw() {
 			if !channel.IsPrivate {
 				guild, err := v.App.session.State.Guild(channel.GuildID)
 				if err == nil {
-					preStr += " " + guild.Name + "/"
+					preStr += guild.Name + "/"
 				} else {
-					preStr += " " + channel.GuildID + "/"
+					preStr += channel.GuildID + "/"
 				}
 			}
 		}
 
-		v.inputHelper.Text = preStr + "#" + name
+		v.inputHelper.Text = preStr + "#" + name + ":"
 		length := utf8.RuneCountInString(v.inputHelper.Text)
 		v.inputHelper.Transform.Size.X = float32(length)
-		v.input.Transform.Left = length + 1
+		v.input.Transform.Left = length
 	}
 
 	if *flagDebugEnabled {
@@ -194,7 +194,6 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			hw := NewHelpWindow(v.App)
 			v.AddChild(hw)
 			v.activeWindow = hw
-			log.Println("Opening help")
 			v.input.Active = false
 		case termbox.KeyCtrlS: // Select server
 			if v.activeWindow != nil {
@@ -204,7 +203,6 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			v.AddChild(ssw)
 			v.activeWindow = ssw
 			v.input.Active = false
-			log.Println("Opening server select window")
 		case termbox.KeyBackspace, termbox.KeyBackspace2:
 			if v.activeWindow != nil {
 				v.RemoveChild(v.activeWindow, true)

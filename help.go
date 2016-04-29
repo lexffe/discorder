@@ -9,17 +9,17 @@ import (
 var HelpContent = []string{
 	"Keyboard shortcuts:",
 	"Ctrl-O: Help",
-	"Ctrl-S: Select server",
-	"Ctrl-G: Select channels",
-	"    Space: mark channel",
+	"Ctrl-S: Select server/channel",
+	"    Space: toggle",
 	"    Enter: Select as send channel",
-	"Ctrl-P: Select private conversation",
+	//"Ctrl-G: Select channels (removed, use ctrl-s)",
+	//"Ctrl-P: Select private conversation (removed, use ctrl-s)",
 	"Ctrl-Q: Quit",
-	"Ctrl-J: Queries the history of the current channel ",
 	"Ctrl-L: Clear log messages",
 	"Up: Scroll up",
 	"Down: Scroll down",
 	"Backspace: Close current wnidow",
+	"\nIf all private channels are selected, it will go into a AllPrivate\nmode meaning new messages from people you haven't talked to before\nwill also show up",
 	"--------------",
 	"You are using Discorder version " + VERSION,
 	"This is still in very early development, please report any bugs you find here",
@@ -39,7 +39,7 @@ func NewHelpWindow(app *App) *HelpWindow {
 	}
 
 	wWidth := 70
-	wHeight := 20
+	wHeight := 21
 
 	curY := 1
 

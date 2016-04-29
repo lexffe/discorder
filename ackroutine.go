@@ -122,7 +122,10 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	if err != nil {
 		log.Println("Error sending ack: ", err)
 	}
-	log.Println("Send ack!", msgStr, msg.ID)
+
+	if *flagDebugEnabled {
+		log.Println("Send ack!", msgStr, msg.ID)
+	}
 
 	a.SetReadState(msg)
 }
