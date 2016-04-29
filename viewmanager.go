@@ -170,6 +170,10 @@ func (v *ViewManager) PreDraw() {
 		children := v.App.Children(true)
 		v.debugText.Text = fmt.Sprintf("Number of entities %d", len(children))
 	}
+
+	if v.input != nil && v.input.TextBuffer != "" {
+		v.App.typingRoutine.selfTypingIn <- v.talkingChannel
+	}
 }
 
 func (v *ViewManager) HandleInput(event termbox.Event) {
@@ -229,7 +233,6 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				v.input.CursorLocation = 0
 				v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
 			}
-
 		}
 	}
 }

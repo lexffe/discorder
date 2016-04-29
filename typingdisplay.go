@@ -34,9 +34,29 @@ func NewTypingDisplay(app *App) *TypingDisplay {
 }
 
 func (t *TypingDisplay) PreDraw() {
-	typing := t.App.typingRoutine.GetTyping([]string{})
+	channels := make([]string, len(t.App.ViewManager.mv.Channels))
+	copy(channels, t.App.ViewManager.mv.Channels)
+	if t.App.ViewManager.mv.ShowAllPrivate {
+		t.App.session.State.RLock()
+		for _, pChan := range t.App.session.State.PrivateChannels {
+			found := false
+			for _, subChan := range t.App.ViewManager.mv.Channels {
+				if subChan == pChan.ID {
+					found = true
+					break
+				}
+			}
+			if !found {
+				channels = append(channels, pChan.ID)
+			}
+		}
+		t.App.session.State.RUnlock()
+	}
+
+	typing := t.App.typingRoutine.GetTyping(channels)
 
 	if len(typing) > 0 {
+		t.text.Disabled = false
 
 		typingStr := "Typing: "
 
@@ -50,13 +70,13 @@ func (t *TypingDisplay) PreDraw() {
 			if err != nil {
 				continue
 			}
-			typingStr += channel.Name + ":" + member.User.Username + ", "
+			typingStr += "#" + GetChannelNameOrRecipient(channel) + ":" + member.User.Username + ", "
 		}
 		// Remove trailing ","
-		typingStr = typingStr[:len(typingStr)-1]
+		typingStr = typingStr[:len(typingStr)-2]
 		t.text.Text = typingStr
 	} else {
-		t.text.Text = "No one is typing :'("
+		t.text.Disabled = true
 	}
 }
 

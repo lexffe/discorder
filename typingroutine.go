@@ -32,8 +32,8 @@ func NewTypingRoutine(app *App) *TypingRoutine {
 }
 
 func (t *TypingRoutine) Run() {
-	ticker := time.NewTicker(5 * time.Second)
-	selfTyping := ""
+	ticker := time.NewTicker(10 * time.Second)
+	selfTyping := false
 	for {
 		select {
 		case <-ticker.C:
@@ -46,17 +46,16 @@ func (t *TypingRoutine) Run() {
 			}
 			t.typing = newTyping
 
-			if selfTyping != "" {
-				err := t.app.session.ChannelTyping(selfTyping)
+			selfTyping = false
+			t.Unlock()
+		case channel := <-t.selfTypingIn:
+			if !selfTyping {
+				err := t.app.session.ChannelTyping(channel)
 				if err != nil {
 					log.Println("Error sending typing: ", err)
 				}
-				selfTyping = ""
 			}
-
-			t.Unlock()
-		case selfTyping = <-t.selfTypingIn:
-			// ...
+			selfTyping = true
 		case typingEvt := <-t.typingEvtIn:
 			t.Lock()
 			found := false
