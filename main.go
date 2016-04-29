@@ -13,7 +13,7 @@ const (
 	VERSION_MAJOR = 0
 	VERSION_MINOR = 3
 	VERSION_PATCH = 0
-	VERSION_NOTE  = "Git-lemony"
+	VERSION_NOTE  = "RC1-Fruity-Alpha"
 )
 
 var (
