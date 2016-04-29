@@ -112,6 +112,10 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 			}
 
 			for _, v := range userdata.Channels {
+				if v.Type != "text" && !v.IsPrivate {
+					continue
+				}
+
 				if toggleTo {
 					ssw.messageView.AddChannel(v.ID)
 					selected.Marked = true
