@@ -68,7 +68,7 @@ func (v *ViewManager) OnReady() {
 	mv := NewMessageView(v.App)
 	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mv.Transform.Bottom = 3
-	mv.Transform.Top = 2
+	mv.Transform.Top = 1
 	mv.ShowAllPrivate = true
 	mv.Logs = v.App.logBuffer
 	v.AddChild(mv)
