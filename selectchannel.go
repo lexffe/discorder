@@ -8,6 +8,11 @@ import (
 	"log"
 )
 
+const (
+	ChannelSelectFooter = "(a)all (space)toggle selected (enter)set sending"
+	ChannelSelectTitle  = "Select Channels"
+)
+
 type ChannelSelectWindow struct {
 	*ui.BaseEntity
 	Guild       string
@@ -80,10 +85,13 @@ func NewChannelSelectWindow(app *App, mv *MessageView, guild string) *ChannelSel
 	listWindow.Transform.Size.Y = float32(len(options))
 
 	listWindow.Transform.Position.Y = -float32(len(options)) / 2
+	listWindow.Window.Title = ChannelSelectTitle
+	listWindow.Window.Footer = ChannelSelectFooter
 
 	listWindow.SetOptions(options)
 	csw.listWindow = listWindow
 	csw.AddChild(listWindow)
+	csw.CheckAll()
 	return csw
 }
 
@@ -101,6 +109,40 @@ func (csw *ChannelSelectWindow) HandleInput(event termbox.Event) {
 			selected := csw.listWindow.GetSelected()
 			// Toggle
 			csw.TogggleMarked(selected)
+		default:
+			switch event.Ch {
+			case 'a', 'A':
+				to := false
+				for k, v := range csw.listWindow.Options {
+					if k == 0 {
+						to = v.Marked
+					}
+					if to == v.Marked {
+						csw.TogggleMarked(v)
+					}
+				}
+			}
+		}
+		csw.CheckAll()
+	}
+}
+
+func (csw *ChannelSelectWindow) CheckAll() {
+	if csw.private {
+		all := true
+		for _, v := range csw.listWindow.Options {
+			if !v.Marked {
+				all = false
+				break
+			}
+		}
+
+		if all {
+			csw.App.ViewManager.mv.ShowAllPrivate = true
+			csw.listWindow.Window.Title = ChannelSelectTitle + " ALLPRIVATEMODE: ON"
+		} else {
+			csw.App.ViewManager.mv.ShowAllPrivate = false
+			csw.listWindow.Window.Title = ChannelSelectTitle + " ALLPRIVATEMODE: OFF"
 		}
 	}
 }
