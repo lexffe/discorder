@@ -67,14 +67,15 @@ func (a *AckRoutine) Run() {
 // Send a ack if we should, the read state check may be overkill? dunno, should check how the official client handles it
 func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	// Check the readstate first to verify if we already have ack'd this messaeg before
-	a.App.session.State.Lock()
-	defer a.App.session.State.Unlock()
+	state := a.App.session.State
+	state.Lock()
+	defer state.Unlock()
 
 	// Do we really need this check here? maybe move it to the history processing...
 	shouldAck := true
 	ackTs, err := time.Parse(common.DiscordTimeFormat, msg.Timestamp)
 	if err == nil {
-		for _, rs := range a.App.session.State.ReadState {
+		for _, rs := range state.ReadState {
 			if rs.ID == msg.ChannelID {
 				// Check if we have already read this message
 				if rs.LastMessageID == msg.ID {
@@ -83,7 +84,9 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 
 				lastRead := rs.LastMessageID
 				// Find the message
-				channel, err := a.App.session.State.Channel(msg.ChannelID)
+				state.Unlock()
+				channel, err := state.Channel(msg.ChannelID)
+				state.Lock()
 				if err != nil {
 					break
 				}
@@ -108,8 +111,9 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	if !shouldAck {
 		return
 	}
-
+	state.Unlock()
 	channel, _ := a.App.session.State.Channel(msg.ChannelID)
+	state.Lock()
 	msgStr := msg.ChannelID
 	if channel != nil {
 		msgStr = GetChannelNameOrRecipient(channel)
