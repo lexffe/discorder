@@ -26,6 +26,7 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 		if lock {
 			app.Unlock()
 		}
+		log.Println("History processing complete")
 	}()
 
 	state := app.session.State
@@ -51,18 +52,17 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 		}
 		return
 	} else if len(resp) < 1 {
-		if beforeId != "" {
-			if lock {
-				state.Unlock() // Also need to unlock this to avoid deadlocks
-				app.Lock()
-			}
-			//log.Println("Set first message")
-			app.firstMessages[channelId] = beforeId
-			if lock {
-				app.Unlock()
-				state.Lock() // And lock it again
-			}
+		if lock {
+			state.Unlock() // Also need to unlock this to avoid deadlocks
+			app.Lock()
 		}
+		//log.Println("Set first message")
+		app.firstMessages[channelId] = beforeId
+		if lock {
+			app.Unlock()
+			state.Lock() // And lock it again
+		}
+
 		return
 	}
 
@@ -136,7 +136,6 @@ func (app *App) GetHistory(channelId string, limit int, beforeId, afterId string
 	if len(resp) > 0 {
 		app.ackRoutine.In <- resp[0]
 	}
-	log.Println("History processing completed!")
 }
 
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
@@ -223,7 +222,11 @@ func GetMessageAuthor(msg *discordgo.Message) string {
 }
 
 func (app *App) IsFirstChannelMessage(channelId, msgId string) bool {
-	first, _ := app.firstMessages[channelId]
+	first, ok := app.firstMessages[channelId]
+	if !ok {
+		return false
+	}
+
 	if first == msgId {
 		return true
 	}

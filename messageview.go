@@ -83,8 +83,16 @@ func (mv *MessageView) AddChannel(channel string) {
 	}
 	// Grab some history
 	if len(discordChannel.Messages) < 10 {
-		mv.App.fetchingHistory[channel] = true
-		go mv.App.GetHistory(channel, 10, "", "", true)
+		firstId := ""
+		if len(discordChannel.Messages) > 0 {
+			firstId = discordChannel.Messages[0].ID
+		}
+
+		if !mv.App.IsFirstChannelMessage(discordChannel.ID, firstId) {
+			mv.App.fetchingHistory[channel] = true
+			go mv.App.GetHistory(channel, 10, "", "", true)
+		}
+
 	}
 }
 

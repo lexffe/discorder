@@ -13,6 +13,7 @@ type Config struct {
 
 	LastChannel       string   `json:"lastChannel"`
 	ListeningChannels []string `json:"listeningChannels"`
+	AllPrivateMode    bool     `json:"allPrivateMode"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -28,7 +29,7 @@ func LoadConfig(path string) (*Config, error) {
 
 func (c *Config) Save(path string) error {
 
-	encoded, err := json.Marshal(c)
+	encoded, err := json.MarshalIndent(c)
 	if err != nil {
 		return err
 	}

@@ -189,6 +189,7 @@ func (app *App) Run() {
 			if app.ViewManager != nil && app.ViewManager.SelectedMessageView != nil {
 				app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
 				app.config.LastChannel = app.ViewManager.talkingChannel
+				app.config.AllPrivateMode = app.ViewManager.SelectedMessageView.ShowAllPrivate
 			}
 
 			app.config.Save(*configPath)
