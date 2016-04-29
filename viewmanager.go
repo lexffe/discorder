@@ -229,7 +229,12 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				toSend := v.input.TextBuffer
 				v.input.TextBuffer = ""
 				v.input.CursorLocation = 0
-				v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
+				go func() {
+					_, err := v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
+					if err != nil {
+						log.Println("Error sending message: ", err)
+					}
+				}()
 			}
 		}
 	}

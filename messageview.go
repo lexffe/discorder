@@ -193,7 +193,7 @@ func (mv *MessageView) BuildTexts() {
 	rect := mv.Transform.GetRect()
 
 	realScroll := mv.ScrollAmount
-	y := int(rect.H) + realScroll
+	y := int(rect.H) + realScroll + 1
 	padding := 0
 
 	now := time.Now()

@@ -113,7 +113,6 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	}
 	state.Unlock()
 	channel, _ := a.App.session.State.Channel(msg.ChannelID)
-	state.Lock()
 	msgStr := msg.ChannelID
 	if channel != nil {
 		msgStr = GetChannelNameOrRecipient(channel)
@@ -127,6 +126,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 		log.Println("Send ack!", msgStr, msg.ID)
 	}
 
+	state.Lock()
 	a.SetReadState(msg)
 }
 

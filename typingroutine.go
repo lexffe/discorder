@@ -80,7 +80,7 @@ func (t *TypingRoutine) Run() {
 func (t *TypingRoutine) GetTyping(filter []string) []*discordgo.TypingStart {
 	out := make([]*discordgo.TypingStart, 0)
 	t.Lock()
-	if len(filter) == 0 {
+	if filter == nil {
 		out = make([]*discordgo.TypingStart, len(t.typing))
 		for k, typing := range t.typing {
 			out[k] = typing.t

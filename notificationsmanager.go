@@ -28,6 +28,7 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 
 	t.Transform.Parent = nm.Transform
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)
+	t.Layer = 8
 	t.BG = termbox.ColorYellow
 	nm.AddChild(t)
 	return nm
