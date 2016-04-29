@@ -71,6 +71,14 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 			ti.TextBuffer = string(newSlice)
 			ti.CursorLocation--
 		}
+	case termbox.KeyDelete:
+		bufLen := utf8.RuneCountInString(ti.TextBuffer)
+		if ti.CursorLocation >= bufLen {
+			break
+		}
+		runeSlice := []rune(ti.TextBuffer)
+		runeSlice = append(runeSlice[:ti.CursorLocation], runeSlice[ti.CursorLocation+1:]...)
+		ti.TextBuffer = string(runeSlice)
 	default:
 		char := event.Ch
 		if event.Key == termbox.KeySpace {
