@@ -71,14 +71,18 @@ func NewApp(config *Config, logPath string) *App {
 	return a
 }
 
-func (app *App) Login(user, password string) error {
+func (app *App) Login(user, password, token string) error {
 	var session *discordgo.Session
 	var err error
 	if app.session != nil {
 		session = app.session
 		err = session.Login(user, password)
 	} else {
-		session, err = discordgo.New(user, password)
+		if token != "" {
+			session, err = discordgo.New(token)
+		} else {
+			session, err = discordgo.New(user, password)
+		}
 	}
 
 	app.session = session
@@ -192,6 +196,10 @@ func (app *App) Run() {
 				app.config.AllPrivateMode = app.ViewManager.SelectedMessageView.ShowAllPrivate
 			}
 
+			if app.session != nil {
+				app.config.AuthToken = app.session.Token
+			}
+
 			app.config.Save(*configPath)
 			pollStopped := make(chan bool)
 
@@ -202,7 +210,6 @@ func (app *App) Run() {
 			app.stopPollEvents <- pollStopped
 			app.ackRoutine.Stop <- true
 			<-pollStopped
-
 			errChan <- nil
 			return
 		case evt := <-app.inputEventChan:

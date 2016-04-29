@@ -22,14 +22,10 @@ type LoginWindow struct {
 
 	loggingIn bool
 
-	Footer *ui.Text
 	Helper *ui.Text
 
 	SavePassword       bool
 	currentlyLoggingIn bool
-	// pwBuffer      string
-	// savePassword  bool
-	// err           error
 }
 
 func NewLoginWindow(app *App) *LoginWindow {
@@ -54,6 +50,7 @@ func NewLoginWindow(app *App) *LoginWindow {
 	mailInput.Transform.Size = common.NewVector2I(45, 0)
 	mailInput.Active = true
 	mailInput.Layer = 5
+	mailInput.TextBuffer = app.config.Email
 	window.AddChild(mailInput)
 
 	pwInput := ui.NewTextInput()
@@ -63,14 +60,6 @@ func NewLoginWindow(app *App) *LoginWindow {
 	pwInput.MaskInput = true
 	pwInput.Layer = 5
 	window.AddChild(pwInput)
-
-	footer1 := ui.NewText()
-	footer1.Text = "Ctrl-t toggle password saving(currently off)"
-	footer1.Transform.Parent = window.Transform
-	footer1.Transform.Position = common.NewVector2I(1, 7)
-	footer1.Transform.Size = common.NewVector2I(45, 1)
-	footer1.Layer = 5
-	window.AddChild(footer1)
 
 	footer2 := ui.NewText()
 	footer2.Text = "Ctrl-s switch between email and password"
@@ -82,7 +71,6 @@ func NewLoginWindow(app *App) *LoginWindow {
 
 	lw := &LoginWindow{
 		BaseEntity: &ui.BaseEntity{},
-		Footer:     footer1,
 		PWInput:    pwInput,
 		EmailInput: mailInput,
 		App:        app,
@@ -93,8 +81,8 @@ func NewLoginWindow(app *App) *LoginWindow {
 }
 
 func (lw *LoginWindow) CheckAutoLogin() {
-	if lw.App.config.Email != "" && lw.App.config.Password != "" {
-		lw.Trylogin(lw.App.config.Email, lw.App.config.Password)
+	if lw.App.config.AuthToken != "" {
+		lw.Trylogin("", "", lw.App.config.AuthToken)
 	}
 }
 
@@ -111,10 +99,7 @@ func (lw *LoginWindow) HandleInput(event termbox.Event) {
 				lw.PWInput.Active = true
 			} else {
 				pw := lw.PWInput.TextBuffer
-				if lw.SavePassword {
-					lw.App.config.Password = pw
-				}
-				lw.Trylogin(lw.App.config.Email, pw)
+				lw.Trylogin(lw.App.config.Email, pw, "")
 			}
 		case termbox.KeyCtrlS:
 			if lw.CurInputState == InputStateEmail {
@@ -128,25 +113,18 @@ func (lw *LoginWindow) HandleInput(event termbox.Event) {
 			}
 		case termbox.KeyCtrlT:
 			lw.SavePassword = !lw.SavePassword
-
-			statusStr := "on"
-			if !lw.SavePassword {
-				statusStr = "off"
-			}
-
-			lw.Footer.Text = "Ctrl-t toggle password saving(currently " + statusStr + ")"
 		}
 	}
 	log.Println("Handled input in loginwindow")
 }
 
-func (lw *LoginWindow) Trylogin(user, pw string) {
+func (lw *LoginWindow) Trylogin(email, pw, token string) {
 	log.Println("Attempting login...")
 
 	lw.loggingIn = true
 	lw.App.Draw()
 
-	err := lw.App.Login(lw.App.config.Email, pw)
+	err := lw.App.Login(email, pw, token)
 	if err != nil {
 		log.Println("Error logging in: ", err)
 	} else {

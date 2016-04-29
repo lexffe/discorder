@@ -8,12 +8,11 @@ import (
 
 type Config struct {
 	Email     string `json:"email"`
-	Password  string `json:"password"`
 	AuthToken string `json:"authToken"` // Not used currently, but planned
 
+	AllPrivateMode    bool     `json:"allPrivateMode"`
 	LastChannel       string   `json:"lastChannel"`
 	ListeningChannels []string `json:"listeningChannels"`
-	AllPrivateMode    bool     `json:"allPrivateMode"`
 }
 
 func LoadConfig(path string) (*Config, error) {

@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
-	"syscall"
 
 	"github.com/jonas747/discordgo"
 )
@@ -48,9 +46,9 @@ func main() {
 
 	if *flagDebugEnabled {
 		// Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
-		logFile, _ := os.OpenFile("discorder_stdout_stderr.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
-		syscall.Dup2(int(logFile.Fd()), 1)
-		syscall.Dup2(int(logFile.Fd()), 2)
+		// logFile, _ := os.OpenFile("discorder_stdout_stderr.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
+		// syscall.Dup2(int(logFile.Fd()), 1)
+		// syscall.Dup2(int(logFile.Fd()), 2)
 		go RunPProf()
 	}
 
