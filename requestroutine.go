@@ -39,7 +39,7 @@ func (hq *HistoryRequest) CheckDuplicate(r Request) bool {
 		return false
 	}
 	if cast.ChannelID == hq.ChannelID {
-		if hq.AfterID == cast.AfterID && hq.BeforeID == cast.AfterID {
+		if hq.AfterID == cast.AfterID && hq.BeforeID == cast.BeforeID {
 			return true
 		}
 	}
