@@ -13,7 +13,7 @@ const (
 	VERSION_MAJOR = 0
 	VERSION_MINOR = 3
 	VERSION_PATCH = 0
-	VERSION_NOTE  = "RC1-Fruity-Alpha"
+	VERSION_NOTE  = "Fruity-Alpha"
 )
 
 var (
@@ -26,7 +26,7 @@ var (
 	config      *Config
 
 	configPath       = flag.String("config", "discorder.json", "Path to the config file")
-	flagLogPath      = flag.String("log", "discorder.log", "Path to output logs")
+	flagLogPath      = flag.String("log", "discorder.log", "Path to output logs, only used with debug enabled")
 	flagDebugEnabled = flag.Bool("debug", false, "Set to enable debuging mode")
 	flagDumpAPI      = flag.Bool("dumpapi", false, "Set to enable debug in discordgo")
 )
