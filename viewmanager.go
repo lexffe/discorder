@@ -212,6 +212,10 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 		case termbox.KeyCtrlL:
 			v.App.logBuffer = []*common.LogMessage{}
 		case termbox.KeyEnter:
+			if v.activeWindow != nil {
+				break
+			}
+
 			if v.mv.ScrollAmount != 0 {
 				break
 			}
