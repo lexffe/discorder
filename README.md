@@ -1,4 +1,4 @@
-#Discorder
+# Discorder
 
 An interactive command line discord client, currently in it's alpha state, so bugs will be found.
 
@@ -8,11 +8,9 @@ If you want to join my discord channel to ask questions or do whatever then here
 
 #### Latest Alpha
 
-Try the latest alpha versio here: https://github.com/jonas747/discorder/releases/tag/v0.2.0
+Try the latest alpha version here: https://github.com/jonas747/discorder/releases
 
 ####compiling from repo
-
-The current git version is very broken at the moment, use one of the releases.
 
 You need go and git installed
 
@@ -48,15 +46,11 @@ Run the executable and follow the instructions on screen
 Controlls:
 
  - ctrl-o: Opens help 
- - ctrl-s: Select server
-     + space marks a channel for listening
-     + enter selects the channel for typing
- - ctrl-g: select channel 
- - ctrl-p: select private channel (direct messages)
- - ctrl-j: Queries the log for the current channel (for debugging, or when you think it missed a new message)
+ - ctrl-s: Select server/channel/private channel
  - ctrl-l: Clears the log, will later be changed to toggle hiding the log, and you can view the log in a seperate window, but thats for later...!
  - ctrl-q: Quit
  - backspace: closes the active window if any
+ - arrow up/down go up/down in history and also select messages
 
 ##Screenshots
 
