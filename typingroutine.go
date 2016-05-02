@@ -32,7 +32,7 @@ func NewTypingRoutine(app *App) *TypingRoutine {
 }
 
 func (t *TypingRoutine) Run() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	selfTyping := false
 	for {
 		select {
