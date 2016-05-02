@@ -168,7 +168,7 @@ func (v *ViewManager) PreDraw() {
 
 	if *flagDebugEnabled {
 		children := v.App.Children(true)
-		v.debugText.Text = fmt.Sprintf("Number of entities %d", len(children))
+		v.debugText.Text = fmt.Sprintf("Number of entities %d, Req queue length: %d", len(children), v.App.requestRoutine.GetQueueLenth())
 	}
 
 	if v.input != nil && v.input.TextBuffer != "" {

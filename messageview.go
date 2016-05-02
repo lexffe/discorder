@@ -89,11 +89,7 @@ func (mv *MessageView) AddChannel(channel string) {
 		}
 
 		if !mv.App.IsFirstChannelMessage(discordChannel.ID, firstId) {
-			mv.App.fetchingHistory[channel] = true
-			go mv.App.GetHistory(channel, 10, "", "", true)
-			if *flagDebugEnabled {
-				log.Println("Fetching :" + GetChannelNameOrRecipient(discordChannel))
-			}
+			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel, 10, "", ""))
 		}
 
 	}
@@ -488,14 +484,10 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 		oldest := msgs[0]
 		if !mv.App.IsFirstChannelMessage(channel.ID, oldest.ID) {
 			// Grab history
-			current, _ := mv.App.fetchingHistory[channel.ID]
-			if !current {
-				if *flagDebugEnabled {
-					log.Println("Should grab history for ", name)
-				}
-				mv.App.fetchingHistory[channel.ID] = true
-				go mv.App.GetHistory(channel.ID, 10, oldest.ID, "", true)
+			if *flagDebugEnabled {
+				log.Println("Should grab history for ", name)
 			}
+			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel.ID, 10, oldest.ID, ""))
 		}
 	}
 

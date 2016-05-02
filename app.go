@@ -27,8 +27,9 @@ type App struct {
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 
-	typingRoutine *TypingRoutine
-	ackRoutine    *AckRoutine
+	typingRoutine  *TypingRoutine
+	ackRoutine     *AckRoutine
+	requestRoutine *RequestRoutine
 
 	stopPollEvents chan chan bool
 
@@ -40,12 +41,11 @@ type App struct {
 
 	ViewManager *ViewManager
 
-	notifications   *notificator.Notificator
-	config          *Config
-	settings        *discordgo.Settings
-	guildSettings   []*discordgo.UserGuildSettings
-	firstMessages   map[string]string
-	fetchingHistory map[string]bool
+	notifications *notificator.Notificator
+	config        *Config
+	settings      *discordgo.Settings
+	guildSettings []*discordgo.UserGuildSettings
+	firstMessages map[string]string
 }
 
 func NewApp(config *Config, logPath string) *App {
@@ -54,11 +54,10 @@ func NewApp(config *Config, logPath string) *App {
 	})
 
 	a := &App{
-		config:          config,
-		notifications:   notify,
-		BaseEntity:      &ui.BaseEntity{},
-		firstMessages:   make(map[string]string),
-		fetchingHistory: make(map[string]bool),
+		config:        config,
+		notifications: notify,
+		BaseEntity:    &ui.BaseEntity{},
+		firstMessages: make(map[string]string),
 	}
 
 	if *flagDebugEnabled {
@@ -153,6 +152,9 @@ func (app *App) init() {
 
 	app.ackRoutine = NewAckRoutine(app)
 	go app.ackRoutine.Run()
+
+	app.requestRoutine = NewRequestRoutine()
+	go app.requestRoutine.Run()
 }
 
 // Lsiten on the channels for incoming messages
