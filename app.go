@@ -87,7 +87,7 @@ func (app *App) Login(user, password, token string) error {
 	app.session = session
 
 	if *flagDumpAPI {
-		session.Debug = true
+		session.LogLevel = discordgo.LogDebug
 	}
 
 	if err != nil {

@@ -32,7 +32,6 @@ func (a *AckRoutine) Run() {
 		case m := <-a.In:
 			ts, err := time.Parse(common.DiscordTimeFormat, m.Timestamp)
 			if err != nil {
-				log.Println("Error pasing timestamp", err)
 				continue
 			}
 			found := false

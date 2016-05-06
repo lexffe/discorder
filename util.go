@@ -13,7 +13,7 @@ func (app *App) Write(p []byte) (n int, err error) {
 }
 
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
-	channel, err := app.session.Channel(channelId)
+	channel, err := app.session.State.Channel(channelId)
 	if err != nil {
 		log.Println("Error getting channel from state", err)
 		return nil
