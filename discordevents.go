@@ -34,6 +34,10 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 		authorId = m.Author.ID
 	}
 
+	if app.session.State.User == nil {
+		return
+	}
+
 	if authorId != app.session.State.User.ID {
 
 		shouldNotify := false

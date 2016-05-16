@@ -206,7 +206,7 @@ func (app *App) Run() {
 			pollStopped := make(chan bool)
 
 			// Stop the event polling
-			go delayedInterrupt(10 * time.Millisecond) // might not work 100% all cases? should probably replace
+			go delayedInterrupt(100 * time.Millisecond) // might not work 100% all cases? should probably replace
 
 			app.Unlock()
 			app.stopPollEvents <- pollStopped
