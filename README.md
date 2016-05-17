@@ -4,6 +4,10 @@ An interactive command line discord client, currently in it's alpha state, so bu
 
 If you want to join my discord channel to ask questions or do whatever then here's a link https://discord.gg/0vYlUK2XBKlmxGrX
 
+## Dev branch
+
+You are currently on the dev branch, things here may be breaking left and right so be carefull
+
 ##Installing/Running
 
 #### Latest Alpha
