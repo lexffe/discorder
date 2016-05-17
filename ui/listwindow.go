@@ -207,7 +207,7 @@ func (lw *ListWindow) HandleInput(event termbox.Event) {
 }
 
 func (lw *ListWindow) Destroy() { lw.DestroyChildren() }
-func (lw *ListWindow) PreDraw() {
+func (lw *ListWindow) Update() {
 	if lw.Dirty {
 		lw.Rebuild()
 		lw.Dirty = false

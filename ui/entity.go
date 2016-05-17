@@ -102,8 +102,8 @@ type InputHandler interface {
 	HandleInput(event termbox.Event)
 }
 
-type PreDrawHandler interface {
-	PreDraw() // Ran before drawing, for example add or remove children
+type UpdateHandler interface {
+	Update() // Ran before drawing, for example add or remove children
 }
 
 type DrawHandler interface {

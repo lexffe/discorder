@@ -114,7 +114,7 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 	}
 }
 
-func (ti *TextInput) PreDraw() {
+func (ti *TextInput) Update() {
 	if ti.MaskInput {
 		ti.Text.Text = ""
 		for _, _ = range ti.TextBuffer {

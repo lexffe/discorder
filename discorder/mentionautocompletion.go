@@ -44,7 +44,7 @@ func (ma *MentionAutoCompletion) HandleInput(event termbox.Event) {
 	}
 }
 
-func (ma *MentionAutoCompletion) PreDraw() {
+func (ma *MentionAutoCompletion) Update() {
 	if ma.lastBufferCheck != ma.input.TextBuffer || ma.dirty {
 		// Do stuff
 		ma.lastBufferCheck = ma.input.TextBuffer

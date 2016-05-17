@@ -226,11 +226,11 @@ func (app *App) HandleInputEvent(event termbox.Event) {
 func (app *App) Draw() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
-	// Run predraw
+	// Run Update
 	ui.RunFunc(app, func(e ui.Entity) {
-		updater, ok := e.(ui.PreDrawHandler)
+		updater, ok := e.(ui.UpdateHandler)
 		if ok {
-			updater.PreDraw()
+			updater.Update()
 		}
 	})
 

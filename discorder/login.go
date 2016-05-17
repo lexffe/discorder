@@ -135,7 +135,7 @@ func (lw *LoginWindow) Trylogin(email, pw, token string) {
 	lw.loggingIn = false
 }
 
-func (lw *LoginWindow) PreDraw() {
+func (lw *LoginWindow) Update() {
 	if lw.Helper == nil {
 		return
 	}

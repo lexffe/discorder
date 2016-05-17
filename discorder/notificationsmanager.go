@@ -34,7 +34,7 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 	return nm
 }
 
-func (nm *NotificationsManager) PreDraw() {
+func (nm *NotificationsManager) Update() {
 	str := ""
 
 	nm.App.session.State.RLock()

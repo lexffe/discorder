@@ -33,7 +33,7 @@ func NewTypingDisplay(app *App) *TypingDisplay {
 	return td
 }
 
-func (t *TypingDisplay) PreDraw() {
+func (t *TypingDisplay) Update() {
 	channels := make([]string, len(t.App.ViewManager.mv.Channels))
 	copy(channels, t.App.ViewManager.mv.Channels)
 	if t.App.ViewManager.mv.ShowAllPrivate {

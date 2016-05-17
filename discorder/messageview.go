@@ -438,7 +438,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 
 func (mv *MessageView) Destroy() { mv.DestroyChildren() }
 
-func (mv *MessageView) PreDraw() {
+func (mv *MessageView) Update() {
 	h := int(mv.Transform.GetRect().H)
 	if h < 0 {
 		h = 0

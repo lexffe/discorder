@@ -135,7 +135,7 @@ func (v *ViewManager) ApplyConfig() {
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }
 
-func (v *ViewManager) PreDraw() {
+func (v *ViewManager) Update() {
 	if v.mv != nil {
 		if logRoutine.HasChangedSince(v.lastLog) {
 			v.mv.Logs = logRoutine.GetCopy()
