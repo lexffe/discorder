@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/jonas747/discorder/discorder"
 	"log"
 	"net/http"
@@ -38,6 +39,10 @@ func main() {
 		return
 	}
 	app.Run()
+
+	discorder.StopLogger()
+
+	fmt.Println("bye :'(.....")
 }
 
 func RunPProf() {

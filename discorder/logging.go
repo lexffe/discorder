@@ -16,11 +16,19 @@ func InitLogging(logPath string) {
 	go logRoutine.Run()
 }
 
+func StopLogger() {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	logRoutine.Stop <- &wg
+	wg.Wait()
+}
+
 type LogRoutine struct {
 	lastLogTime time.Time
 	sync.RWMutex
 
-	In chan *LogMessage
+	In   chan *LogMessage
+	Stop chan *sync.WaitGroup
 
 	buffer []*LogMessage
 	file   *os.File
@@ -39,6 +47,7 @@ func NewLogRoutine(logPath string) *LogRoutine {
 	in := make(chan *LogMessage, 100)
 	return &LogRoutine{
 		In:   in,
+		Stop: make(chan *sync.WaitGroup),
 		file: logFile,
 	}
 }
@@ -48,6 +57,18 @@ func (l *LogRoutine) Run() {
 		select {
 		case msg := <-l.In:
 			l.handleMsg(msg)
+		case wg := <-l.Stop:
+
+			// Empty the buffer
+			for {
+				select {
+				case msg := <-l.In:
+					l.handleMsg(msg)
+				default:
+					wg.Done()
+					return
+				}
+			}
 		}
 	}
 }

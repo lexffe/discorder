@@ -281,8 +281,11 @@ func (mv *MessageView) BuildTexts() {
 		}
 
 		// Send ack
-		if !item.IsLogMessage {
-			mv.App.ackRoutine.In <- item.DiscordMessage
+		if !item.IsLogMessage && !mv.App.stopping {
+			msgCopy := item.DiscordMessage
+			go func() {
+				mv.App.ackRoutine.In <- msgCopy
+			}()
 		}
 
 		if mv.ScrollAmount != 0 && isFirst {
@@ -479,7 +482,7 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 		}
 	}
 
-	if len(msgs) > 0 {
+	if len(msgs) > 0 && !mv.App.stopping {
 		name := GetChannelNameOrRecipient(channel)
 		oldest := msgs[0]
 		if !mv.App.IsFirstChannelMessage(channel.ID, oldest.ID) {

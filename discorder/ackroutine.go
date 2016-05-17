@@ -3,20 +3,21 @@ package discorder
 import (
 	"github.com/jonas747/discordgo"
 	"log"
+	"sync"
 	"time"
 )
 
 type AckRoutine struct {
 	App  *App
 	In   chan *discordgo.Message
-	Stop chan bool
+	stop chan *sync.WaitGroup
 }
 
 func NewAckRoutine(app *App) *AckRoutine {
 	return &AckRoutine{
 		App:  app,
 		In:   make(chan *discordgo.Message),
-		Stop: make(chan bool),
+		stop: make(chan *sync.WaitGroup),
 	}
 }
 
@@ -50,8 +51,10 @@ func (a *AckRoutine) Run() {
 			if !found {
 				curAckBuffer = append(curAckBuffer, m)
 			}
-		case <-a.Stop:
+		case wg := <-a.stop:
 			ticker.Stop()
+			wg.Done()
+			log.Println("Ackroutine shut down")
 			return
 		case <-ticker.C:
 			for _, v := range curAckBuffer {

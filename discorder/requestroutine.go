@@ -165,12 +165,14 @@ type RequestRoutine struct {
 	sync.RWMutex
 	queue *list.List
 	In    chan Request
+	stop  chan *sync.WaitGroup
 }
 
 func NewRequestRoutine() *RequestRoutine {
 	return &RequestRoutine{
 		queue: list.New(),
 		In:    make(chan Request),
+		stop:  make(chan *sync.WaitGroup),
 	}
 }
 
@@ -217,7 +219,10 @@ func (rr *RequestRoutine) Run() {
 			} else {
 				isReady = true
 			}
-
+		case wg := <-rr.stop:
+			wg.Done()
+			log.Println("Request routine shut down")
+			return
 		}
 	}
 }

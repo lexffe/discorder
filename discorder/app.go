@@ -21,7 +21,7 @@ type App struct {
 	sync.RWMutex
 	running        bool
 	stopping       bool
-	stopChan       chan chan error
+	stopChan       chan interface{}
 	session        *discordgo.Session
 	inputEventChan chan termbox.Event
 
@@ -29,7 +29,7 @@ type App struct {
 	ackRoutine     *AckRoutine
 	requestRoutine *RequestRoutine
 
-	stopPollEvents chan chan bool
+	stopPollEvents chan *sync.WaitGroup
 
 	*ui.BaseEntity
 
@@ -107,30 +107,29 @@ func (app *App) Login(user, password, token string) error {
 	return err
 }
 
-func (app *App) Stop() error {
+func (app *App) Stop() {
 	app.Lock()
 
 	if app.stopping {
 		app.Unlock()
-		return nil
+		return
 	}
 	app.stopping = true
-	errChan := make(chan error)
 	if app.running {
 		app.Unlock()
-		app.stopChan <- errChan
-		return <-errChan
+		app.shutdown()
+		return
 	}
 
 	app.Unlock()
-	return nil
+	return
 }
 
 func (app *App) init() {
 	// Initialize the channels
-	app.stopChan = make(chan chan error)
+	app.stopChan = make(chan interface{})
 	app.inputEventChan = make(chan termbox.Event)
-	app.stopPollEvents = make(chan chan bool)
+	app.stopPollEvents = make(chan *sync.WaitGroup)
 
 	err := termbox.Init()
 	if err != nil {
@@ -164,7 +163,9 @@ func (app *App) Run() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			termbox.Close()
+			if termbox.IsInit {
+				termbox.Close()
+			}
 			fmt.Println("Panic!: ", r, string(debug.Stack()))
 			os.Exit(1)
 		}
@@ -181,32 +182,10 @@ func (app *App) Run() {
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	for {
 		select {
-		case errChan := <-app.stopChan:
-			app.Lock()
-			app.running = false
-			// app.config.LastServer = app.selectedServerId
-			// app.config.LastChannel = app.selectedChannelId
-			if app.ViewManager != nil && app.ViewManager.SelectedMessageView != nil {
-				app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
-				app.config.LastChannel = app.ViewManager.talkingChannel
-				app.config.AllPrivateMode = app.ViewManager.SelectedMessageView.ShowAllPrivate
+		case _ = <-app.stopChan:
+			if termbox.IsInit {
+				termbox.Close()
 			}
-
-			if app.session != nil {
-				app.config.AuthToken = app.session.Token
-			}
-
-			app.config.Save(app.configPath)
-			pollStopped := make(chan bool)
-
-			// Stop the event polling
-			go delayedInterrupt(100 * time.Millisecond) // might not work 100% all cases? should probably replace
-
-			app.Unlock()
-			app.stopPollEvents <- pollStopped
-			app.ackRoutine.Stop <- true
-			<-pollStopped
-			errChan <- nil
 			return
 		case evt := <-app.inputEventChan:
 			app.Lock()
@@ -280,11 +259,9 @@ func (app *App) PollEvents() {
 		evt := termbox.PollEvent()
 
 		select {
-		case retChan := <-app.stopPollEvents:
-			if termbox.IsInit {
-				termbox.Close()
-			}
-			retChan <- true
+		case wg := <-app.stopPollEvents:
+			wg.Done()
+			log.Println("Event polling stopped")
 			return
 		default:
 			break
@@ -295,6 +272,45 @@ func (app *App) PollEvents() {
 
 func (app *App) PrintWelcome() {
 	log.Println("You are using Discorder V" + VERSION + "! If you stumble upon any issues or bugs then please let me know!\n(Press ctrl-o For help)")
+}
+
+func (app *App) shutdown() {
+	app.Lock()
+	app.running = false
+	// app.config.LastServer = app.selectedServerId
+	// app.config.LastChannel = app.selectedChannelId
+	if app.ViewManager != nil && app.ViewManager.SelectedMessageView != nil {
+		app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
+		app.config.LastChannel = app.ViewManager.talkingChannel
+		app.config.AllPrivateMode = app.ViewManager.SelectedMessageView.ShowAllPrivate
+	}
+
+	if app.session != nil {
+		app.config.AuthToken = app.session.Token
+	}
+
+	app.config.Save(app.configPath)
+
+	err := app.session.Close()
+	if err != nil {
+		log.Println("Error closing:", err)
+	}
+
+	app.Unlock()
+
+	var wg sync.WaitGroup
+	wg.Add(4)
+
+	// Stop the event polling
+	go delayedInterrupt(10 * time.Millisecond)
+
+	app.stopPollEvents <- &wg
+	app.ackRoutine.stop <- &wg
+	app.typingRoutine.stop <- &wg
+	app.requestRoutine.stop <- &wg
+
+	wg.Wait()
+	app.stopChan <- true
 }
 
 func (app *App) Destroy() { app.DestroyChildren() }
