@@ -1,4 +1,4 @@
-package main
+package discorder
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ type MessageView struct {
 
 	Channels       []string
 	ShowAllPrivate bool
-	Logs           []*common.LogMessage // Maybe move this?
+	Logs           []*LogMessage // Maybe move this?
 
 	Layer int
 
@@ -35,7 +35,7 @@ type MessageView struct {
 
 type DisplayMessage struct {
 	DiscordMessage *discordgo.Message
-	LogMessage     *common.LogMessage
+	LogMessage     *LogMessage
 	IsLogMessage   bool
 	Timestamp      time.Time
 }
@@ -469,7 +469,7 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 	}
 	for j := startIndex; j >= 0; j-- {
 		msg := msgs[j]
-		parsedTimestamp, _ := time.Parse(common.DiscordTimeFormat, msg.Timestamp)
+		parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
 		if !parsedTimestamp.After(before) || before.IsZero() { // Reason for !after is so that we still show all the messages with same timestamps
 			curNewestMessage := &DisplayMessage{
 				DiscordMessage: msg,
@@ -484,7 +484,7 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 		oldest := msgs[0]
 		if !mv.App.IsFirstChannelMessage(channel.ID, oldest.ID) {
 			// Grab history
-			if *flagDebugEnabled {
+			if mv.App.debug {
 				log.Println("Should grab history for ", name)
 			}
 			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel.ID, 10, oldest.ID, ""))

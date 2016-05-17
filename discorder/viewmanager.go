@@ -1,4 +1,4 @@
-package main
+package discorder
 
 import (
 	"fmt"
@@ -44,7 +44,7 @@ func (v *ViewManager) OnInit() {
 	header.Transform.Position.X = float32(-(hw / 2))
 	v.AddChild(header)
 
-	if *flagDebugEnabled {
+	if v.App.debug {
 		debugBar := ui.NewText()
 		debugBar.Text = "debug"
 		debugBar.Transform.AnchorMin = common.NewVector2F(0, 0)
@@ -74,7 +74,7 @@ func (v *ViewManager) OnReady() {
 	v.AddChild(mv)
 	v.mv = mv
 	v.SelectedMessageView = mv
-	if *flagDebugEnabled {
+	if v.App.debug {
 		mv.Transform.Top = 3
 	}
 
@@ -166,7 +166,7 @@ func (v *ViewManager) PreDraw() {
 		v.input.Transform.Left = length
 	}
 
-	if *flagDebugEnabled {
+	if v.App.debug {
 		children := v.App.Children(true)
 		v.debugText.Text = fmt.Sprintf("Number of entities %d, Req queue length: %d", len(children), v.App.requestRoutine.GetQueueLenth())
 	}
@@ -210,7 +210,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				v.input.Active = true
 			}
 		case termbox.KeyCtrlL:
-			v.App.logBuffer = []*common.LogMessage{}
+			v.App.logBuffer = []*LogMessage{}
 		case termbox.KeyEnter:
 			if v.activeWindow != nil {
 				break

@@ -1,9 +1,8 @@
 // Manages some requests like history
-package main
+package discorder
 
 import (
 	"container/list"
-	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discordgo"
 	"log"
 	"sync"
@@ -52,10 +51,10 @@ func (hq *HistoryRequest) Do(finished chan error) {
 	defer func() {
 		hq.App.Lock()
 		hq.App.ViewManager.mv.DisplayMessagesDirty = true
-		hq.App.Unlock()
-		if *flagDebugEnabled {
+		if hq.App.debug {
 			log.Println("History processing complete")
 		}
+		hq.App.Unlock()
 
 		finished <- err
 	}()
@@ -142,8 +141,8 @@ func (hq *HistoryRequest) Do(finished chan error) {
 			continue
 		}
 
-		parsedNew, _ := time.Parse(common.DiscordTimeFormat, nextNewMessage.Timestamp)
-		parsedOld, _ := time.Parse(common.DiscordTimeFormat, nextOldMessage.Timestamp)
+		parsedNew, _ := time.Parse(DiscordTimeFormat, nextNewMessage.Timestamp)
+		parsedOld, _ := time.Parse(DiscordTimeFormat, nextOldMessage.Timestamp)
 
 		if parsedNew.Before(parsedOld) {
 			newMessages = append(newMessages, nextNewMessage)

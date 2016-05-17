@@ -1,4 +1,4 @@
-package main
+package discorder
 
 import (
 	"github.com/jonas747/discorder/common"
@@ -129,7 +129,7 @@ func (lw *LoginWindow) Trylogin(email, pw, token string) {
 		log.Println("Error logging in: ", err)
 	} else {
 		log.Println("Logged in!")
-		lw.App.config.Save(*configPath)
+		lw.App.config.Save(lw.App.configPath)
 		lw.App.RemoveChild(lw, true)
 	}
 	lw.loggingIn = false

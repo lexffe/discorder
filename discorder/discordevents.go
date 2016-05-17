@@ -1,4 +1,4 @@
-package main
+package discorder
 
 import (
 	"github.com/0xAX/notificator"
@@ -29,15 +29,17 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 	author := "Unknown?"
 	authorId := ""
-	if m.Author != nil { // Yes this does happen...
+	if m.Author != nil { // Yes this does happen... very rare though
 		author = m.Author.Username
 		authorId = m.Author.ID
 	}
 
+	// Happens when we haven't received ready yet
 	if app.session.State.User == nil {
 		return
 	}
 
+	// Check if we should do a notification
 	if authorId != app.session.State.User.ID {
 
 		shouldNotify := false
@@ -82,6 +84,9 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 func (app *App) messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	// Emit event
+	app.Lock()
+	defer app.Unlock()
+
 	ui.RunFunc(app, func(e ui.Entity) {
 		cast, ok := e.(MessageUpdateHandler)
 		if ok {
@@ -91,6 +96,9 @@ func (app *App) messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) 
 }
 
 func (app *App) messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
+	app.Lock()
+	defer app.Unlock()
+
 	// Emit event
 	ui.RunFunc(app, func(e ui.Entity) {
 		cast, ok := e.(MessageRemoveHandler)
@@ -101,7 +109,7 @@ func (app *App) messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) 
 }
 
 func (app *App) messageAck(s *discordgo.Session, a *discordgo.MessageAck) {
-	if *flagDebugEnabled {
+	if app.debug {
 		log.Println("Received ack!")
 	}
 	app.ViewManager.notificationsManager.HandleAck(a)
@@ -132,5 +140,5 @@ func (app *App) typingStart(s *discordgo.Session, t *discordgo.TypingStart) {
 }
 
 func (app *App) guildCreated(s *discordgo.Session, g *discordgo.GuildCreate) {
-	log.Println("Guild created!", g.Guild)
+	//log.Println("Guild created!", g.Guild)
 }

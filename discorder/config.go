@@ -1,8 +1,9 @@
-package main
+package discorder
 
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 )
 
@@ -15,15 +16,18 @@ type Config struct {
 	ListeningChannels []string `json:"listeningChannels"`
 }
 
-func LoadConfig(path string) (*Config, error) {
+func LoadOrCreateConfig(path string) (*Config, error) {
 	file, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		var decoded Config
+		err = json.Unmarshal(file, &decoded)
+		return &decoded, err
 	}
 
-	var decoded Config
-	err = json.Unmarshal(file, &decoded)
-	return &decoded, err
+	log.Println("Failed loading config, creating new one")
+	c := &Config{}
+	err = c.Save(path)
+	return c, err
 }
 
 func (c *Config) Save(path string) error {

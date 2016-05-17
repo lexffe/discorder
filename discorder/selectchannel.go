@@ -1,4 +1,4 @@
-package main
+package discorder
 
 import (
 	"github.com/jonas747/discorder/common"

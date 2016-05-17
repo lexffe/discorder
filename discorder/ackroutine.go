@@ -1,7 +1,6 @@
-package main
+package discorder
 
 import (
-	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discordgo"
 	"log"
 	"time"
@@ -30,7 +29,7 @@ func (a *AckRoutine) Run() {
 	for {
 		select {
 		case m := <-a.In:
-			ts, err := time.Parse(common.DiscordTimeFormat, m.Timestamp)
+			ts, err := time.Parse(DiscordTimeFormat, m.Timestamp)
 			if err != nil {
 				continue
 			}
@@ -38,7 +37,7 @@ func (a *AckRoutine) Run() {
 			for k, v := range curAckBuffer {
 				if v.ChannelID == m.ChannelID {
 					found = true
-					parsed, err := time.Parse(common.DiscordTimeFormat, v.Timestamp)
+					parsed, err := time.Parse(DiscordTimeFormat, v.Timestamp)
 					if err != nil {
 						log.Println("Error pasring timestamp", err)
 					}
@@ -72,7 +71,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 
 	// Do we really need this check here? maybe move it to the history processing...
 	shouldAck := true
-	ackTs, err := time.Parse(common.DiscordTimeFormat, msg.Timestamp)
+	ackTs, err := time.Parse(DiscordTimeFormat, msg.Timestamp)
 	if err == nil {
 		for _, rs := range state.ReadState {
 			if rs.ID == msg.ChannelID {
@@ -91,7 +90,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 				}
 				for _, cm := range channel.Messages {
 					if cm.ID == lastRead {
-						parsedTs, err := time.Parse(common.DiscordTimeFormat, cm.Timestamp)
+						parsedTs, err := time.Parse(DiscordTimeFormat, cm.Timestamp)
 						if err == nil {
 							if ackTs.Before(parsedTs) {
 								// Do not ack, this message is older than the last read message
@@ -121,7 +120,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 		log.Println("Error sending ack: ", err)
 	}
 
-	if *flagDebugEnabled {
+	if a.App.debug {
 		log.Println("Send ack!", msgStr, msg.ID)
 	}
 

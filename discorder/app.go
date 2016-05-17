@@ -1,9 +1,8 @@
-package main
+package discorder
 
 import (
 	"fmt"
 	"github.com/0xAX/notificator"
-	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
@@ -33,7 +32,7 @@ type App struct {
 
 	stopPollEvents chan chan bool
 
-	logBuffer []*common.LogMessage
+	logBuffer []*LogMessage
 	logFile   *os.File
 	logLock   sync.Mutex
 
@@ -46,28 +45,40 @@ type App struct {
 	settings      *discordgo.Settings
 	guildSettings []*discordgo.UserGuildSettings
 	firstMessages map[string]string
+
+	configPath  string
+	debug       bool
+	dGoDebugLvl int
 }
 
-func NewApp(config *Config, logPath string) *App {
+func NewApp(configPath, logPath string, debug bool, dgoDebug int) (*App, error) {
 	notify := notificator.New(notificator.Options{
 		AppName: "Discorder",
 	})
 
-	a := &App{
+	config, err := LoadOrCreateConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	app := &App{
 		config:        config,
 		notifications: notify,
 		BaseEntity:    &ui.BaseEntity{},
 		firstMessages: make(map[string]string),
+		configPath:    configPath,
+		debug:         debug,
+		dGoDebugLvl:   dgoDebug,
 	}
 
-	if *flagDebugEnabled {
+	if debug {
 		logFile, err := os.Create(logPath)
 		if err == nil {
-			a.logFile = logFile
+			app.logFile = logFile
 		}
 	}
 
-	return a
+	return app, nil
 }
 
 func (app *App) Login(user, password, token string) error {
@@ -84,11 +95,8 @@ func (app *App) Login(user, password, token string) error {
 		}
 	}
 
+	session.LogLevel = app.dGoDebugLvl
 	app.session = session
-
-	if *flagDumpAPI {
-		session.LogLevel = discordgo.LogDebug
-	}
 
 	if err != nil {
 		return err
@@ -202,7 +210,7 @@ func (app *App) Run() {
 				app.config.AuthToken = app.session.Token
 			}
 
-			app.config.Save(*configPath)
+			app.config.Save(app.configPath)
 			pollStopped := make(chan bool)
 
 			// Stop the event polling
@@ -240,7 +248,7 @@ func (app *App) HandleLogMessage(msg string) {
 		if splitStr == "" {
 			continue
 		}
-		obj := &common.LogMessage{
+		obj := &LogMessage{
 			Timestamp: now,
 			Content:   splitStr,
 		}
