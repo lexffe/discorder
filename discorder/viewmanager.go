@@ -6,6 +6,7 @@ import (
 	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
 	"log"
+	"time"
 	"unicode/utf8"
 )
 
@@ -23,6 +24,8 @@ type ViewManager struct {
 	talkingChannel       string
 	mentionAutocompleter *MentionAutoCompletion
 	notificationsManager *NotificationsManager
+
+	lastLog time.Time
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -70,7 +73,6 @@ func (v *ViewManager) OnReady() {
 	mv.Transform.Bottom = 3
 	mv.Transform.Top = 1
 	mv.ShowAllPrivate = true
-	mv.Logs = v.App.logBuffer
 	v.AddChild(mv)
 	v.mv = mv
 	v.SelectedMessageView = mv
@@ -135,8 +137,8 @@ func (v *ViewManager) Destroy() { v.DestroyChildren() }
 
 func (v *ViewManager) PreDraw() {
 	if v.mv != nil {
-		if len(v.mv.Logs) != len(v.App.logBuffer) {
-			v.mv.Logs = v.App.logBuffer
+		if logRoutine.HasChangedSince(v.lastLog) {
+			v.mv.Logs = logRoutine.GetCopy()
 			v.mv.DisplayMessagesDirty = true
 		}
 	}
@@ -210,7 +212,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				v.input.Active = true
 			}
 		case termbox.KeyCtrlL: // Send message
-			v.App.logBuffer = []*LogMessage{}
+			logRoutine.Clear()
 		case termbox.KeyEnter:
 			if v.activeWindow != nil {
 				break

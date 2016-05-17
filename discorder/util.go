@@ -5,13 +5,6 @@ import (
 	"log"
 )
 
-// For logs, should probably move this somewhere else though
-func (app *App) Write(p []byte) (n int, err error) {
-	cop := string(p)
-	app.HandleLogMessage(cop)
-	return len(p), nil
-}
-
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
 	channel, err := app.session.State.Channel(channelId)
 	if err != nil {

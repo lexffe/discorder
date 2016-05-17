@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"runtime/debug"
-	"strings"
 	"sync"
 	"time"
 )
@@ -32,10 +31,6 @@ type App struct {
 
 	stopPollEvents chan chan bool
 
-	logBuffer []*LogMessage
-	logFile   *os.File
-	logLock   sync.Mutex
-
 	*ui.BaseEntity
 
 	ViewManager *ViewManager
@@ -51,7 +46,7 @@ type App struct {
 	dGoDebugLvl int
 }
 
-func NewApp(configPath, logPath string, debug bool, dgoDebug int) (*App, error) {
+func NewApp(configPath string, debug bool, dgoDebug int) (*App, error) {
 	notify := notificator.New(notificator.Options{
 		AppName: "Discorder",
 	})
@@ -70,14 +65,6 @@ func NewApp(configPath, logPath string, debug bool, dgoDebug int) (*App, error) 
 		debug:         debug,
 		dGoDebugLvl:   dgoDebug,
 	}
-
-	if debug {
-		logFile, err := os.Create(logPath)
-		if err == nil {
-			app.logFile = logFile
-		}
-	}
-
 	return app, nil
 }
 
@@ -144,7 +131,6 @@ func (app *App) init() {
 	app.stopChan = make(chan chan error)
 	app.inputEventChan = make(chan termbox.Event)
 	app.stopPollEvents = make(chan chan bool)
-	log.SetOutput(app)
 
 	err := termbox.Init()
 	if err != nil {
@@ -237,27 +223,6 @@ func (app *App) Run() {
 func delayedInterrupt(d time.Duration) {
 	time.Sleep(d)
 	termbox.Interrupt()
-}
-
-func (app *App) HandleLogMessage(msg string) {
-	split := strings.Split(msg, "\n")
-	now := time.Now()
-
-	app.logLock.Lock()
-	for _, splitStr := range split {
-		if splitStr == "" {
-			continue
-		}
-		obj := &LogMessage{
-			Timestamp: now,
-			Content:   splitStr,
-		}
-		app.logBuffer = append(app.logBuffer, obj)
-	}
-	if app.logFile != nil {
-		app.logFile.Write([]byte(msg)) // TODO: Move this somewhere else, to its own goroutine to avoid slowdowns
-	}
-	app.logLock.Unlock()
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {

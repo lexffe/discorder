@@ -18,6 +18,12 @@ var (
 func main() {
 	flag.Parse()
 
+	logPath := ""
+	if *flagDebugEnabled {
+		logPath = *flagLogPath
+	}
+	discorder.InitLogging(logPath)
+
 	if *flagDebugEnabled {
 		// Below used when panics thats not recovered from occurs and it smesses up the terminal :'(
 		// logFile, _ := os.OpenFile("discorder_stdout_stderr.log", os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0755)
@@ -26,7 +32,7 @@ func main() {
 		go RunPProf()
 	}
 
-	app, err := discorder.NewApp(*flagConfigPath, *flagLogPath, *flagDebugEnabled, *flagDGoDebugLvl)
+	app, err := discorder.NewApp(*flagConfigPath, *flagDebugEnabled, *flagDGoDebugLvl)
 	if err != nil {
 		log.Println("Error setting up discorder :(", err)
 		return
