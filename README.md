@@ -2,7 +2,9 @@
 
 An interactive command line discord client, currently in it's alpha state, so bugs will be found.
 
-If you want to join my discord channel to ask questions or do whatever then here's a link https://discord.gg/0vYlUK2XBKlmxGrX
+Discord server: https://discord.gg/0vYlUK2XBKlmxGrX
+
+Join for updates, and to suggest stuff or complain stuff, or just talk about stuff
 
 ## Dev branch
 
