@@ -203,13 +203,13 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			v.AddChild(ssw)
 			v.activeWindow = ssw
 			v.input.Active = false
-		case termbox.KeyBackspace, termbox.KeyBackspace2:
+		case termbox.KeyBackspace, termbox.KeyBackspace2: // Close windows if any
 			if v.activeWindow != nil {
 				v.RemoveChild(v.activeWindow, true)
 				v.activeWindow = nil
 				v.input.Active = true
 			}
-		case termbox.KeyCtrlL:
+		case termbox.KeyCtrlL: // Send message
 			v.App.logBuffer = []*LogMessage{}
 		case termbox.KeyEnter:
 			if v.activeWindow != nil {
@@ -223,6 +223,10 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			if v.talkingChannel == "" {
 				log.Println("you're trying to send a message to nobody buddy D:")
 				break
+			}
+
+			if v.input.TextBuffer == "" {
+				break // Nothing to see here...
 			}
 
 			if v.mentionAutocompleter.isAutocompletingMention {
