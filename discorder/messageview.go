@@ -106,7 +106,7 @@ func (mv *MessageView) RemoveChannel(channel string) {
 
 func (mv *MessageView) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
-		mv.TextsDirty = true //  ;)
+		mv.TextsDirty = true // ;)
 
 		if mv.App.ViewManager.activeWindow != nil {
 			return
@@ -293,7 +293,7 @@ func (mv *MessageView) BuildTexts() {
 				text.BG = termbox.ColorBlue | termbox.AttrBold
 			} else {
 				for k, v := range text.Attribs {
-					text.Attribs[k] = ui.AttribPair{v.Fg, termbox.ColorBlue | termbox.AttrBold}
+					text.Attribs[k] = ui.AttribPair{v.FG, termbox.ColorBlue | termbox.AttrBold}
 				}
 			}
 			isFirst = false

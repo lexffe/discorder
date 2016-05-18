@@ -148,6 +148,11 @@ func (app *App) init() {
 
 	app.requestRoutine = NewRequestRoutine()
 	go app.requestRoutine.Run()
+
+	// out, err := DefaultTheme.Read()
+	// if err == nil {
+	// 	log.Println(string(out))
+	// }
 }
 
 // Lsiten on the channels for incoming messages

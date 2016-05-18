@@ -7,8 +7,8 @@ import (
 
 // Simple bg fg attribute pair
 type AttribPair struct {
-	Fg termbox.Attribute
-	Bg termbox.Attribute
+	FG termbox.Attribute `json:"fg"`
+	BG termbox.Attribute `json:"bg"`
 }
 
 // Helper functions
@@ -31,8 +31,8 @@ func GenCellSlice(str string, points map[int]AttribPair) []termbox.Cell {
 		}
 		cell := termbox.Cell{
 			Ch: ch,
-			Fg: curAttribs.Fg,
-			Bg: curAttribs.Bg,
+			Fg: curAttribs.FG,
+			Bg: curAttribs.BG,
 		}
 		cells[index] = cell
 		index++

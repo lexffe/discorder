@@ -13,6 +13,8 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	log.Println("Received ready from discord!")
 
 	app.settings = r.Settings
+
+	log.Println(r.Settings.GuildPositions)
 	app.ViewManager.OnReady()
 	app.PrintWelcome()
 }

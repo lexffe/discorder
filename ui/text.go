@@ -84,7 +84,7 @@ func (t *Text) Draw() {
 
 		if char != '\n' {
 			if skip <= 0 {
-				termbox.SetCell(x+int(rect.X), y+int(rect.Y), char, curAttribs.Fg, curAttribs.Bg)
+				termbox.SetCell(x+int(rect.X), y+int(rect.Y), char, curAttribs.FG, curAttribs.BG)
 			}
 			x++
 		} else {
