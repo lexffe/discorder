@@ -30,9 +30,10 @@ type ListWindow struct {
 	Window    *Window
 
 	// Style
-	NormalBG, NormalFG     termbox.Attribute
-	MarkedBG, MarkedFG     termbox.Attribute
-	SelectedBG, SelectedFG termbox.Attribute
+	NormalBG, NormalFG                 termbox.Attribute
+	MarkedBG, MarkedFG                 termbox.Attribute
+	SelectedBG, SelectedFG             termbox.Attribute
+	MarkedSelectedFG, MarkedSelectedBG termbox.Attribute
 
 	Options []*ListItem
 
@@ -179,6 +180,9 @@ func (lw *ListWindow) Rebuild() {
 		t.Transform.Parent = lw.Window.Transform
 
 		switch {
+		case option.Selected && option.Marked:
+			t.FG = lw.MarkedSelectedFG
+			t.BG = lw.MarkedSelectedBG
 		case option.Selected:
 			t.FG = lw.SelectedFG
 			t.BG = lw.SelectedBG

@@ -14,17 +14,11 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 
 	app.settings = r.Settings
 
-	log.Println(r.Settings.GuildPositions)
 	app.ViewManager.OnReady()
 	app.PrintWelcome()
 }
 
 func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	// channel, err := app.session.State.Channel(m.ChannelID)
-	// if err != nil {
-	// 	log.Println("Error retrieving channel from state", err)
-	// 	return
-	// }
 	app.Lock()
 	defer app.Unlock()
 	settings := app.GetNotificationSettingsForChannel(m.ChannelID)

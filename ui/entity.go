@@ -25,6 +25,19 @@ func RunFunc(e Entity, f func(e Entity)) {
 	}
 }
 
+// Same as above but only runs on children if f returns true
+func RunFuncConditional(e Entity, f func(e Entity) bool) {
+	traverseChildren := f(e)
+	if traverseChildren {
+		children := e.Children(false) // We wanna make sure we do it in the proper order
+		if children != nil {
+			for _, child := range children {
+				RunFuncConditional(child, f)
+			}
+		}
+	}
+}
+
 // Maybe reuse the slice...? probably miniscule performance hit to not...
 func (b *BaseEntity) Children(recursive bool) []Entity {
 	if b.entities == nil || len(b.entities) < 1 {

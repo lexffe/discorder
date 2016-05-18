@@ -10,22 +10,26 @@ import (
 	"unicode/utf8"
 )
 
-// TODO: Clean this pile of ... up
 type ViewManager struct {
 	*ui.BaseEntity
-	App                  *App
-	mv                   *MessageView
-	SelectedMessageView  *MessageView
-	activeWindow         ui.Entity
-	inputHelper          *ui.Text
-	input                *ui.TextInput
-	debugText            *ui.Text
-	readyReceived        bool
-	talkingChannel       string
+	App *App
+
+	mv                  *MessageView // Will be changed when multiple message views
+	SelectedMessageView *MessageView
+
+	activeWindow ui.Entity
+	inputHelper  *ui.Text
+	input        *ui.TextInput
+	debugText    *ui.Text
+	header       *ui.Text
+
 	mentionAutocompleter *MentionAutoCompletion
 	notificationsManager *NotificationsManager
+	typingDisplay        *TypingDisplay
 
-	lastLog time.Time
+	readyReceived  bool
+	talkingChannel string
+	lastLog        time.Time
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -46,6 +50,7 @@ func (v *ViewManager) OnInit() {
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
 	header.Transform.Position.X = float32(-(hw / 2))
 	v.AddChild(header)
+	v.header = header
 
 	if v.App.debug {
 		debugBar := ui.NewText()
@@ -68,6 +73,7 @@ func (v *ViewManager) OnReady() {
 	// go into the main view
 	v.readyReceived = true
 
+	// Initialize all the ui entities
 	mv := NewMessageView(v.App)
 	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mv.Transform.Bottom = 3
@@ -115,6 +121,7 @@ func (v *ViewManager) OnReady() {
 	typingDisplay.Transform.AnchorMax = common.NewVector2I(1, 1)
 	typingDisplay.Transform.Position.Y = -2
 	v.AddChild(typingDisplay)
+	v.typingDisplay = typingDisplay
 
 	v.notificationsManager = NewNotificationsManager(v.App)
 	v.notificationsManager.Transform.AnchorMax.X = 1
@@ -122,7 +129,7 @@ func (v *ViewManager) OnReady() {
 	v.AddChild(v.notificationsManager)
 
 	v.ApplyConfig()
-
+	v.ApplyTheme()
 }
 
 func (v *ViewManager) ApplyConfig() {
@@ -213,6 +220,9 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			}
 		case termbox.KeyCtrlL: // Send message
 			logRoutine.Clear()
+		case termbox.KeyCtrlT:
+			v.App.theme = LoadTheme(v.App.themePath)
+			v.ApplyTheme()
 		case termbox.KeyEnter:
 			if v.activeWindow != nil {
 				break
@@ -259,4 +269,28 @@ func (v *ViewManager) CloseActiveWindow() {
 	if v.mv.ScrollAmount == 0 {
 		v.input.Active = true
 	}
+}
+
+func (v *ViewManager) ApplyTheme() {
+	theme := v.App.theme
+	ApplyThemeText(v.inputHelper, theme.SendPrompt)
+	ApplyThemeText(v.input.Text, theme.InputChat)
+	ApplyThemeText(v.header, theme.TitleBar)
+	ApplyThemeText(v.typingDisplay.text, theme.TypingBar)
+	ApplyThemeText(v.notificationsManager.text, theme.NotificationsBar)
+
+	ui.RunFuncConditional(v, func(e ui.Entity) bool {
+		list, ok := e.(*ui.ListWindow)
+		if ok {
+			theme.ApplyList(list)
+			return false
+		}
+
+		window, ok := e.(*ui.Window)
+		if ok {
+			theme.ApplyWindow(window)
+			return false
+		}
+		return true
+	})
 }

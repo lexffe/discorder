@@ -88,6 +88,8 @@ func NewChannelSelectWindow(app *App, mv *MessageView, guild string) *ChannelSel
 	listWindow.Window.Title = ChannelSelectTitle
 	listWindow.Window.Footer = ChannelSelectFooter
 
+	app.theme.ApplyList(listWindow)
+
 	listWindow.SetOptions(options)
 	csw.listWindow = listWindow
 	csw.AddChild(listWindow)

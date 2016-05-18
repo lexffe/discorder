@@ -35,18 +35,21 @@ type App struct {
 
 	ViewManager *ViewManager
 
+	config *Config
+	theme  *Theme
+
 	notifications *notificator.Notificator
-	config        *Config
 	settings      *discordgo.Settings
 	guildSettings []*discordgo.UserGuildSettings
 	firstMessages map[string]string
 
 	configPath  string
+	themePath   string
 	debug       bool
 	dGoDebugLvl int
 }
 
-func NewApp(configPath string, debug bool, dgoDebug int) (*App, error) {
+func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error) {
 	notify := notificator.New(notificator.Options{
 		AppName: "Discorder",
 	})
@@ -56,6 +59,8 @@ func NewApp(configPath string, debug bool, dgoDebug int) (*App, error) {
 		return nil, err
 	}
 
+	theme := LoadTheme(themePath)
+
 	app := &App{
 		config:        config,
 		notifications: notify,
@@ -64,6 +69,8 @@ func NewApp(configPath string, debug bool, dgoDebug int) (*App, error) {
 		configPath:    configPath,
 		debug:         debug,
 		dGoDebugLvl:   dgoDebug,
+		theme:         theme,
+		themePath:     themePath,
 	}
 	return app, nil
 }

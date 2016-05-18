@@ -38,3 +38,24 @@ func (c *Config) Save(path string) error {
 
 	return ioutil.WriteFile(path, eencoded, os.FileMode(0755))
 }
+
+func LoadTheme(themePath string) *Theme {
+	if themePath == "" {
+		return DefaultTheme
+	}
+
+	file, err := ioutil.ReadFile(themePath)
+	if err != nil {
+		log.Println("Failed loading theme", themePath, ":", err)
+		return DefaultTheme
+	}
+
+	var theme Theme
+	err = json.Unmarshal(file, &theme)
+	if err != nil {
+		log.Println("Failed loading theme", themePath, ":", err)
+		return DefaultTheme
+	}
+	log.Println("Loaded theme", theme.Name, "By", theme.Author)
+	return &theme
+}
