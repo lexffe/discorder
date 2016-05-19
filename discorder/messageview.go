@@ -189,7 +189,7 @@ func (mv *MessageView) BuildTexts() {
 	rect := mv.Transform.GetRect()
 
 	realScroll := mv.ScrollAmount
-	y := int(rect.H) + realScroll + 1
+	y := int(rect.H) + realScroll
 	padding := 0
 
 	now := time.Now()
@@ -506,4 +506,8 @@ func (mv *MessageView) GetRequiredSize() common.Vector2F {
 
 func (mv *MessageView) GetTransform() *ui.Transform {
 	return mv.Transform
+}
+
+func (mv *MessageView) IsLayoutDynamic() bool {
+	return true
 }

@@ -131,7 +131,7 @@ func (ti *TextInput) Draw() {
 		rect := ti.Transform.GetRect()
 		x := (ti.CursorLocation % int(rect.W)) + int(rect.X)
 		y := int(rect.Y) + (ti.CursorLocation / int(rect.W))
-		termbox.SetCursor(x, y)
+		SafeSetCursor(x, y)
 	}
 }
 
@@ -149,4 +149,27 @@ func (ti *TextInput) GetRequiredSize() common.Vector2F {
 
 func (ti *TextInput) GetTransform() *Transform {
 	return ti.Transform
+}
+
+func (ti *TextInput) IsLayoutDynamic() bool {
+	return false
+}
+
+// Crashes on windows otherwise if going out of bounds
+func SafeSetCursor(x, y int) {
+	sizeX, sizeY := termbox.Size()
+	if x > +sizeX {
+		x = sizeX - 1
+	}
+	if y >= sizeY {
+		y = sizeY - 1
+	}
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+
+	termbox.SetCursor(x, y)
 }

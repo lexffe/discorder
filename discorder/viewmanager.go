@@ -44,7 +44,7 @@ func NewViewManager(app *App) *ViewManager {
 
 func (v *ViewManager) OnInit() {
 	mainContainer := ui.NewAutoLayoutContainer()
-	mainContainer.Transform.AnchorMax = common.NewVector2F(1, 0.5)
+	mainContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
 	mainContainer.LayoutType = ui.LayoutTypeVertical
 	mainContainer.ForceExpandWidth = true
 	v.AddChild(mainContainer)
@@ -82,14 +82,9 @@ func (v *ViewManager) OnReady() {
 
 	// Initialize all the ui entities
 	mv := NewMessageView(v.App)
-	mv.ShowAllPrivate = true
-
 	v.mainContainer.AddChild(mv)
 	v.mv = mv
 	v.SelectedMessageView = mv
-	if v.App.debug {
-		//	mv.Transform.Top = 3
-	}
 
 	typingDisplay := NewTypingDisplay(v.App)
 	typingDisplay.text.Layer = 9
@@ -97,7 +92,7 @@ func (v *ViewManager) OnReady() {
 	v.typingDisplay = typingDisplay
 
 	footerContainer := ui.NewContainer()
-	footerContainer.Transform.Size.Y = 1
+	footerContainer.AllowZeroSize = false
 	v.mainContainer.AddChild(footerContainer)
 
 	input := ui.NewTextInput()

@@ -96,6 +96,10 @@ func (t *Text) Draw() {
 }
 
 func (t *Text) HeightRequired() int {
+	if t.Disabled {
+		return 0
+	}
+
 	rect := t.Transform.GetRect()
 	return HeightRequired(t.Text, int(rect.W))
 }
@@ -107,6 +111,9 @@ func (t *Text) GetRequiredSize() common.Vector2F {
 }
 func (t *Text) GetTransform() *Transform {
 	return t.Transform
+}
+func (t *Text) IsLayoutDynamic() bool {
+	return false
 }
 
 func (t *Text) Destroy() { t.DestroyChildren() }

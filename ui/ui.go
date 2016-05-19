@@ -66,6 +66,10 @@ func SetCells(cells []termbox.Cell, startX, startY, width, height int) int {
 
 // Returns the number of lines required
 func HeightRequired(str string, width int) int {
+	if str == "" {
+		return 0
+	}
+
 	x := 0
 	y := 1
 	for _, v := range str {

@@ -94,3 +94,7 @@ func (t *TypingDisplay) GetRequiredSize() common.Vector2F {
 func (t *TypingDisplay) GetTransform() *ui.Transform {
 	return t.Transform
 }
+
+func (t *TypingDisplay) IsLayoutDynamic() bool {
+	return false
+}

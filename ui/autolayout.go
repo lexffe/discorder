@@ -50,20 +50,18 @@ func (a *AutoLayoutContainer) BuildLayout() {
 
 		requiredSize := cast.GetRequiredSize()
 
+		if cast.IsLayoutDynamic() {
+			numDynammic++
+		}
+
 		if a.LayoutType == LayoutTypeVertical {
 			transform.AnchorMin.Y = 0
 			transform.AnchorMax.Y = 0
 			required += requiredSize.Y
-			if requiredSize.Y == 0 {
-				numDynammic++
-			}
 		} else {
 			transform.AnchorMin.X = 0
 			transform.AnchorMin.X = 0
 			required += requiredSize.X
-			if requiredSize.X == 0 {
-				numDynammic++
-			}
 		}
 
 		elements = append(elements, cast)
@@ -86,7 +84,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 
 		if a.LayoutType == LayoutTypeVertical {
 			transform.Position = common.NewVector2F(0, counter)
-			if requiredSize.Y == 0 {
+			if v.IsLayoutDynamic() {
 				transform.Size.Y = spacePerDynamic
 				counter += spacePerDynamic
 			} else {
@@ -95,7 +93,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 			}
 		} else {
 			transform.Position = common.NewVector2F(counter, 0)
-			if requiredSize.X == 0 {
+			if v.IsLayoutDynamic() {
 				transform.Size.X = spacePerDynamic
 				counter += spacePerDynamic
 			} else {
@@ -116,12 +114,15 @@ type LayoutElement interface {
 	GetRequiredSize() common.Vector2F
 	//PreferredSize() common.Vector2F
 	GetTransform() *Transform
+	IsLayoutDynamic() bool
 }
 
 type Container struct {
 	*BaseEntity
-	Transform *Transform
-	ProxySize LayoutElement
+	Transform     *Transform
+	ProxySize     LayoutElement
+	Dynamic       bool
+	AllowZeroSize bool
 }
 
 // A bare bones container
@@ -134,7 +135,15 @@ func NewContainer() *Container {
 
 func (c *Container) GetRequiredSize() common.Vector2F {
 	if c.ProxySize != nil {
-		return c.ProxySize.GetRequiredSize()
+		size := c.ProxySize.GetRequiredSize()
+		if !c.AllowZeroSize {
+			if size.X == 0 {
+				size.X = 1
+			} else if size.Y == 0 {
+				size.Y = 1
+			}
+		}
+		return size
 	}
 
 	rect := c.Transform.GetRect()
@@ -143,6 +152,10 @@ func (c *Container) GetRequiredSize() common.Vector2F {
 
 func (c *Container) GetTransform() *Transform {
 	return c.Transform
+}
+
+func (c *Container) IsLayoutDynamic() bool {
+	return c.Dynamic
 }
 
 func (c *Container) Destroy() { c.DestroyChildren() }

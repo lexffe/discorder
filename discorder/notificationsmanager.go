@@ -150,6 +150,10 @@ func (nm *NotificationsManager) GetTransform() *ui.Transform {
 	return nm.Transform
 }
 
+func (nm *NotificationsManager) IsLayoutDynamic() bool {
+	return false
+}
+
 type NotificationSource struct {
 	ChannelId string
 	LastRead  string

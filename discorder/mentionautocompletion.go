@@ -168,10 +168,19 @@ func (ma *MentionAutoCompletion) FindMatchSubIndex(split []string) int {
 }
 func (ma *MentionAutoCompletion) Destroy() { ma.DestroyChildren() }
 
+// Implements LayoutElement
 func (ma *MentionAutoCompletion) GetRequiredSize() common.Vector2F {
-	return common.NewVector2F(0, 1)
+	size := 0
+	if ma.isAutocompletingMention {
+		size = 1
+	}
+	return common.NewVector2I(0, size)
 }
 
 func (ma *MentionAutoCompletion) GetTransform() *ui.Transform {
 	return ma.Transform
+}
+
+func (ma *MentionAutoCompletion) IsLayoutDynamic() bool {
+	return false
 }
