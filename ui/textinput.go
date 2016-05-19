@@ -129,6 +129,9 @@ func (ti *TextInput) Update() {
 func (ti *TextInput) Draw() {
 	if ti.Active {
 		rect := ti.Transform.GetRect()
+		if rect.W < 1 {
+			return
+		}
 		x := (ti.CursorLocation % int(rect.W)) + int(rect.X)
 		y := int(rect.Y) + (ti.CursorLocation / int(rect.W))
 		SafeSetCursor(x, y)

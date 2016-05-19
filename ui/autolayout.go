@@ -104,7 +104,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 	}
 }
 
-func (a *AutoLayoutContainer) Update() {
+func (a *AutoLayoutContainer) LateUpdate() {
 	a.BuildLayout()
 }
 
@@ -112,7 +112,6 @@ func (a *AutoLayoutContainer) Destroy() { a.DestroyChildren() }
 
 type LayoutElement interface {
 	GetRequiredSize() common.Vector2F
-	//PreferredSize() common.Vector2F
 	GetTransform() *Transform
 	IsLayoutDynamic() bool
 }

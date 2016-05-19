@@ -246,6 +246,14 @@ func (app *App) Draw() {
 		}
 	})
 
+	// Run Update
+	ui.RunFunc(app, func(e ui.Entity) {
+		updater, ok := e.(ui.LateUpdateHandler)
+		if ok {
+			updater.LateUpdate()
+		}
+	})
+
 	// Build the layers
 	layers := make([][]ui.DrawHandler, 10)
 

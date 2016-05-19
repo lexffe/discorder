@@ -119,6 +119,10 @@ type UpdateHandler interface {
 	Update() // Ran before drawing, for example add or remove children
 }
 
+type LateUpdateHandler interface {
+	LateUpdate() // Ran after update, shouldnt change the size of the element
+}
+
 type DrawHandler interface {
 	GetDrawLayer() int
 	Draw()
