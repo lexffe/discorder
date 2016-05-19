@@ -92,7 +92,8 @@ var DefaultTheme = &Theme{
 	MessageDirect:        ThemeAttribPair{ThemeAttribFromTermbox(termbox.ColorMagenta | termbox.AttrBold), ThemeAttribute{}},
 	MessageAuthor:        ThemeAttribPair{ThemeAttribFromTermbox(termbox.ColorCyan | termbox.AttrBold), ThemeAttribute{}},
 
-	TypingBar: ThemeAttribPair{ThemeAttribFromTermbox(termbox.ColorCyan), ThemeAttribute{}},
+	TypingBar:        ThemeAttribPair{ThemeAttribFromTermbox(termbox.ColorCyan), ThemeAttribute{}},
+	NotificationsBar: ThemeAttribPair{ThemeAttribute{}, ThemeAttribFromTermbox(termbox.ColorYellow)},
 }
 
 type ThemeAttribute struct {
