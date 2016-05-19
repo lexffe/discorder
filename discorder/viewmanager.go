@@ -202,9 +202,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 				break
 			}
 			ssw := NewSelectServerWindow(v.App, v.mv)
-			v.AddChild(ssw)
-			v.activeWindow = ssw
-			v.input.Active = false
+			v.SetActiveWindow(ssw)
 		case termbox.KeyBackspace, termbox.KeyBackspace2: // Close windows if any
 			if v.activeWindow != nil {
 				v.RemoveChild(v.activeWindow, true)
@@ -251,6 +249,16 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			}
 		}
 	}
+}
+
+func (v *ViewManager) CanOpenWindow() bool {
+	return v.activeWindow == nil
+}
+
+func (v *ViewManager) SetActiveWindow(e ui.Entity) {
+	v.AddChild(e)
+	v.activeWindow = e
+	v.input.Active = false
 }
 
 func (v *ViewManager) CloseActiveWindow() {
