@@ -14,6 +14,8 @@ type ViewManager struct {
 	*ui.BaseEntity
 	App *App
 
+	mainContainer *ui.AutoLayoutContainer
+
 	mv                  *MessageView // Will be changed when multiple message views
 	SelectedMessageView *MessageView
 
@@ -41,25 +43,27 @@ func NewViewManager(app *App) *ViewManager {
 }
 
 func (v *ViewManager) OnInit() {
+	mainContainer := ui.NewAutoLayoutContainer()
+	mainContainer.Transform.AnchorMax = common.NewVector2F(1, 0.5)
+	mainContainer.LayoutType = ui.LayoutTypeVertical
+	mainContainer.ForceExpandWidth = true
+	v.AddChild(mainContainer)
+	v.mainContainer = mainContainer
+
 	// Add the header
 	header := ui.NewText()
 	header.Text = "Discorder v" + VERSION + "(´ ▽ ` )ﾉ"
-	hw := utf8.RuneCountInString(header.Text)
-	header.Transform.Size = common.NewVector2I(hw, 0)
 	header.Transform.AnchorMin = common.NewVector2F(0.5, 0)
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
-	header.Transform.Position.X = float32(-(hw / 2))
-	v.AddChild(header)
+
+	mainContainer.AddChild(header)
 	v.header = header
 
 	if v.App.debug {
 		debugBar := ui.NewText()
 		debugBar.Text = "debug"
-		debugBar.Transform.AnchorMin = common.NewVector2F(0, 0)
-		debugBar.Transform.AnchorMax = common.NewVector2F(1, 0)
-		debugBar.Transform.Position.Y = 2
 		debugBar.Layer = 9
-		v.AddChild(debugBar)
+		mainContainer.AddChild(debugBar)
 		v.debugText = debugBar
 	}
 
@@ -73,60 +77,54 @@ func (v *ViewManager) OnReady() {
 	// go into the main view
 	v.readyReceived = true
 
+	v.notificationsManager = NewNotificationsManager(v.App)
+	v.mainContainer.AddChild(v.notificationsManager)
+
 	// Initialize all the ui entities
 	mv := NewMessageView(v.App)
-	mv.Transform.AnchorMax = common.NewVector2I(1, 1)
-	mv.Transform.Bottom = 3
-	mv.Transform.Top = 1
 	mv.ShowAllPrivate = true
-	v.AddChild(mv)
+
+	v.mainContainer.AddChild(mv)
 	v.mv = mv
 	v.SelectedMessageView = mv
 	if v.App.debug {
-		mv.Transform.Top = 3
+		//	mv.Transform.Top = 3
 	}
 
+	typingDisplay := NewTypingDisplay(v.App)
+	typingDisplay.text.Layer = 9
+	v.mainContainer.AddChild(typingDisplay)
+	v.typingDisplay = typingDisplay
+
+	footerContainer := ui.NewContainer()
+	footerContainer.Transform.Size.Y = 1
+	v.mainContainer.AddChild(footerContainer)
+
 	input := ui.NewTextInput()
-	input.Transform.AnchorMin = common.NewVector2F(0, 1)
 	input.Transform.AnchorMax = common.NewVector2F(1, 1)
-	input.Transform.Position.Y = -1
 	input.Layer = 5
-	input.Text.Layer = 5
 	input.Active = true
-	v.AddChild(input)
+
+	footerContainer.AddChild(input)
+	input.Transform.Parent = footerContainer.Transform
 	v.input = input
 
-	inputHelper := ui.NewText()
-	inputHelper.Transform.AnchorMax = common.NewVector2I(0, 1)
-	inputHelper.Transform.AnchorMin = common.NewVector2I(0, 1)
-	inputHelper.FG = termbox.ColorYellow | termbox.AttrBold
-	inputHelper.Text = "Select a channel to send to"
-	inputHelper.Layer = 5
-	length := utf8.RuneCountInString(inputHelper.Text)
-	inputHelper.Transform.Size.X = float32(length)
-	inputHelper.Transform.Position.Y = -1
-	v.inputHelper = inputHelper
-	v.AddChild(inputHelper)
+	footerContainer.ProxySize = input
 
+	inputHelper := ui.NewText()
+	inputHelper.Transform.AnchorMax = common.NewVector2I(1, 1)
+	inputHelper.Layer = 5
+	v.inputHelper = inputHelper
+	footerContainer.AddChild(inputHelper)
+
+	inputHelper.Text = "Select a channel to send to"
+	length := utf8.RuneCountInString(inputHelper.Text)
+
+	inputHelper.Transform.Parent = footerContainer.Transform
 	v.input.Transform.Left = length + 1
 
 	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, input)
-	v.mentionAutocompleter.Transform.AnchorMin.Y = 1
-	v.mentionAutocompleter.Transform.AnchorMax = common.NewVector2I(1, 1)
-	v.mentionAutocompleter.Transform.Position.Y = -2
-	v.AddChild(v.mentionAutocompleter)
-
-	typingDisplay := NewTypingDisplay(v.App)
-	typingDisplay.Transform.AnchorMin.Y = 1
-	typingDisplay.Transform.AnchorMax = common.NewVector2I(1, 1)
-	typingDisplay.Transform.Position.Y = -2
-	v.AddChild(typingDisplay)
-	v.typingDisplay = typingDisplay
-
-	v.notificationsManager = NewNotificationsManager(v.App)
-	v.notificationsManager.Transform.AnchorMax.X = 1
-	v.notificationsManager.Transform.Position.Y = 1
-	v.AddChild(v.notificationsManager)
+	v.mainContainer.AddChild(v.mentionAutocompleter)
 
 	v.ApplyConfig()
 	v.ApplyTheme()

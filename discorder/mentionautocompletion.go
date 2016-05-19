@@ -1,6 +1,7 @@
 package discorder
 
 import (
+	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
@@ -166,3 +167,11 @@ func (ma *MentionAutoCompletion) FindMatchSubIndex(split []string) int {
 	return currentIndex
 }
 func (ma *MentionAutoCompletion) Destroy() { ma.DestroyChildren() }
+
+func (ma *MentionAutoCompletion) GetRequiredSize() common.Vector2F {
+	return common.NewVector2F(0, 1)
+}
+
+func (ma *MentionAutoCompletion) GetTransform() *ui.Transform {
+	return ma.Transform
+}

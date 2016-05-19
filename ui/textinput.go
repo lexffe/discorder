@@ -123,12 +123,15 @@ func (ti *TextInput) Update() {
 	} else {
 		ti.Text.Text = ti.TextBuffer
 	}
+	ti.Text.Layer = ti.Layer
 }
 
 func (ti *TextInput) Draw() {
 	if ti.Active {
 		rect := ti.Transform.GetRect()
-		termbox.SetCursor(ti.CursorLocation+int(rect.X), int(rect.Y))
+		x := (ti.CursorLocation % int(rect.W)) + int(rect.X)
+		y := int(rect.Y) + (ti.CursorLocation / int(rect.W))
+		termbox.SetCursor(x, y)
 	}
 }
 
@@ -137,3 +140,13 @@ func (ti *TextInput) GetDrawLayer() int {
 }
 
 func (ti *TextInput) Destroy() { ti.DestroyChildren() }
+
+// Implement LayoutElement
+func (ti *TextInput) GetRequiredSize() common.Vector2F {
+	rect := ti.Transform.GetRect()
+	return common.NewVector2F(rect.W, float32(ti.Text.HeightRequired()))
+}
+
+func (ti *TextInput) GetTransform() *Transform {
+	return ti.Transform
+}

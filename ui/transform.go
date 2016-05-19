@@ -47,7 +47,7 @@ func (t *Transform) GetRect() common.Rect {
 		xOffsetMin := parentRect.W * t.AnchorMin.X
 		xOffsetMax := parentRect.W * t.AnchorMax.X
 		ret.X = xOffsetMin + parentRect.X + float32(t.Left)
-		ret.W = xOffsetMax - xOffsetMin - float32(t.Right)
+		ret.W = xOffsetMax - xOffsetMin - (float32(t.Right) + float32(t.Left))
 	}
 
 	return ret

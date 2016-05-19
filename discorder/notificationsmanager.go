@@ -142,6 +142,14 @@ func (nm *NotificationsManager) HandleAck(a *discordgo.MessageAck) {
 
 func (nm *NotificationsManager) Destroy() { nm.DestroyChildren() }
 
+func (nm *NotificationsManager) GetRequiredSize() common.Vector2F {
+	return common.NewVector2F(0, float32(nm.text.HeightRequired()))
+}
+
+func (nm *NotificationsManager) GetTransform() *ui.Transform {
+	return nm.Transform
+}
+
 type NotificationSource struct {
 	ChannelId string
 	LastRead  string

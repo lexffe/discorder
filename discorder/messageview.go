@@ -52,7 +52,7 @@ func NewMessageView(app *App) *MessageView {
 	t.Transform.Parent = mv.Transform
 	t.Transform.AnchorMin.Y = 1
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)
-	t.Layer = 9
+	t.Layer = 5
 	t.BG = termbox.ColorYellow
 
 	mv.AddChild(t)
@@ -463,7 +463,7 @@ func (mv *MessageView) Update() {
 }
 
 func (mv *MessageView) GetDrawLayer() int {
-	return 9
+	return mv.Layer
 }
 
 func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before time.Time, startIndex int) (*DisplayMessage, int) {
@@ -496,4 +496,14 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 	}
 
 	return nil, 0
+}
+
+// Implement LayoutElement
+func (mv *MessageView) GetRequiredSize() common.Vector2F {
+	//log.Println("Called getreuidesize")
+	return common.Vector2F{}
+}
+
+func (mv *MessageView) GetTransform() *ui.Transform {
+	return mv.Transform
 }

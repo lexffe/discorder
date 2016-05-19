@@ -58,19 +58,22 @@ func (t *TypingDisplay) Update() {
 	if len(typing) > 0 {
 		t.text.Disabled = false
 
-		typingStr := "Typing: "
+		typingStr := "Typing: asd"
 
 		for _, v := range typing {
 			channel, err := t.App.session.State.Channel(v.ChannelID)
 			if err != nil {
 				continue
 			}
-
-			member, err := t.App.session.State.Member(channel.GuildID, v.UserID)
-			if err != nil {
-				continue
+			if !channel.IsPrivate {
+				member, err := t.App.session.State.Member(channel.GuildID, v.UserID)
+				if err != nil {
+					continue
+				}
+				typingStr += "#" + GetChannelNameOrRecipient(channel) + ":" + member.User.Username + ", "
+			} else {
+				typingStr += "#DM:" + channel.Recipient.Username + ", "
 			}
-			typingStr += "#" + GetChannelNameOrRecipient(channel) + ":" + member.User.Username + ", "
 		}
 		// Remove trailing ","
 		typingStr = typingStr[:len(typingStr)-2]
@@ -81,3 +84,13 @@ func (t *TypingDisplay) Update() {
 }
 
 func (t *TypingDisplay) Destroy() { t.DestroyChildren() }
+
+func (t *TypingDisplay) GetRequiredSize() common.Vector2F {
+	rect := t.text.Transform.GetRect()
+	//log.Println(float32(t.text.HeightRequired()), t.text.Text)
+	return common.Vector2F{rect.W, float32(t.text.HeightRequired())}
+}
+
+func (t *TypingDisplay) GetTransform() *ui.Transform {
+	return t.Transform
+}

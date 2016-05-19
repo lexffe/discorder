@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
 )
 
@@ -35,18 +36,6 @@ func NewText() *Text {
 	}
 	return t
 }
-
-// Helper functions
-// func SimpleText(pos common.Vector2F, size common.Vector2F, text string, fg, bg termbox.Attribute, layer int) *Text {
-// 	t := NewUIText()
-// 	t.Transform.Position = pos
-// 	t.Transform.Size = size
-// 	t.Text = text
-// 	t.fg = fg
-// 	t.BG = bg
-// 	t.Layer = layer
-// 	return t
-// }
 
 func (t *Text) GetDrawLayer() int {
 	return t.Layer
@@ -109,6 +98,15 @@ func (t *Text) Draw() {
 func (t *Text) HeightRequired() int {
 	rect := t.Transform.GetRect()
 	return HeightRequired(t.Text, int(rect.W))
+}
+
+// Implement LayoutElement
+func (t *Text) GetRequiredSize() common.Vector2F {
+	rect := t.Transform.GetRect()
+	return common.NewVector2F(rect.W, float32(t.HeightRequired()))
+}
+func (t *Text) GetTransform() *Transform {
+	return t.Transform
 }
 
 func (t *Text) Destroy() { t.DestroyChildren() }
