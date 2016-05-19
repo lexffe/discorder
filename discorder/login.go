@@ -52,11 +52,13 @@ func NewLoginWindow(app *App) *LoginWindow {
 	mailInput.Layer = 5
 	mailInput.TextBuffer = app.config.Email
 	window.AddChild(mailInput)
+	app.ViewManager.ActiveInput = mailInput
 
 	pwInput := ui.NewTextInput()
 	pwInput.Transform.Parent = window.Transform
 	pwInput.Transform.Position = common.NewVector2I(1, 5)
 	pwInput.Transform.Size = common.NewVector2I(45, 0)
+	pwInput.Active = true
 	pwInput.MaskInput = true
 	pwInput.Layer = 5
 	window.AddChild(pwInput)
@@ -95,20 +97,17 @@ func (lw *LoginWindow) HandleInput(event termbox.Event) {
 			if lw.CurInputState == InputStateEmail {
 				lw.App.config.Email = lw.EmailInput.TextBuffer
 				lw.CurInputState = InputStatePassword
-				lw.EmailInput.Active = false
-				lw.PWInput.Active = true
+				lw.App.ViewManager.ActiveInput = lw.PWInput
 			} else {
 				pw := lw.PWInput.TextBuffer
 				lw.Trylogin(lw.App.config.Email, pw, "")
 			}
 		case termbox.KeyCtrlS:
 			if lw.CurInputState == InputStateEmail {
-				lw.EmailInput.Active = false
-				lw.PWInput.Active = true
+				lw.App.ViewManager.ActiveInput = lw.PWInput
 				lw.CurInputState = InputStatePassword
 			} else {
-				lw.EmailInput.Active = true
-				lw.PWInput.Active = false
+				lw.App.ViewManager.ActiveInput = lw.EmailInput
 				lw.CurInputState = InputStateEmail
 			}
 		case termbox.KeyCtrlT:

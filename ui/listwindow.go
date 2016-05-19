@@ -217,3 +217,5 @@ func (lw *ListWindow) Update() {
 		lw.Dirty = false
 	}
 }
+
+func (lw *ListWindow) Scroll(dir Direction, amount int) {}

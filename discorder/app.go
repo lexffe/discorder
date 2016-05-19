@@ -217,21 +217,32 @@ func delayedInterrupt(d time.Duration) {
 }
 
 func (app *App) HandleInputEvent(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		if event.Key == termbox.KeyCtrlQ {
-			log.Println("Stopping...")
-			go app.Stop()
-		}
-	}
+	app.CheckCommand(event)
 
-	entities := app.Children(true)
-	for _, entity := range entities {
-		inputHandler, ok := entity.(ui.InputHandler)
+	ui.RunFunc(app, func(e ui.Entity) {
+		inputHandler, ok := e.(ui.InputHandler)
 		if ok {
 			inputHandler.HandleInput(event)
 		}
-	}
+	})
 	app.Draw()
+}
+
+func (app *App) CheckCommand(event termbox.Event) {
+	if event.Type != termbox.EventKey {
+		return
+	}
+	for _, v := range app.config.KeyBinds {
+		if v.Key.TermKey == event.Key {
+			if (v.Alt && event.Mod&termbox.ModAlt != 0) || (!v.Alt && event.Mod&termbox.ModAlt == 0) {
+				cmd := GetCommandByName(v.Command)
+				if cmd != nil && cmd.Run != nil {
+					cmd.Run(app, v.Args)
+					log.Println("Running command from hotkey", cmd.Name)
+				}
+			}
+		}
+	}
 }
 
 // Todo remove 10 layer lazy limit... Maps?

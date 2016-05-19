@@ -114,6 +114,37 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 	}
 }
 
+type Direction int
+
+const (
+	DirLeft Direction = iota
+	DirRight
+	DirUp
+	DirDown
+	DirEnd
+	DirStart
+)
+
+func (ti *TextInput) MoveCursor(dir Direction, amount int, byWords bool) {
+	switch dir {
+	case DirLeft:
+	case DirRight:
+	case DirUp:
+	case DirDown:
+	case DirEnd:
+	case DirStart:
+	}
+}
+
+func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
+	switch dir {
+	case DirLeft:
+	case DirRight:
+	case DirEnd:
+	case DirStart:
+	}
+}
+
 func (ti *TextInput) Update() {
 	if ti.MaskInput {
 		ti.Text.Text = ""

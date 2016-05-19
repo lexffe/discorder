@@ -12,12 +12,13 @@ const (
 	ArgumentDataTypeInt ArgumentDataType = iota
 	ArgumentDataTypeFloat
 	ArgumentDataTypeString
+	ArgumentDataTypeBool
 )
 
 type Command struct {
 	Name        string
 	Description string
-	Arguments   []ArgumentDef
+	Args        []*ArgumentDef
 	Category    string
 	Run         func(app *App, args []*Argument)
 }
@@ -46,7 +47,7 @@ type KeyBind struct {
 	Command string      `json:"command"`
 	Args    []*Argument `json:"args"`
 	Key     KeyBindKey  `json:"key"`
-	Shift   bool        `json:"shift"`
+	Alt     bool        `json:"alt"`
 }
 
 type KeyBindKey struct {
@@ -62,7 +63,7 @@ func (k *KeyBindKey) UnmarshalJSON(data []byte) error {
 
 	key, ok := Keys[k.StringKey]
 	if !ok {
-		return errors.New("Key not found", k.StringKey)
+		return errors.New("Key not found: " + k.StringKey)
 	}
 
 	k.TermKey = key
@@ -100,50 +101,50 @@ var Keys = map[string]termbox.Key{
 	"MouseWheelUp":   termbox.MouseWheelUp,
 	"MouseWheelDown": termbox.MouseWheelDown,
 
-	"CtrlTilde":      ermbox.KeyCtrlTilde,
-	"CtrlSpace":      ermbox.KeyCtrlSpace,
-	"CtrlA":          ermbox.KeyCtrlA,
-	"CtrlB":          ermbox.KeyCtrlB,
-	"CtrlC":          ermbox.KeyCtrlC,
-	"CtrlD":          ermbox.KeyCtrlD,
-	"CtrlE":          ermbox.KeyCtrlE,
-	"CtrlF":          ermbox.KeyCtrlF,
-	"CtrlG":          ermbox.KeyCtrlG,
-	"Backspace":      ermbox.KeyBackspace,
-	"CtrlH":          ermbox.KeyCtrlH,
-	"Tab":            ermbox.KeyTab,
-	"CtrlI":          ermbox.KeyCtrlI,
-	"CtrlJ":          ermbox.KeyCtrlJ,
-	"CtrlK":          ermbox.KeyCtrlK,
-	"CtrlL":          ermbox.KeyCtrlL,
-	"Enter":          ermbox.KeyEnter,
-	"CtrlM":          ermbox.KeyCtrlM,
-	"CtrlN":          ermbox.KeyCtrlN,
-	"CtrlO":          ermbox.KeyCtrlO,
-	"CtrlP":          ermbox.KeyCtrlP,
-	"CtrlQ":          ermbox.KeyCtrlQ,
-	"CtrlR":          ermbox.KeyCtrlR,
-	"CtrlS":          ermbox.KeyCtrlS,
-	"CtrlT":          ermbox.KeyCtrlT,
-	"CtrlU":          ermbox.KeyCtrlU,
-	"CtrlV":          ermbox.KeyCtrlV,
-	"CtrlW":          ermbox.KeyCtrlW,
-	"CtrlX":          ermbox.KeyCtrlX,
-	"CtrlY":          ermbox.KeyCtrlY,
-	"CtrlZ":          ermbox.KeyCtrlZ,
-	"Esc":            ermbox.KeyEsc,
-	"CtrlLsqBracket": ermbox.KeyCtrlLsqBracket,
-	"CtrlBackslash":  ermbox.KeyCtrlBackslash,
-	"CtrlRsqBracket": ermbox.KeyCtrlRsqBracket,
-	"CtrlSlash":      ermbox.KeyCtrlSlash,
-	"CtrlUnderscore": ermbox.KeyCtrlUnderscore,
-	"Space":          ermbox.KeySpace,
-	"Backspace2":     ermbox.KeyBackspace2,
-	"Ctrl2":          ermbox.KeyCtrl2,
-	"Ctrl3":          ermbox.KeyCtrl3,
-	"Ctrl4":          ermbox.KeyCtrl4,
-	"Ctrl5":          ermbox.KeyCtrl5,
-	"Ctrl6":          ermbox.KeyCtrl6,
-	"Ctrl7":          ermbox.KeyCtrl7,
-	"Ctrl8":          ermbox.KeyCtrl8,
+	"CtrlTilde":      termbox.KeyCtrlTilde,
+	"CtrlSpace":      termbox.KeyCtrlSpace,
+	"CtrlA":          termbox.KeyCtrlA,
+	"CtrlB":          termbox.KeyCtrlB,
+	"CtrlC":          termbox.KeyCtrlC,
+	"CtrlD":          termbox.KeyCtrlD,
+	"CtrlE":          termbox.KeyCtrlE,
+	"CtrlF":          termbox.KeyCtrlF,
+	"CtrlG":          termbox.KeyCtrlG,
+	"Backspace":      termbox.KeyBackspace,
+	"CtrlH":          termbox.KeyCtrlH,
+	"Tab":            termbox.KeyTab,
+	"CtrlI":          termbox.KeyCtrlI,
+	"CtrlJ":          termbox.KeyCtrlJ,
+	"CtrlK":          termbox.KeyCtrlK,
+	"CtrlL":          termbox.KeyCtrlL,
+	"Enter":          termbox.KeyEnter,
+	"CtrlM":          termbox.KeyCtrlM,
+	"CtrlN":          termbox.KeyCtrlN,
+	"CtrlO":          termbox.KeyCtrlO,
+	"CtrlP":          termbox.KeyCtrlP,
+	"CtrlQ":          termbox.KeyCtrlQ,
+	"CtrlR":          termbox.KeyCtrlR,
+	"CtrlS":          termbox.KeyCtrlS,
+	"CtrlT":          termbox.KeyCtrlT,
+	"CtrlU":          termbox.KeyCtrlU,
+	"CtrlV":          termbox.KeyCtrlV,
+	"CtrlW":          termbox.KeyCtrlW,
+	"CtrlX":          termbox.KeyCtrlX,
+	"CtrlY":          termbox.KeyCtrlY,
+	"CtrlZ":          termbox.KeyCtrlZ,
+	"Esc":            termbox.KeyEsc,
+	"CtrlLsqBracket": termbox.KeyCtrlLsqBracket,
+	"CtrlBackslash":  termbox.KeyCtrlBackslash,
+	"CtrlRsqBracket": termbox.KeyCtrlRsqBracket,
+	"CtrlSlash":      termbox.KeyCtrlSlash,
+	"CtrlUnderscore": termbox.KeyCtrlUnderscore,
+	"Space":          termbox.KeySpace,
+	"Backspace2":     termbox.KeyBackspace2,
+	"Ctrl2":          termbox.KeyCtrl2,
+	"Ctrl3":          termbox.KeyCtrl3,
+	"Ctrl4":          termbox.KeyCtrl4,
+	"Ctrl5":          termbox.KeyCtrl5,
+	"Ctrl6":          termbox.KeyCtrl6,
+	"Ctrl7":          termbox.KeyCtrl7,
+	"Ctrl8":          termbox.KeyCtrl8,
 }

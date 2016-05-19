@@ -11,6 +11,8 @@ type Config struct {
 	Email     string `json:"email"`
 	AuthToken string `json:"authToken"` // Not used currently, but planned
 
+	KeyBinds []*KeyBind `json:"keybinds"`
+
 	AllPrivateMode    bool     `json:"allPrivateMode"`
 	LastChannel       string   `json:"lastChannel"`
 	ListeningChannels []string `json:"listeningChannels"`

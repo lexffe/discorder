@@ -18,6 +18,7 @@ type ViewManager struct {
 
 	mv                  *MessageView // Will be changed when multiple message views
 	SelectedMessageView *MessageView
+	ActiveInput         *ui.TextInput
 
 	activeWindow ui.Entity
 	inputHelper  *ui.Text
@@ -103,6 +104,7 @@ func (v *ViewManager) OnReady() {
 	footerContainer.AddChild(input)
 	input.Transform.Parent = footerContainer.Transform
 	v.input = input
+	v.ActiveInput = input
 
 	footerContainer.ProxySize = input
 

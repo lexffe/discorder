@@ -127,3 +127,7 @@ type DrawHandler interface {
 	GetDrawLayer() int
 	Draw()
 }
+
+type Scrollable interface {
+	Scroll(dir Direction, amount int)
+}

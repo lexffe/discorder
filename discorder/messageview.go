@@ -156,6 +156,24 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 	}
 }
 
+func (mv *MessageView) OpenMessageSelectWindow(msg string) {
+	if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
+		return
+	}
+
+	text := mv.MessageTexts[0]
+	selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
+	if !ok || selectedDisplayMsg.IsLogMessage {
+		return
+	}
+	msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
+	mv.App.ViewManager.AddChild(msw)
+	mv.App.ViewManager.activeWindow = msw
+}
+
+func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
+}
+
 func (mv *MessageView) HandleMessageCreate(msg *discordgo.Message) {
 	// Check if its private and if this messagegview shows private messages
 	pChannel, err := mv.App.session.State.PrivateChannel(msg.ChannelID)
