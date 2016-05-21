@@ -2,8 +2,8 @@ package discorder
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/nsf/termbox-go"
+	"strings"
 )
 
 type ArgumentDataType int
@@ -44,33 +44,85 @@ func (a *Argument) Int() (int, bool) {
 }
 
 type KeyBind struct {
-	Command string      `json:"command"`
-	Args    []*Argument `json:"args"`
-	Key     KeyBindKey  `json:"key"`
-	Alt     bool        `json:"alt"`
+	Command string         `json:"command"`
+	Args    []*Argument    `json:"args"`
+	KeyComb KeyCombination `json:"key"`
+	Alt     bool           `json:"alt"`
 }
 
-type KeyBindKey struct {
-	StringKey string
-	TermKey   termbox.Key
+func (k KeyBind) Check(seq []termbox.Event) (partialMatch, fullMatch bool) {
+	if len(seq) > len(k.KeyComb.Keys) {
+		return
+	}
+
+	for i, event := range seq {
+		keybindKey := k.KeyComb.Keys[i]
+		if (event.Mod&termbox.ModAlt != 0 && !keybindKey.Alt) || (event.Mod&termbox.ModAlt == 0 && keybindKey.Alt) {
+			return
+		}
+		if keybindKey.Char != "" {
+			if string(event.Ch) != keybindKey.Char {
+				return
+			}
+		} else {
+			if event.Key != keybindKey.Special {
+				return
+			}
+		}
+	}
+
+	if len(seq) < len(k.KeyComb.Keys) {
+		partialMatch = true
+	} else {
+		fullMatch = true
+	}
+	return
 }
 
-func (k *KeyBindKey) UnmarshalJSON(data []byte) error {
-	err := json.Unmarshal(data, &k.StringKey)
+type KeyCombination struct {
+	Keys []*KeybindKey
+}
+
+// Alt+CtrlX-A
+func (k *KeyCombination) UnmarshalJSON(data []byte) error {
+	raw := ""
+	err := json.Unmarshal(data, &raw)
 	if err != nil {
 		return err
 	}
+	k.Keys = make([]*KeybindKey, 0)
 
-	key, ok := Keys[k.StringKey]
-	if !ok {
-		return errors.New("Key not found: " + k.StringKey)
+	seqSplit := strings.Split(raw, "-")
+	for _, sequence := range seqSplit {
+		modSplit := strings.Split(sequence, "+")
+		key := &KeybindKey{}
+		for _, mod := range modSplit {
+			if mod == "Alt" || mod == "alt" {
+				key.Alt = true
+				continue
+			}
+			special, ok := SpecialKeys[mod]
+			if ok {
+				key.Special = special
+				continue
+			}
+			key.Char = mod
+		}
 	}
-
-	k.TermKey = key
 	return nil
 }
 
-var Keys = map[string]termbox.Key{
+type KeybindKey struct {
+	Alt     bool
+	Special termbox.Key
+	Char    string
+}
+
+type CommandHandler interface {
+	OnCommand(cmd *Command)
+}
+
+var SpecialKeys = map[string]termbox.Key{
 	"F1":         termbox.KeyF1,
 	"F2":         termbox.KeyF2,
 	"F3":         termbox.KeyF3,

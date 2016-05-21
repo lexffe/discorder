@@ -148,7 +148,7 @@ var Commands = []*Command{
 		Category:    "Misc",
 	},
 	&Command{
-		Name:        "ToggleMark",
+		Name:        "Mark",
 		Description: "Toggles the currently highlited element",
 		Category:    "Misc",
 	},

@@ -19,21 +19,19 @@ const (
 
 type App struct {
 	sync.RWMutex
-	running        bool
-	stopping       bool
-	stopChan       chan interface{}
-	session        *discordgo.Session
-	inputEventChan chan termbox.Event
+	*ui.BaseEntity
 
+	running  bool
+	stopping bool             // true if in the process of stopping
+	stopChan chan interface{} // Sending on this channel will instantly stop (not gracefull)
+
+	session        *discordgo.Session
 	typingRoutine  *TypingRoutine
 	ackRoutine     *AckRoutine
 	requestRoutine *RequestRoutine
 
-	stopPollEvents chan *sync.WaitGroup
-
-	*ui.BaseEntity
-
-	ViewManager *ViewManager
+	ViewManager  *ViewManager
+	InputManager *InputManager
 
 	config *Config
 	theme  *Theme
@@ -135,8 +133,6 @@ func (app *App) Stop() {
 func (app *App) init() {
 	// Initialize the channels
 	app.stopChan = make(chan interface{})
-	app.inputEventChan = make(chan termbox.Event)
-	app.stopPollEvents = make(chan *sync.WaitGroup)
 
 	err := termbox.Init()
 	if err != nil {
@@ -155,6 +151,9 @@ func (app *App) init() {
 
 	app.requestRoutine = NewRequestRoutine()
 	go app.requestRoutine.Run()
+
+	app.InputManager = NewInputManager(app)
+	go app.InputManager.Run()
 
 	// out, err := DefaultTheme.Read()
 	// if err == nil {
@@ -183,9 +182,7 @@ func (app *App) Run() {
 		}
 	}()
 
-	// Start polling events
-	go app.PollEvents()
-
+	// Initialize and run
 	app.init()
 	log.Println("Initialized!")
 	app.ViewManager.OnInit()
@@ -199,10 +196,6 @@ func (app *App) Run() {
 				termbox.Close()
 			}
 			return
-		case evt := <-app.inputEventChan:
-			app.Lock()
-			app.HandleInputEvent(evt)
-			app.Unlock()
 		case <-ticker.C:
 			app.Lock()
 			app.Draw()
@@ -214,35 +207,6 @@ func (app *App) Run() {
 func delayedInterrupt(d time.Duration) {
 	time.Sleep(d)
 	termbox.Interrupt()
-}
-
-func (app *App) HandleInputEvent(event termbox.Event) {
-	app.CheckCommand(event)
-
-	ui.RunFunc(app, func(e ui.Entity) {
-		inputHandler, ok := e.(ui.InputHandler)
-		if ok {
-			inputHandler.HandleInput(event)
-		}
-	})
-	app.Draw()
-}
-
-func (app *App) CheckCommand(event termbox.Event) {
-	if event.Type != termbox.EventKey {
-		return
-	}
-	for _, v := range app.config.KeyBinds {
-		if v.Key.TermKey == event.Key {
-			if (v.Alt && event.Mod&termbox.ModAlt != 0) || (!v.Alt && event.Mod&termbox.ModAlt == 0) {
-				cmd := GetCommandByName(v.Command)
-				if cmd != nil && cmd.Run != nil {
-					cmd.Run(app, v.Args)
-					log.Println("Running command from hotkey", cmd.Name)
-				}
-			}
-		}
-	}
 }
 
 // Todo remove 10 layer lazy limit... Maps?
@@ -285,20 +249,22 @@ func (app *App) Draw() {
 	termbox.Flush()
 }
 
-func (app *App) PollEvents() {
-	for {
-		evt := termbox.PollEvent()
-
-		select {
-		case wg := <-app.stopPollEvents:
-			wg.Done()
-			log.Println("Event polling stopped")
-			return
-		default:
-			break
-		}
-		app.inputEventChan <- evt
+func (app *App) RunCommand(command *Command, args []*Argument) {
+	if command == nil {
+		log.Println("Tried to run a nonexstant command")
+		return
 	}
+
+	if command.Run != nil {
+		command.Run(app, args)
+	}
+
+	ui.RunFunc(app, func(e ui.Entity) {
+		cmdHandler, ok := e.(CommandHandler)
+		if ok {
+			cmdHandler.OnCommand(command)
+		}
+	})
 }
 
 func (app *App) PrintWelcome() {
@@ -335,7 +301,7 @@ func (app *App) shutdown() {
 	// Stop the event polling
 	go delayedInterrupt(10 * time.Millisecond)
 
-	app.stopPollEvents <- &wg
+	app.InputManager.stop <- &wg
 	app.ackRoutine.stop <- &wg
 	app.typingRoutine.stop <- &wg
 	app.requestRoutine.stop <- &wg

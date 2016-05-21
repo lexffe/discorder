@@ -30,6 +30,12 @@ func main() {
 		go RunPProf()
 	}
 
+	path, err := discorder.GetCreateConfigDir()
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Config path is", path)
+
 	app, err := discorder.NewApp(*flagConfigPath, *flagThemePath, *flagDebugEnabled, *flagDGoDebugLvl)
 	if err != nil {
 		log.Println("Error setting up discorder :(", err)
