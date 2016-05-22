@@ -19,10 +19,87 @@ If you want to change say the open server keybind from ctrl-s to ctrl-w you woul
 
 First we unbind the CtrlS key to "nop" (No operation), since user binds overrides default binds, then we set CtrlW to open_servers
 
-Here is a little more advanced example:
+### Sequences and arguments
 
 ```json
 {"key": "CtrlC-d", "command": "delete_message", "args":{"which": "last"}}
 ```
 
 Here we have a key sequence, doing CtrlC and then d will delete our last message
+
+## Special keys:
+
+ - F1
+ - F2
+ - F3
+ - F4
+ - F5
+ - F6
+ - F7
+ - F8
+ - F9
+ - F10
+ - F11
+ - F12
+ - Insert
+ - Delete
+ - Home
+ - End
+ - Pgup
+ - Pgdn
+ - ArrowUp
+ - ArrowDown
+ - ArrowLeft
+ - ArrowRight
+ - MouseLeft
+ - MouseMiddle
+ - MouseRight
+ - MouseRelease
+ - MouseWheelUp
+ - MouseWheelDown
+ - CtrlTilde
+ - CtrlSpace
+ - CtrlA
+ - CtrlB
+ - CtrlC
+ - CtrlD
+ - CtrlE
+ - CtrlF
+ - CtrlG
+ - Backspace
+ - CtrlH
+ - Tab
+ - CtrlI
+ - CtrlJ
+ - CtrlK
+ - CtrlL
+ - Enter
+ - CtrlM
+ - CtrlN
+ - CtrlO
+ - CtrlP
+ - CtrlQ
+ - CtrlR
+ - CtrlS
+ - CtrlT
+ - CtrlU
+ - CtrlV
+ - CtrlW
+ - CtrlX
+ - CtrlY
+ - CtrlZ
+ - Esc
+ - CtrlLsqBracket
+ - CtrlBackslash
+ - CtrlRsqBracket
+ - CtrlSlash
+ - CtrlUnderscore
+ - Space
+ - Backspace2
+ - Ctrl2
+ - Ctrl3
+ - Ctrl4
+ - Ctrl5
+ - Ctrl6
+ - Ctrl7
+ - Ctrl8
