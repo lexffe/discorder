@@ -285,3 +285,12 @@ func (v *ViewManager) ApplyTheme() {
 		return true
 	})
 }
+
+func (v *ViewManager) SetActiveInput(input *ui.TextInput) {
+	if v.ActiveInput != nil {
+		v.ActiveInput.Active = false
+	}
+
+	v.ActiveInput = input
+	input.Active = true
+}

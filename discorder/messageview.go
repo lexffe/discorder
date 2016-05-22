@@ -225,10 +225,8 @@ func (mv *MessageView) BuildTexts() {
 		text.Transform.Size = common.NewVector2F(rect.W, 0)
 
 		if item.IsLogMessage {
-			//cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
 			text.Text = "Log: " + item.LogMessage.Content
 			mv.App.ApplyThemeToText(text, "message_log")
-			//text.Attribs = map[int]AttribPair{0: AttribPair{termbox.ColorYellow, termbox.ColorDefault}}
 		} else {
 			msg := item.DiscordMessage
 			if msg == nil {

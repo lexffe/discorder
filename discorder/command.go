@@ -152,7 +152,7 @@ type KeybindKey struct {
 }
 
 type CommandHandler interface {
-	OnCommand(cmd *Command)
+	OnCommand(cmd *Command, args Arguments)
 }
 
 var SpecialKeys = map[string]termbox.Key{

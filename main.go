@@ -11,7 +11,7 @@ import (
 
 var (
 	flagDGoDebugLvl  = flag.Int("dgo", 0, "discordgo logging level (0 - Errors, 1 - Warnings, 2 - Info, 3 - Debug")
-	flagConfigPath   = flag.String("config", "discorder.json", "Path to the config file")
+	flagConfigPath   = flag.String("config", "", "Path to the config file")
 	flagThemePath    = flag.String("theme", "", "For use a theme, as opposed to the one in the config file")
 	flagLogPath      = flag.String("log", "discorder.log", "Path to output logs, only used with debug enabled")
 	flagDebugEnabled = flag.Bool("debug", false, "Set to enable debuging mode")

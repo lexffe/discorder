@@ -3,7 +3,6 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
-	"github.com/nsf/termbox-go"
 	"log"
 )
 
@@ -58,7 +57,7 @@ func NewLoginWindow(app *App) *LoginWindow {
 	pwInput.Transform.Parent = window.Transform
 	pwInput.Transform.Position = common.NewVector2I(1, 5)
 	pwInput.Transform.Size = common.NewVector2I(45, 0)
-	pwInput.Active = true
+	pwInput.Active = false
 	pwInput.MaskInput = true
 	pwInput.Layer = 5
 	window.AddChild(pwInput)
@@ -90,33 +89,6 @@ func (lw *LoginWindow) CheckAutoLogin() {
 
 func (lw *LoginWindow) Destroy() { lw.DestroyChildren() }
 
-func (lw *LoginWindow) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		switch event.Key {
-		case termbox.KeyEnter:
-			if lw.CurInputState == InputStateEmail {
-				lw.App.config.Email = lw.EmailInput.TextBuffer
-				lw.CurInputState = InputStatePassword
-				lw.App.ViewManager.ActiveInput = lw.PWInput
-			} else {
-				pw := lw.PWInput.TextBuffer
-				lw.Trylogin(lw.App.config.Email, pw, "")
-			}
-		case termbox.KeyCtrlS:
-			if lw.CurInputState == InputStateEmail {
-				lw.App.ViewManager.ActiveInput = lw.PWInput
-				lw.CurInputState = InputStatePassword
-			} else {
-				lw.App.ViewManager.ActiveInput = lw.EmailInput
-				lw.CurInputState = InputStateEmail
-			}
-		case termbox.KeyCtrlT:
-			lw.SavePassword = !lw.SavePassword
-		}
-	}
-	log.Println("Handled input in loginwindow")
-}
-
 func (lw *LoginWindow) Trylogin(email, pw, token string) {
 	log.Println("Attempting login...")
 
@@ -146,5 +118,25 @@ func (lw *LoginWindow) Update() {
 
 	if lw.loggingIn {
 		lw.Helper.Text = "Logging in..."
+	}
+}
+func (lw *LoginWindow) OnCommand(cmd *Command, args Arguments) {
+	if cmd.Name == "select" {
+		if lw.CurInputState == InputStateEmail {
+			lw.App.config.Email = lw.EmailInput.TextBuffer
+			lw.CurInputState = InputStatePassword
+			lw.App.ViewManager.SetActiveInput(lw.PWInput)
+		} else {
+			pw := lw.PWInput.TextBuffer
+			lw.Trylogin(lw.App.config.Email, pw, "")
+		}
+	} else if cmd.Name == "scroll" {
+		if lw.CurInputState == InputStateEmail {
+			lw.App.ViewManager.SetActiveInput(lw.PWInput)
+			lw.CurInputState = InputStatePassword
+		} else {
+			lw.App.ViewManager.SetActiveInput(lw.EmailInput)
+			lw.CurInputState = InputStateEmail
+		}
 	}
 }

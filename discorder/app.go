@@ -267,7 +267,7 @@ func (app *App) RunCommand(command *Command, args Arguments) {
 	ui.RunFunc(app, func(e ui.Entity) {
 		cmdHandler, ok := e.(CommandHandler)
 		if ok {
-			cmdHandler.OnCommand(command)
+			cmdHandler.OnCommand(command, args)
 		}
 	})
 }

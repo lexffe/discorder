@@ -88,14 +88,22 @@ func (t *Theme) Read() ([]byte, error) {
 }
 
 type ThemeAttribute struct {
-	Color     Color `json:"color"`
-	Bold      bool  `json:"bold"`
-	Underline bool  `json:"underline"`
-	Reverse   bool  `json:"reverse"`
+	Color     *Color `json:"color"`
+	Bold      bool   `json:"bold"`
+	Underline bool   `json:"underline"`
+	Reverse   bool   `json:"reverse"`
+}
+
+func (t *ThemeAttribute) GetColor() uint8 {
+	if t.Color == nil {
+		return 0
+	}
+	return uint8(*t.Color)
 }
 
 func (t *ThemeAttribute) Attribute() termbox.Attribute {
-	attr := termbox.Attribute(t.Color)
+
+	attr := termbox.Attribute(t.GetColor())
 	if t.Bold {
 		attr |= termbox.AttrBold
 	}
@@ -122,7 +130,7 @@ func (t ThemeAttribPair) AttribPair() ui.AttribPair {
 
 type Color uint8
 
-func (c *Color) UnmarshallJSON(data []byte) error {
+func (c *Color) UnmarshalJSON(data []byte) error {
 	log.Println("Unmarshalling color")
 	var raw interface{}
 	err := json.Unmarshal(data, &raw)
