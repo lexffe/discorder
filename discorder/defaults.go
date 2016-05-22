@@ -29,52 +29,54 @@ var DefaultTheme = []byte(`{
     "author": "jonas747",
     "comment": "The default discorder theme",
     "color_mode": 0,
-    "window_border": {
-        "fg": {"color": "white", "bold": true},
-        "bg": {"color": "black"}
-    },
-    "window_fill": {
-        "bg": {"color": "black"}
-    },
-    "list_element_normal": {
-        "bg": {"color": "black"}
-    },
-    "element_marked": {
-        "bg": {"color": "yellow"}
-    },
-    "element_selected": {
-        "bg": {"color": "cyan"}
-    },
-    "element_selected_marked": {
-        "bg": {"color": "blue"}
-    },
-    "message_timestamp": {
-        "fg": {"color": "blue"}
-    },
-    "message_server_channel": {
-        "fg": {"color": "green"}
-    },
-    "message_direct_channel": {
-        "fg": {"color": "magenta", "bold": true}
-    },
-    "message_author": {
-        "fg": {"color": "cyan", "bold": true}
-    },
-    "message_content": {},
-    "message_log": {},
-    "title_bar": {
-        "fg": {"color": "green", "bold": true, "underline": true}
-    },
-    "notifications_bar": {
-        "bg": {"color": "blue"}
-    },
-    "typing_bar": {
-        "fg": {"color": "cyan"}
-    },
-    "text_other": {},
-    "input_chat": {},
-    "send_prompt": {
-        "fg": {"color": "green", "bold": true}
-    },
-    "input_other": {}
+    "theme":{
+		"window_border": {
+			"fg": {"color": "white", "bold": true},
+			"bg": {"color": "black"}
+		},
+		"window_fill": {
+			"bg": {"color": "black"}
+		},
+		"list_element_normal": {
+			"bg": {"color": "black"}
+		},
+		"element_marked": {
+			"bg": {"color": "yellow"}
+		},
+		"element_selected": {
+			"bg": {"color": "cyan"}
+		},
+		"element_selected_marked": {
+			"bg": {"color": "blue"}
+		},
+		"message_timestamp": {
+			"fg": {"color": "blue"}
+		},
+		"message_server_channel": {
+			"fg": {"color": "green"}
+		},
+		"message_direct_channel": {
+			"fg": {"color": "magenta", "bold": true}
+		},
+		"message_author": {
+			"fg": {"color": "cyan", "bold": true}
+		},
+		"message_content": {},
+		"message_log": {},
+		"title_bar": {
+			"fg": {"color": "green", "bold": true, "underline": true}
+		},
+		"notifications_bar": {
+			"bg": {"color": "blue"}
+		},
+		"typing_bar": {
+			"fg": {"color": "cyan"}
+		},
+		"text_other": {},
+		"input_chat": {},
+		"send_prompt": {
+			"fg": {"color": "green", "bold": true}
+		},
+		"input_other": {}
+	}
 }`)

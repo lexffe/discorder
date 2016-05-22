@@ -291,11 +291,18 @@ func (app *App) shutdown() {
 		app.config.AuthToken = app.session.Token
 	}
 
-	app.config.Save(app.configPath)
+	savePath := app.configPath
+	if app.configPath == "" {
+		savePath = filepath.Join(app.configDir, "discorder.json")
+	}
 
-	err := app.session.Close()
-	if err != nil {
-		log.Println("Error closing:", err)
+	app.config.Save(savePath)
+
+	if app.session != nil {
+		err := app.session.Close()
+		if err != nil {
+			log.Println("Error closing:", err)
+		}
 	}
 
 	app.Unlock()
