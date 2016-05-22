@@ -96,12 +96,11 @@ func (k KeyBind) Check(seq []termbox.Event) (partialMatch, fullMatch bool) {
 				return
 			}
 		} else {
-			if event.Key != keybindKey.Special {
+			if event.Key != keybindKey.Special || event.Ch != 0 {
 				return
 			}
 		}
 	}
-
 	if len(seq) < len(k.KeyComb.Keys) {
 		partialMatch = true
 	} else {
@@ -112,6 +111,7 @@ func (k KeyBind) Check(seq []termbox.Event) (partialMatch, fullMatch bool) {
 
 type KeyCombination struct {
 	Keys []*KeybindKey
+	raw  string
 }
 
 // Alt+CtrlX-A
@@ -121,6 +121,7 @@ func (k *KeyCombination) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	k.raw = raw
 	k.Keys = make([]*KeybindKey, 0)
 
 	seqSplit := strings.Split(raw, "-")
@@ -139,6 +140,7 @@ func (k *KeyCombination) UnmarshalJSON(data []byte) error {
 			}
 			key.Char = mod
 		}
+		k.Keys = append(k.Keys, key)
 	}
 	return nil
 }
@@ -154,18 +156,25 @@ type CommandHandler interface {
 }
 
 var SpecialKeys = map[string]termbox.Key{
-	"F1":         termbox.KeyF1,
-	"F2":         termbox.KeyF2,
-	"F3":         termbox.KeyF3,
-	"F4":         termbox.KeyF4,
-	"F5":         termbox.KeyF5,
-	"F6":         termbox.KeyF6,
-	"F7":         termbox.KeyF7,
-	"F8":         termbox.KeyF8,
-	"F9":         termbox.KeyF9,
-	"F10":        termbox.KeyF10,
-	"F11":        termbox.KeyF11,
-	"F12":        termbox.KeyF12,
+	"F1":  termbox.KeyF1,
+	"F2":  termbox.KeyF2,
+	"F3":  termbox.KeyF3,
+	"F4":  termbox.KeyF4,
+	"F5":  termbox.KeyF5,
+	"F6":  termbox.KeyF6,
+	"F7":  termbox.KeyF7,
+	"F8":  termbox.KeyF8,
+	"F9":  termbox.KeyF9,
+	"F10": termbox.KeyF10,
+	"F11": termbox.KeyF11,
+	"F12": termbox.KeyF12,
+
+	"Tab":        termbox.KeyTab,
+	"Esc":        termbox.KeyEsc,
+	"Enter":      termbox.KeyEnter,
+	"Space":      termbox.KeySpace,
+	"Backspace":  termbox.KeyBackspace,
+	"Backspace2": termbox.KeyBackspace2,
 	"Insert":     termbox.KeyInsert,
 	"Delete":     termbox.KeyDelete,
 	"Home":       termbox.KeyHome,
@@ -193,14 +202,11 @@ var SpecialKeys = map[string]termbox.Key{
 	"CtrlE":          termbox.KeyCtrlE,
 	"CtrlF":          termbox.KeyCtrlF,
 	"CtrlG":          termbox.KeyCtrlG,
-	"Backspace":      termbox.KeyBackspace,
 	"CtrlH":          termbox.KeyCtrlH,
-	"Tab":            termbox.KeyTab,
 	"CtrlI":          termbox.KeyCtrlI,
 	"CtrlJ":          termbox.KeyCtrlJ,
 	"CtrlK":          termbox.KeyCtrlK,
 	"CtrlL":          termbox.KeyCtrlL,
-	"Enter":          termbox.KeyEnter,
 	"CtrlM":          termbox.KeyCtrlM,
 	"CtrlN":          termbox.KeyCtrlN,
 	"CtrlO":          termbox.KeyCtrlO,
@@ -215,19 +221,17 @@ var SpecialKeys = map[string]termbox.Key{
 	"CtrlX":          termbox.KeyCtrlX,
 	"CtrlY":          termbox.KeyCtrlY,
 	"CtrlZ":          termbox.KeyCtrlZ,
-	"Esc":            termbox.KeyEsc,
 	"CtrlLsqBracket": termbox.KeyCtrlLsqBracket,
 	"CtrlBackslash":  termbox.KeyCtrlBackslash,
 	"CtrlRsqBracket": termbox.KeyCtrlRsqBracket,
 	"CtrlSlash":      termbox.KeyCtrlSlash,
 	"CtrlUnderscore": termbox.KeyCtrlUnderscore,
-	"Space":          termbox.KeySpace,
-	"Backspace2":     termbox.KeyBackspace2,
-	"Ctrl2":          termbox.KeyCtrl2,
-	"Ctrl3":          termbox.KeyCtrl3,
-	"Ctrl4":          termbox.KeyCtrl4,
-	"Ctrl5":          termbox.KeyCtrl5,
-	"Ctrl6":          termbox.KeyCtrl6,
-	"Ctrl7":          termbox.KeyCtrl7,
-	"Ctrl8":          termbox.KeyCtrl8,
+
+	"Ctrl2": termbox.KeyCtrl2,
+	"Ctrl3": termbox.KeyCtrl3,
+	"Ctrl4": termbox.KeyCtrl4,
+	"Ctrl5": termbox.KeyCtrl5,
+	"Ctrl6": termbox.KeyCtrl6,
+	"Ctrl7": termbox.KeyCtrl7,
+	"Ctrl8": termbox.KeyCtrl8,
 }

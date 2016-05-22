@@ -205,17 +205,6 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 			}
 			ssw := NewSelectServerWindow(v.App, v.mv)
 			v.SetActiveWindow(ssw)
-		case termbox.KeyBackspace, termbox.KeyBackspace2: // Close windows if any
-			if v.activeWindow != nil {
-				v.RemoveChild(v.activeWindow, true)
-				v.activeWindow = nil
-				v.input.Active = true
-			}
-		case termbox.KeyCtrlL: // Send message
-			logRoutine.Clear()
-		case termbox.KeyCtrlT:
-			v.App.theme = LoadTheme(v.App.themePath)
-			v.ApplyTheme()
 		case termbox.KeyEnter:
 			if v.activeWindow != nil {
 				break
@@ -275,23 +264,22 @@ func (v *ViewManager) CloseActiveWindow() {
 }
 
 func (v *ViewManager) ApplyTheme() {
-	theme := v.App.theme
-	ApplyThemeText(v.inputHelper, theme.SendPrompt)
-	ApplyThemeText(v.input.Text, theme.InputChat)
-	ApplyThemeText(v.header, theme.TitleBar)
-	ApplyThemeText(v.typingDisplay.text, theme.TypingBar)
-	ApplyThemeText(v.notificationsManager.text, theme.NotificationsBar)
+	v.App.ApplyThemeToText(v.inputHelper, "send_prompt")
+	v.App.ApplyThemeToText(v.input.Text, "input_chat")
+	v.App.ApplyThemeToText(v.header, "title_bar")
+	v.App.ApplyThemeToText(v.typingDisplay.text, "typing_bar")
+	v.App.ApplyThemeToText(v.notificationsManager.text, "notifications_bar")
 
 	ui.RunFuncConditional(v, func(e ui.Entity) bool {
 		list, ok := e.(*ui.ListWindow)
 		if ok {
-			theme.ApplyList(list)
+			v.App.ApplyThemeToList(list)
 			return false
 		}
 
 		window, ok := e.(*ui.Window)
 		if ok {
-			theme.ApplyWindow(window)
+			v.App.ApplyThemeToWindow(window)
 			return false
 		}
 		return true

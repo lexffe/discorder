@@ -227,7 +227,7 @@ func (mv *MessageView) BuildTexts() {
 		if item.IsLogMessage {
 			//cells = GenCellSlice("Log: "+item.logMessage.content, map[int]AttribPoint{0: AttribPoint{termbox.ColorYellow, termbox.ColorDefault}})
 			text.Text = "Log: " + item.LogMessage.Content
-			ApplyThemeText(text, mv.App.theme.MessageLog)
+			mv.App.ApplyThemeToText(text, "message_log")
 			//text.Attribs = map[int]AttribPair{0: AttribPair{termbox.ColorYellow, termbox.ColorDefault}}
 		} else {
 			msg := item.DiscordMessage
@@ -273,13 +273,13 @@ func (mv *MessageView) BuildTexts() {
 			fullMsg := ts + "[" + channelName + "]" + author + ": " + msg.ContentWithMentionsReplaced()
 			channelLen := utf8.RuneCountInString(channelName) + 2
 			points := map[int]ui.AttribPair{
-				0:                              mv.App.theme.MessageTimestamp.AttribPair(),
-				tsLen:                          mv.App.theme.MessageServerChannel.AttribPair(),
-				channelLen + tsLen:             mv.App.theme.MessageAuthor.AttribPair(),
-				channelLen + authorLen + tsLen: mv.App.theme.MessageContent.AttribPair(),
+				0:                              mv.App.GetThemeAttribPair("message_timestamp").AttribPair(),
+				tsLen:                          mv.App.GetThemeAttribPair("message_server_channel").AttribPair(),
+				channelLen + tsLen:             mv.App.GetThemeAttribPair("message_author").AttribPair(),
+				channelLen + authorLen + tsLen: mv.App.GetThemeAttribPair("message_content").AttribPair(),
 			}
 			if isPrivate {
-				points[tsLen] = mv.App.theme.MessageDirect.AttribPair()
+				points[tsLen] = mv.App.GetThemeAttribPair("message_direct_channel").AttribPair()
 			}
 			text.Text = fullMsg
 			text.Attribs = points

@@ -15,9 +15,9 @@ import (
 )
 
 type Config struct {
-	Email     string `json:"email"`
-	AuthToken string `json:"authToken"` // Not used currently, but planned
-
+	Email             string   `json:"email"`
+	AuthToken         string   `json:"authToken"` // Not used currently, but planned
+	Theme             string   `json:"theme"`
 	AllPrivateMode    bool     `json:"allPrivateMode"`
 	LastChannel       string   `json:"lastChannel"`
 	ListeningChannels []string `json:"listeningChannels"`
@@ -48,20 +48,20 @@ func (c *Config) Save(path string) error {
 
 func LoadTheme(themePath string) *Theme {
 	if themePath == "" {
-		return DefaultTheme
+		return nil
 	}
 
 	file, err := ioutil.ReadFile(themePath)
 	if err != nil {
 		log.Println("Failed loading theme", themePath, ":", err)
-		return DefaultTheme
+		return nil
 	}
 
 	var theme Theme
 	err = json.Unmarshal(file, &theme)
 	if err != nil {
 		log.Println("Failed loading theme", themePath, ":", err)
-		return DefaultTheme
+		return nil
 	}
 	log.Println("Loaded theme", theme.Name, "By", theme.Author)
 	return &theme

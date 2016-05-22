@@ -1,13 +1,16 @@
 package discorder
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/0xAX/notificator"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -33,13 +36,16 @@ type App struct {
 	ViewManager  *ViewManager
 	InputManager *InputManager
 
-	config *Config
-	theme  *Theme
+	config       *Config
+	defaultTheme *Theme
+	userTheme    *Theme
 
 	notifications *notificator.Notificator
 	settings      *discordgo.Settings
 	guildSettings []*discordgo.UserGuildSettings
 	firstMessages map[string]string
+
+	configDir string
 
 	configPath  string
 	themePath   string
@@ -52,25 +58,25 @@ func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error
 		AppName: "Discorder",
 	})
 
-	config, err := LoadOrCreateConfig(configPath)
+	configDir, err := GetCreateConfigDir()
 	if err != nil {
-		return nil, err
+		log.Println("Failed getting proper config dirs, falling back to current directory")
+		configDir = ""
 	}
 
-	theme := LoadTheme(themePath)
-
 	app := &App{
-		config:        config,
 		notifications: notify,
 		BaseEntity:    &ui.BaseEntity{},
 		firstMessages: make(map[string]string),
-		configPath:    configPath,
 		debug:         debug,
 		dGoDebugLvl:   dgoDebug,
-		theme:         theme,
+		configPath:    configPath,
 		themePath:     themePath,
+		configDir:     configDir,
 	}
-	return app, nil
+
+	err = app.InitializeConfigFiles()
+	return app, err
 }
 
 func (app *App) Login(user, password, token string) error {
@@ -254,7 +260,6 @@ func (app *App) RunCommand(command *Command, args Arguments) {
 		log.Println("Tried to run a nonexstant command")
 		return
 	}
-
 	if command.Run != nil {
 		command.Run(app, args)
 	}
@@ -311,3 +316,61 @@ func (app *App) shutdown() {
 }
 
 func (app *App) Destroy() { app.DestroyChildren() }
+
+func (app *App) InitializeConfigFiles() error {
+	// Load general config
+	configPath := ""
+	if app.configPath != "" {
+		configPath = app.configPath
+	} else {
+		configPath = filepath.Join(app.configDir, "discorder.json")
+	}
+
+	config, err := LoadOrCreateConfig(configPath)
+	if err != nil {
+		return err
+	}
+	app.config = config
+
+	// Load default theme
+	var defaultTheme Theme
+	err = json.Unmarshal(DefaultTheme, &defaultTheme)
+	if err != nil {
+		panic(err) // Panic cuase were in serious trouble then
+	}
+	app.defaultTheme = &defaultTheme
+
+	// Check if theme dir exists
+	skipCreateFile := false
+	themesDir := filepath.Join(app.configDir, "themes")
+	_, err = os.Stat(themesDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(themesDir, 0755)
+			if err != nil {
+				log.Println("Failed creating themes dir", err)
+				skipCreateFile = true
+			}
+		} else {
+			skipCreateFile = true
+			log.Println("Failed checking if themes dir exist", err)
+		}
+	}
+
+	// Write default theme file
+	if !skipCreateFile {
+		outFilePath := filepath.Join(themesDir, "default.json")
+		err = ioutil.WriteFile(outFilePath, DefaultTheme, 0755)
+		if err != nil {
+			log.Println("Error creating default theme file", err)
+		}
+	}
+
+	// Load user theme
+	if app.themePath != "" {
+		app.userTheme = LoadTheme(app.themePath)
+	} else if app.config.Theme != "" {
+		app.userTheme = LoadTheme(filepath.Join(themesDir, app.config.Theme))
+	}
+	return nil
+}

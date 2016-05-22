@@ -39,24 +39,24 @@ The color mode specified the color mode the theme utilizes, beware that some ter
 
 #### Modes
 
- 0. OutputNormal
- 1. Output256
- 2. Output216
- 3. OutputGrayscale
+0 - utputNormal
+1 - Output256
+2 - Output216
+3 - OutputGrayscale
 
 In colormode normal you can specify the colors as strings if you want ("red" for 2 for example).
 
 #### Colors (In colormode normal): 
 
-0. Default
-1. Black
-2. Red
-3. Green
-4. Yellow
-5. Blue
-6. Magenta
-7. Cyan
-8. White
+0 - Default
+1 - Black
+2 - Red
+3 - Green
+4 - Yellow
+5 - Blue
+6 - Magenta
+7 - Cyan
+8 - White
 
 #### Attributes
 

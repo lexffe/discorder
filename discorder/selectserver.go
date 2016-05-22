@@ -68,7 +68,7 @@ func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWind
 	listWindow.Window.Title = ServerSelectTitle
 	listWindow.Transform.Position.Y = -float32(len(options)) / 2
 
-	app.theme.ApplyList(listWindow)
+	app.ApplyThemeToList(listWindow)
 
 	listWindow.SetOptions(options)
 	ssw.listWindow = listWindow

@@ -2,17 +2,30 @@ package discorder
 
 import (
 	"github.com/jonas747/discorder/ui"
+	"log"
+	"path/filepath"
 )
 
 var Commands = []*Command{
 	&Command{
-		Name:        "OpenCommands",
+		Name:        "commands",
 		Description: "Opens up the command window with all commands available",
 		Category:    "Hidden",
 		Run:         func(app *App, args Arguments) {},
 	},
 	&Command{
-		Name:        "MoveCursor",
+		Name:        "settings",
+		Description: "Opens up the help window",
+		Category:    "Main",
+		Run: func(app *App, args Arguments) {
+			if app.ViewManager.CanOpenWindow() {
+				// hw := NewHelpWindow(app)
+				// app.ViewManager.SetActiveWindow(hw)
+			}
+		},
+	},
+	&Command{
+		Name:        "move_cursor",
 		Description: "Moves cursor in specified direction",
 		Category:    "Misc",
 		Args: []*ArgumentDef{
@@ -32,7 +45,7 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "Erase",
+		Name:        "erase",
 		Description: "Erase text",
 		Category:    "Misc",
 		Args: []*ArgumentDef{
@@ -53,7 +66,7 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "OpenServers",
+		Name:        "servers",
 		Description: "Opens up the server window",
 		Category:    "Main",
 		Run: func(app *App, args Arguments) {
@@ -64,7 +77,18 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "OpenHelp",
+		Name:        "channels",
+		Description: "Opens up the channel window",
+		Category:    "Main",
+		Run: func(app *App, args Arguments) {
+			if app.ViewManager.CanOpenWindow() {
+				// ssw := NewChannelSelectWindow(app, app.ViewManager.SelectedMessageView, guild)
+				// app.ViewManager.SetActiveWindow(ssw)
+			}
+		},
+	},
+	&Command{
+		Name:        "help",
 		Description: "Opens up the help window",
 		Category:    "Main",
 		Run: func(app *App, args Arguments) {
@@ -75,7 +99,7 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "OpenMessage",
+		Name:        "message_window",
 		Description: "Opens message window",
 		Category:    "Misc",
 		Args: []*ArgumentDef{
@@ -86,7 +110,7 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "Scroll",
+		Name:        "scroll",
 		Description: "Scrolls currently active view",
 		Category:    "Misc",
 		Args: []*ArgumentDef{
@@ -109,22 +133,77 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "Select",
+		Name:        "select",
 		Description: "Select the currently highlighted element",
 		Category:    "Misc",
 	},
 	&Command{
-		Name:        "Mark",
+		Name:        "mark",
 		Description: "Toggles the currently highlited element",
 		Category:    "Misc",
 	},
 	&Command{
-		Name:        "ClearLog",
+		Name:        "clear_log",
 		Description: "Clear the logbuffer",
 		Category:    "Main",
+		Run: func(app *App, args Arguments) {
+			logRoutine.Clear()
+		},
 	},
 	&Command{
-		Name:        "Quit",
+		Name:        "reload_theme",
+		Description: "Reloads the current theme",
+		Category:    "Main",
+		Run: func(app *App, args Arguments) {
+			userTheme := app.themePath
+			if userTheme == "" {
+				userTheme = filepath.Join(app.configDir, "themes", app.config.Theme)
+			}
+			if userTheme == "" {
+				log.Println("No theme selected")
+				return
+			}
+
+			app.userTheme = LoadTheme(userTheme)
+			app.ViewManager.ApplyTheme()
+		},
+	},
+	&Command{
+		Name:        "delete",
+		Description: "Deletes a message",
+		Category:    "Util",
+	},
+	&Command{
+		Name:        "game",
+		Description: "Sets the game you're playing",
+		Category:    "Util",
+	},
+	&Command{
+		Name:        "send_message",
+		Description: "Sends a message",
+		Category:    "Util",
+		Run: func(app *App, args Arguments) {
+		},
+	},
+	&Command{
+		Name:        "set_nick",
+		Description: "Sets your nickname on a server (if possible)",
+		Category:    "Main",
+		Run: func(app *App, args Arguments) {
+		},
+	},
+	&Command{
+		Name:        "close_window",
+		Description: "Closes the active window",
+		Category:    "Main",
+		Run: func(app *App, args Arguments) {
+			if app.ViewManager.activeWindow != nil {
+				app.ViewManager.CloseActiveWindow()
+			}
+		},
+	},
+	&Command{
+		Name:        "quit",
 		Description: "Quit discorder",
 		Category:    "Main",
 		Run: func(app *App, args Arguments) {

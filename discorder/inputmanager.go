@@ -1,9 +1,12 @@
 package discorder
 
 import (
+	"encoding/json"
 	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
+	"io/ioutil"
 	"log"
+	"path/filepath"
 	"sync"
 )
 
@@ -24,31 +27,38 @@ func NewInputManager(app *App) *InputManager {
 }
 
 func (im *InputManager) Run() {
+	im.InitializeKeybinds()
 	im.PollEvents()
 }
 
 func (im *InputManager) HandleInputEvent(event termbox.Event) {
+	commandProcessed := false
+
 	im.eventBuffer = append(im.eventBuffer, event)
 	// Check both built in and user defined keybinds, with userdefined ones as priority
 	if event.Type == termbox.EventKey {
 		partial, full := im.CheckBinds(im.userKeybinds)
 		if partial || full {
-			return
-		}
-		partial, full = im.CheckBinds(im.defaultKeybinds)
-		if partial || full {
-			return
+			commandProcessed = true
+		} else {
+			partial, full = im.CheckBinds(im.defaultKeybinds)
+			if partial || full {
+				commandProcessed = true
+			} else {
+				im.eventBuffer = []termbox.Event{}
+			}
 		}
 	}
-
 	im.app.Lock()
 	defer im.app.Unlock()
-	ui.RunFunc(im.app, func(e ui.Entity) {
-		inputHandler, ok := e.(ui.InputHandler)
-		if ok {
-			inputHandler.HandleInput(event)
-		}
-	})
+	if !commandProcessed {
+		ui.RunFunc(im.app, func(e ui.Entity) {
+			inputHandler, ok := e.(ui.InputHandler)
+			if ok {
+				inputHandler.HandleInput(event)
+			}
+		})
+	}
 	im.app.Draw()
 }
 
@@ -68,7 +78,6 @@ func (im *InputManager) CheckBinds(binds []*KeyBind) (partialMatch, fullMatch bo
 		if partialMatch {
 			return
 		}
-		im.eventBuffer = []termbox.Event{}
 	}
 	return
 }
@@ -87,4 +96,34 @@ func (im *InputManager) PollEvents() {
 		}
 		im.HandleInputEvent(evt)
 	}
+}
+
+func (im *InputManager) InitializeKeybinds() {
+	var defaultBinds []*KeyBind
+	err := json.Unmarshal(DefaultKeybinds, &defaultBinds)
+	if err != nil {
+		panic(err)
+	}
+
+	im.defaultKeybinds = defaultBinds
+
+	// Create default binds file
+	err = ioutil.WriteFile(filepath.Join(im.app.configDir, "keybinds-default.json"), DefaultKeybinds, 0755)
+	if err != nil {
+		log.Println("Error writing default keybinds", err)
+	}
+
+	// Load user binds
+	file, err := ioutil.ReadFile(filepath.Join(im.app.configDir, "keybinds-user.json"))
+	if err != nil {
+		log.Println("Error reading user keybinds", err)
+		return
+	}
+
+	var userBinds []*KeyBind
+	err = json.Unmarshal(file, &userBinds)
+	if err != nil {
+		log.Println("Error decoding user binds:", err)
+	}
+	im.userKeybinds = userBinds
 }

@@ -13,11 +13,11 @@ If you want to change say the open server keybind from ctrl-s to ctrl-w you woul
 ```json
 [
     {"key": "CtrlS", "command": "nop"},
-    {"key": "CtrlW", "command": "open_servers"}
+    {"key": "CtrlW", "command": "servers"}
 ]
 ```
 
-First we unbind the CtrlS key to "nop" (No operation), since user binds overrides default binds, then we set CtrlW to open_servers
+First we unbind the CtrlS key to "nop" (No operation), since user binds overrides default binds, then we set CtrlW to servers
 
 ### Sequences and arguments
 

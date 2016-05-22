@@ -38,20 +38,78 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 		return
 	}
 
-	switch event.Key {
-	case termbox.KeyArrowLeft: // Move cursor left
-		ti.CursorLocation--
+	char := event.Ch
+	if event.Key == termbox.KeySpace {
+		char = ' '
+	} else if event.Key == termbox.Key(0) && event.Mod == termbox.ModAlt && char == 0 {
+		char = '@' // Just temporary workaround for non american keyboards on windows
+		// So they're atleast able to log in
+	}
+	if char == 0 {
+		return
+	}
+
+	bufLen := utf8.RuneCountInString(ti.TextBuffer)
+	if ti.CursorLocation == bufLen {
+		ti.TextBuffer += string(char)
+		ti.CursorLocation++
+	} else if ti.CursorLocation == 0 {
+		ti.TextBuffer = string(char) + ti.TextBuffer
+		ti.CursorLocation++
+	} else {
+		bufSlice := []rune(ti.TextBuffer)
+		bufCopy := ""
+
+		for i := 0; i < len(bufSlice); i++ {
+			if i == ti.CursorLocation {
+				bufCopy += string(char)
+			}
+			bufCopy += string(bufSlice[i])
+		}
+		ti.TextBuffer = bufCopy
+		ti.CursorLocation++
+	}
+
+}
+
+type Direction int
+
+const (
+	DirLeft Direction = iota
+	DirRight
+	DirUp
+	DirDown
+	DirEnd
+	DirStart
+)
+
+func (ti *TextInput) MoveCursor(dir Direction, amount int, byWords bool) {
+	switch dir {
+	case DirLeft:
+		ti.CursorLocation -= amount
 		if ti.CursorLocation < 0 {
 			ti.CursorLocation = 0
 		}
-	case termbox.KeyArrowRight: // Move cusror right
-		ti.CursorLocation++
+	case DirRight:
+		ti.CursorLocation += amount
 		bufLen := utf8.RuneCountInString(ti.TextBuffer)
 		if ti.CursorLocation > bufLen {
 			ti.CursorLocation = bufLen
 		}
-	case termbox.KeyBackspace, termbox.KeyBackspace2:
-		bufLen := utf8.RuneCountInString(ti.TextBuffer)
+	case DirUp:
+	case DirDown:
+	case DirEnd:
+		ti.CursorLocation = utf8.RuneCountInString(ti.TextBuffer)
+	case DirStart:
+		ti.CursorLocation = 0
+	}
+}
+
+func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
+	bufLen := utf8.RuneCountInString(ti.TextBuffer)
+
+	switch dir {
+	case DirLeft:
 		if bufLen == 0 {
 			return
 		}
@@ -71,75 +129,13 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 			ti.TextBuffer = string(newSlice)
 			ti.CursorLocation--
 		}
-	case termbox.KeyDelete:
-		bufLen := utf8.RuneCountInString(ti.TextBuffer)
+	case DirRight:
 		if ti.CursorLocation >= bufLen {
 			break
 		}
 		runeSlice := []rune(ti.TextBuffer)
-		runeSlice = append(runeSlice[:ti.CursorLocation], runeSlice[ti.CursorLocation+1:]...)
+		runeSlice = append(runeSlice[:ti.CursorLocation], runeSlice[ti.CursorLocation+amount:]...)
 		ti.TextBuffer = string(runeSlice)
-	default:
-		char := event.Ch
-		if event.Key == termbox.KeySpace {
-			char = ' '
-		} else if event.Key == termbox.Key(0) && event.Mod == termbox.ModAlt && char == 0 {
-			char = '@' // Just temporary workaround for non american keyboards on windows
-			// So they're atleast able to log in
-		}
-		if char == 0 {
-			return
-		}
-
-		bufLen := utf8.RuneCountInString(ti.TextBuffer)
-		if ti.CursorLocation == bufLen {
-			ti.TextBuffer += string(char)
-			ti.CursorLocation++
-		} else if ti.CursorLocation == 0 {
-			ti.TextBuffer = string(char) + ti.TextBuffer
-			ti.CursorLocation++
-		} else {
-			bufSlice := []rune(ti.TextBuffer)
-			bufCopy := ""
-
-			for i := 0; i < len(bufSlice); i++ {
-				if i == ti.CursorLocation {
-					bufCopy += string(char)
-				}
-				bufCopy += string(bufSlice[i])
-			}
-			ti.TextBuffer = bufCopy
-			ti.CursorLocation++
-		}
-	}
-}
-
-type Direction int
-
-const (
-	DirLeft Direction = iota
-	DirRight
-	DirUp
-	DirDown
-	DirEnd
-	DirStart
-)
-
-func (ti *TextInput) MoveCursor(dir Direction, amount int, byWords bool) {
-	switch dir {
-	case DirLeft:
-	case DirRight:
-	case DirUp:
-	case DirDown:
-	case DirEnd:
-	case DirStart:
-	}
-}
-
-func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
-	switch dir {
-	case DirLeft:
-	case DirRight:
 	case DirEnd:
 	case DirStart:
 	}
