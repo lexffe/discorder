@@ -69,11 +69,23 @@ func (w *Window) Draw() {
 				char = runeSlice[curX-headerStartPos]
 			} else if curX >= footerStartPos && curX < footerStartPos+footerLen && atBottom {
 				char = footerSlice[curX-footerStartPos]
-			} else if curX == -1 || curX == int(rect.W)+1 {
-				char = '|'
+			} else {
 				atBorder = true
-			} else if atTop || atBottom {
-				char = '-'
+				if curX == -1 && atTop {
+					char = '┌'
+				} else if curX == int(rect.W)+1 && atTop {
+					char = '┐'
+				} else if curX == -1 && atBottom {
+					char = '└'
+				} else if curX == int(rect.W)+1 && atBottom {
+					char = '┘'
+				} else if curX == -1 || curX == int(rect.W)+1 {
+					char = '│'
+				} else if atTop || atBottom {
+					char = '─'
+				} else {
+					atBorder = false
+				}
 			}
 
 			if atBorder || atTop || atBottom {
