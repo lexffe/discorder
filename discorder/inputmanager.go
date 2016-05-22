@@ -28,13 +28,21 @@ func (im *InputManager) Run() {
 }
 
 func (im *InputManager) HandleInputEvent(event termbox.Event) {
-	im.app.Lock()
-	defer im.app.Unlock()
-
+	im.eventBuffer = append(im.eventBuffer, event)
+	// Check both built in and user defined keybinds, with userdefined ones as priority
 	if event.Type == termbox.EventKey {
-		//im.app.CheckCommand(event)
+		partial, full := im.CheckBinds(im.userKeybinds)
+		if partial || full {
+			return
+		}
+		partial, full = im.CheckBinds(im.defaultKeybinds)
+		if partial || full {
+			return
+		}
 	}
 
+	im.app.Lock()
+	defer im.app.Unlock()
 	ui.RunFunc(im.app, func(e ui.Entity) {
 		inputHandler, ok := e.(ui.InputHandler)
 		if ok {
@@ -44,18 +52,23 @@ func (im *InputManager) HandleInputEvent(event termbox.Event) {
 	im.app.Draw()
 }
 
-func (im *InputManager) CheckBinds(seq []termbox.Event, binds []*KeyBind) (partialMatch, fullMatch bool) {
+func (im *InputManager) CheckBinds(binds []*KeyBind) (partialMatch, fullMatch bool) {
 	for _, v := range binds {
-		partialMatch, fullMatch = v.Check(seq)
+		partialMatch, fullMatch = v.Check(im.eventBuffer)
 		if fullMatch {
-			im.app.RunCommand(GetCommandByName(v.Command), v.Args)
+			if v.Command != "nop" {
+				im.app.Lock()
+				im.app.RunCommand(GetCommandByName(v.Command), v.Args)
+				im.app.Unlock()
+			}
+			im.eventBuffer = []termbox.Event{}
 			return
 		}
 
 		if partialMatch {
 			return
 		}
-
+		im.eventBuffer = []termbox.Event{}
 	}
 	return
 }

@@ -249,7 +249,7 @@ func (app *App) Draw() {
 	termbox.Flush()
 }
 
-func (app *App) RunCommand(command *Command, args []*Argument) {
+func (app *App) RunCommand(command *Command, args Arguments) {
 	if command == nil {
 		log.Println("Tried to run a nonexstant command")
 		return

@@ -9,7 +9,7 @@ var Commands = []*Command{
 		Name:        "OpenCommands",
 		Description: "Opens up the command window with all commands available",
 		Category:    "Hidden",
-		Run:         func(app *App, args []*Argument) {},
+		Run:         func(app *App, args Arguments) {},
 	},
 	&Command{
 		Name:        "MoveCursor",
@@ -20,26 +20,14 @@ var Commands = []*Command{
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
 			&ArgumentDef{Name: "word", Optional: true, Datatype: ArgumentDataTypeBool},
 		},
-		Run: func(app *App, args []*Argument) {
-			amount := 1
-			word := false
-			dir := ""
-
-			for _, v := range args {
-				switch v.Name {
-				case "direction":
-					dir, _ = v.Val.(string)
-				case "amount":
-					amount, _ = v.Int()
-				case "word":
-					word, _ = v.Val.(bool)
-				}
-			}
-
+		Run: func(app *App, args Arguments) {
+			amount, _ := args.Int("amount")
+			words, _ := args.Bool("words")
+			dir, _ := args.String("direction")
 			moveDir := StringToDir(dir)
 
 			if app.ViewManager.ActiveInput != nil && app.ViewManager.ActiveInput.Active {
-				app.ViewManager.ActiveInput.MoveCursor(moveDir, amount, word)
+				app.ViewManager.ActiveInput.MoveCursor(moveDir, amount, words)
 			}
 		},
 	},
@@ -50,28 +38,17 @@ var Commands = []*Command{
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
-			&ArgumentDef{Name: "word", Optional: true, Datatype: ArgumentDataTypeBool},
+			&ArgumentDef{Name: "words", Optional: true, Datatype: ArgumentDataTypeBool},
 		},
-		Run: func(app *App, args []*Argument) {
-			amount := 1
-			word := false
-			dir := ""
-
-			for _, v := range args {
-				switch v.Name {
-				case "direction":
-					dir, _ = v.Val.(string)
-				case "amount":
-					amount, _ = v.Int()
-				case "word":
-					word, _ = v.Val.(bool)
-				}
-			}
+		Run: func(app *App, args Arguments) {
+			amount, _ := args.Int("amount")
+			words, _ := args.Bool("words")
+			dir, _ := args.String("direction")
 
 			moveDir := StringToDir(dir)
 
 			if app.ViewManager.ActiveInput != nil && app.ViewManager.ActiveInput.Active {
-				app.ViewManager.ActiveInput.Erase(moveDir, amount, word)
+				app.ViewManager.ActiveInput.Erase(moveDir, amount, words)
 			}
 		},
 	},
@@ -79,7 +56,7 @@ var Commands = []*Command{
 		Name:        "OpenServers",
 		Description: "Opens up the server window",
 		Category:    "Main",
-		Run: func(app *App, args []*Argument) {
+		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView)
 				app.ViewManager.SetActiveWindow(ssw)
@@ -90,7 +67,7 @@ var Commands = []*Command{
 		Name:        "OpenHelp",
 		Description: "Opens up the help window",
 		Category:    "Main",
-		Run: func(app *App, args []*Argument) {
+		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
 				app.ViewManager.SetActiveWindow(hw)
@@ -104,7 +81,7 @@ var Commands = []*Command{
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "message", Optional: true, Datatype: ArgumentDataTypeString},
 		},
-		Run: func(app *App, args []*Argument) {
+		Run: func(app *App, args Arguments) {
 			app.ViewManager.SelectedMessageView.OpenMessageSelectWindow("")
 		},
 	},
@@ -115,21 +92,10 @@ var Commands = []*Command{
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
-			&ArgumentDef{Name: "word", Optional: true, Datatype: ArgumentDataTypeBool},
 		},
-		Run: func(app *App, args []*Argument) {
-			amount := 1
-			dir := ""
-
-			for _, v := range args {
-				switch v.Name {
-				case "Direction":
-					dir, _ = v.Val.(string)
-				case "Amount":
-					amount, _ = v.Int()
-				}
-			}
-
+		Run: func(app *App, args Arguments) {
+			amount, _ := args.Int("amount")
+			dir, _ := args.String("direction")
 			moveDir := StringToDir(dir)
 
 			if app.ViewManager.activeWindow != nil {
@@ -161,7 +127,7 @@ var Commands = []*Command{
 		Name:        "Quit",
 		Description: "Quit discorder",
 		Category:    "Main",
-		Run: func(app *App, args []*Argument) {
+		Run: func(app *App, args Arguments) {
 			go app.Stop()
 		},
 	},

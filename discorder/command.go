@@ -20,7 +20,7 @@ type Command struct {
 	Description string
 	Args        []*ArgumentDef
 	Category    string
-	Run         func(app *App, args []*Argument)
+	Run         func(app *App, args Arguments)
 }
 
 type ArgumentDef struct {
@@ -29,23 +29,54 @@ type ArgumentDef struct {
 	Datatype ArgumentDataType
 }
 
-type Argument struct {
-	Name string      `json:"name"`
-	Val  interface{} `json:"val"`
+type Arguments map[string]interface{}
+
+func (a Arguments) Get(key string) (val interface{}, ok bool) {
+	val, ok = map[string]interface{}(a)[key]
+	return
 }
 
-func (a *Argument) Int() (int, bool) {
-	fVal, ok := a.Val.(float64)
+func (a Arguments) Int(key string) (val int, ok bool) {
+	fVal, ok := a.Float(key)
 	if !ok {
 		return 0, false
 	}
 
-	return int(fVal), true
+	val = int(fVal)
+	ok = true
+	return
+}
+
+func (a Arguments) Float(key string) (val float64, ok bool) {
+	raw, ok := a.Get(key)
+	if !ok {
+		return
+	}
+	val, ok = raw.(float64)
+	return
+}
+
+func (a Arguments) String(key string) (val string, ok bool) {
+	raw, ok := a.Get(key)
+	if !ok {
+		return
+	}
+	val, ok = raw.(string)
+	return
+}
+
+func (a Arguments) Bool(key string) (val bool, ok bool) {
+	raw, ok := a.Get(key)
+	if !ok {
+		return
+	}
+	val, ok = raw.(bool)
+	return
 }
 
 type KeyBind struct {
 	Command string         `json:"command"`
-	Args    []*Argument    `json:"args"`
+	Args    Arguments      `json:"args"`
 	KeyComb KeyCombination `json:"key"`
 	Alt     bool           `json:"alt"`
 }
