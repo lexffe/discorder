@@ -19,7 +19,6 @@ type Window struct {
 
 	Layer int
 
-	Transform          *Transform
 	BorderBG, BorderFG termbox.Attribute
 	FillBG             termbox.Attribute
 }
@@ -27,7 +26,6 @@ type Window struct {
 func NewWindow() *Window {
 	w := &Window{
 		BaseEntity: &BaseEntity{},
-		Transform:  &Transform{},
 		BorderBG:   DefaultWindowBorderBG,
 		BorderFG:   DefaultWindowBorderFG,
 		FillBG:     DefaultWindowFillBG,

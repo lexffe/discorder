@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/jonas747/discorder/common"
+	"log"
 )
 
 type LayoutType int
@@ -32,6 +33,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 	required := float32(0)
 	numDynammic := 0
 	elements := make([]LayoutElement, 0)
+	// Get number of dynamic elements and calulate leftover space for them
 	RunFuncConditional(a, func(e Entity) bool {
 		if e == a {
 			return true
@@ -78,6 +80,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 	spacePerDynamic := spaceLeft / float32(numDynammic)
 
 	counter := float32(0)
+	// Apply
 	for _, v := range elements {
 		requiredSize := v.GetRequiredSize()
 		transform := v.GetTransform()
@@ -118,7 +121,6 @@ type LayoutElement interface {
 
 type Container struct {
 	*BaseEntity
-	Transform     *Transform
 	ProxySize     LayoutElement
 	Dynamic       bool
 	AllowZeroSize bool
@@ -128,7 +130,6 @@ type Container struct {
 func NewContainer() *Container {
 	return &Container{
 		BaseEntity: &BaseEntity{},
-		Transform:  &Transform{},
 	}
 }
 
@@ -149,12 +150,12 @@ func (c *Container) GetRequiredSize() common.Vector2F {
 	return common.NewVector2F(rect.W, rect.H)
 }
 
-func (c *Container) GetTransform() *Transform {
-	return c.Transform
-}
-
 func (c *Container) IsLayoutDynamic() bool {
 	return c.Dynamic
+}
+
+func (c *Container) Update() {
+	log.Println(c.Transform.Position, c.Transform.Size)
 }
 
 func (c *Container) Destroy() { c.DestroyChildren() }

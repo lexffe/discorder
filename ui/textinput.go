@@ -8,8 +8,7 @@ import (
 
 type TextInput struct {
 	*BaseEntity
-	Transform *Transform
-	Text      *Text
+	Text *Text
 
 	Layer          int
 	TextBuffer     string
@@ -19,17 +18,14 @@ type TextInput struct {
 }
 
 func NewTextInput() *TextInput {
-	t := NewText()
-
 	input := &TextInput{
 		BaseEntity: &BaseEntity{},
-		Transform:  &Transform{},
+		Text:       NewText(),
 	}
 
-	t.Transform.Parent = input.Transform
-	t.Transform.AnchorMax = common.NewVector2I(1, 1)
-	input.Text = t
-	input.AddChild(t)
+	input.Transform.AddChildren(input.Text)
+	input.Text.Transform.AnchorMax = common.NewVector2I(1, 1)
+
 	return input
 }
 
@@ -175,10 +171,6 @@ func (ti *TextInput) Destroy() { ti.DestroyChildren() }
 func (ti *TextInput) GetRequiredSize() common.Vector2F {
 	rect := ti.Transform.GetRect()
 	return common.NewVector2F(rect.W, float32(ti.Text.HeightRequired()))
-}
-
-func (ti *TextInput) GetTransform() *Transform {
-	return ti.Transform
 }
 
 func (ti *TextInput) IsLayoutDynamic() bool {

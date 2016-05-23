@@ -7,10 +7,11 @@ import (
 type Entity interface {
 	Children(recursive bool) []Entity
 	Destroy()
+	GetTransform() *Transform
 }
 
 type BaseEntity struct {
-	entities []Entity
+	Transform Transform
 }
 
 // Runs f recursively and in order on e and its children
@@ -38,16 +39,21 @@ func RunFuncConditional(e Entity, f func(e Entity) bool) {
 	}
 }
 
+func (b *BaseEntity) GetTransform() *Transform {
+	return &b.Transform
+}
+
 // Maybe reuse the slice...? probably miniscule performance hit to not...
 func (b *BaseEntity) Children(recursive bool) []Entity {
-	if b.entities == nil || len(b.entities) < 1 {
+	if b.Transform.Children == nil || len(b.Transform.Children) < 1 {
 		return nil
 	}
 
-	ret := make([]Entity, len(b.entities))
-	copy(ret, b.entities)
+	ret := make([]Entity, len(b.Transform.Children))
+	copy(ret, b.Transform.Children)
+
 	if recursive {
-		for _, entity := range b.entities {
+		for _, entity := range b.Transform.Children {
 			children := entity.Children(true)
 			if children != nil {
 				ret = append(ret, children...)
@@ -58,45 +64,8 @@ func (b *BaseEntity) Children(recursive bool) []Entity {
 	return ret
 }
 
-func (b *BaseEntity) AddChild(children ...Entity) {
-
-	if b.entities == nil {
-		b.entities = make([]Entity, len(children))
-		copy(b.entities, children)
-	} else {
-		b.entities = append(b.entities, children...)
-	}
-}
-
-func (b *BaseEntity) RemoveChild(child Entity, destroy bool) {
-	if b.entities == nil || len(b.entities) < 1 {
-		return
-	}
-
-	if destroy {
-		child.Destroy()
-	}
-
-	for k, v := range b.entities {
-		if v == child {
-			b.entities = append(b.entities[:k], b.entities[k+1:]...)
-			break
-		}
-
-	}
-}
-
-// Only clears the list, does not call Destroy() on them or anythin
-func (b *BaseEntity) ClearChildren() {
-	b.entities = make([]Entity, 0)
-}
-
 func (b *BaseEntity) DestroyChildren() {
-	for _, v := range b.entities {
-		if v != nil {
-			v.Destroy()
-		}
-	}
+	b.Transform.ClearChildren(true)
 }
 
 type SimpleEntity struct {
@@ -110,6 +79,8 @@ func NewSimpleEntity() *SimpleEntity {
 }
 
 func (s *SimpleEntity) Destroy() { s.DestroyChildren() }
+
+// Misc handlers
 
 type InputHandler interface {
 	HandleInput(event termbox.Event)

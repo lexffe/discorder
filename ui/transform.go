@@ -5,7 +5,7 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-// Unit3d like UI transform (minus scale, pivot and rotation)
+// Unity3d like UI transform (minus scale, pivot and rotation)
 type Transform struct {
 	AnchorMin common.Vector2F
 	AnchorMax common.Vector2F
@@ -15,7 +15,8 @@ type Transform struct {
 
 	Top, Bottom, Left, Right int
 
-	Parent *Transform
+	Parent   *Transform
+	Children []Entity
 }
 
 // Incorrect.. will fix as i come by the silly mistakes
@@ -51,6 +52,49 @@ func (t *Transform) GetRect() common.Rect {
 	}
 
 	return ret
+}
+
+func (t *Transform) AddChildren(children ...Entity) {
+	for _, v := range children {
+		childTransform := v.GetTransform()
+		childTransform.Parent = t
+	}
+
+	if t.Children == nil {
+		t.Children = []Entity{}
+		copy(t.Children, children)
+	} else {
+		t.Children = append(t.Children, children...)
+	}
+}
+
+func (t *Transform) RemoveChild(child Entity, destroy bool) {
+	if t.Children == nil || len(t.Children) < 1 {
+		return
+	}
+
+	if destroy {
+		child.Destroy()
+	}
+
+	for k, v := range t.Children {
+		if v == child {
+			t.Children = append(t.Children[:k], t.Children[k+1:]...)
+			break
+		}
+
+	}
+}
+
+// Revmoves and optinally clears children
+func (t *Transform) ClearChildren(destroy bool) {
+	for _, v := range t.Children {
+		v.GetTransform().Parent = nil
+		if destroy {
+			v.Destroy()
+		}
+	}
+	t.Children = []Entity{}
 }
 
 /*

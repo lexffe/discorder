@@ -15,8 +15,7 @@ type Text struct {
 	*BaseEntity
 	Disabled bool // won't draw then
 
-	Transform *Transform
-	Text      string
+	Text string
 
 	SkipLines int
 
@@ -32,7 +31,6 @@ type Text struct {
 func NewText() *Text {
 	t := &Text{
 		BaseEntity: &BaseEntity{},
-		Transform:  &Transform{},
 	}
 	return t
 }
@@ -109,9 +107,7 @@ func (t *Text) GetRequiredSize() common.Vector2F {
 	rect := t.Transform.GetRect()
 	return common.NewVector2F(rect.W, float32(t.HeightRequired()))
 }
-func (t *Text) GetTransform() *Transform {
-	return t.Transform
-}
+
 func (t *Text) IsLayoutDynamic() bool {
 	return false
 }
