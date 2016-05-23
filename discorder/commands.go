@@ -123,10 +123,14 @@ var Commands = []*Command{
 			moveDir := StringToDir(dir)
 
 			if app.ViewManager.activeWindow != nil {
-				scrollable, ok := app.ViewManager.activeWindow.(ui.Scrollable)
-				if ok {
-					scrollable.Scroll(moveDir, amount)
-				}
+				ui.RunFuncConditional(app.ViewManager.activeWindow, func(e ui.Entity) bool {
+					scrollable, ok := e.(ui.Scrollable)
+					if ok {
+						scrollable.Scroll(moveDir, amount)
+						return false
+					}
+					return true
+				})
 			} else if app.ViewManager.SelectedMessageView != nil {
 				app.ViewManager.SelectedMessageView.Scroll(moveDir, amount)
 			}

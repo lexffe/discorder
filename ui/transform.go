@@ -50,7 +50,6 @@ func (t *Transform) GetRect() common.Rect {
 		ret.X = xOffsetMin + parentRect.X + float32(t.Left)
 		ret.W = xOffsetMax - xOffsetMin - (float32(t.Right) + float32(t.Left))
 	}
-
 	return ret
 }
 
@@ -59,9 +58,8 @@ func (t *Transform) AddChildren(children ...Entity) {
 		childTransform := v.GetTransform()
 		childTransform.Parent = t
 	}
-
 	if t.Children == nil {
-		t.Children = []Entity{}
+		t.Children = make([]Entity, len(children))
 		copy(t.Children, children)
 	} else {
 		t.Children = append(t.Children, children...)

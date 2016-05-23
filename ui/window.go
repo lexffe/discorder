@@ -42,7 +42,6 @@ func (w *Window) Draw() {
 	runeSlice := []rune(w.Title)
 
 	rect := w.Transform.GetRect()
-
 	headerStartPos := int((rect.W / 2) - (float32(headerLen) / 2))
 
 	footerLen := utf8.RuneCountInString(w.Footer)

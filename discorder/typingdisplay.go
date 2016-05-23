@@ -9,7 +9,6 @@ import (
 // Shows whos typing
 type TypingDisplay struct {
 	*ui.BaseEntity
-	Transform *ui.Transform
 
 	App *App
 
@@ -19,17 +18,14 @@ type TypingDisplay struct {
 func NewTypingDisplay(app *App) *TypingDisplay {
 	td := &TypingDisplay{
 		BaseEntity: &ui.BaseEntity{},
-		Transform:  &ui.Transform{},
 		App:        app,
+		text:       ui.NewText(),
 	}
 
-	t := ui.NewText()
+	td.text.Transform.AnchorMax = common.NewVector2I(1, 1)
+	td.text.FG = termbox.ColorCyan
+	td.Transform.AddChildren(td.text)
 
-	t.Transform.Parent = td.Transform
-	t.Transform.AnchorMax = common.NewVector2I(1, 1)
-	t.FG = termbox.ColorCyan
-	td.AddChild(t)
-	td.text = t
 	return td
 }
 
@@ -89,10 +85,6 @@ func (t *TypingDisplay) GetRequiredSize() common.Vector2F {
 	rect := t.text.Transform.GetRect()
 	//log.Println(float32(t.text.HeightRequired()), t.text.Text)
 	return common.Vector2F{rect.W, float32(t.text.HeightRequired())}
-}
-
-func (t *TypingDisplay) GetTransform() *ui.Transform {
-	return t.Transform
 }
 
 func (t *TypingDisplay) IsLayoutDynamic() bool {

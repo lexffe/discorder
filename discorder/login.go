@@ -29,46 +29,40 @@ type LoginWindow struct {
 
 func NewLoginWindow(app *App) *LoginWindow {
 	window := ui.NewWindow()
-	window.Transform.AnchorMax = common.NewVector2F(0.5, 0.5)
-	window.Transform.AnchorMin = common.NewVector2F(0.5, 0.5)
-	window.Transform.Size = common.NewVector2I(50, 10)
-	window.Transform.Position = common.NewVector2I(-25, -5)
+	window.Transform.AnchorMax = common.NewVector2F(1, 1)
 	window.Title = "Login"
 
 	helper := ui.NewText()
 	helper.Text = "Enter Email"
-	helper.Transform.Parent = window.Transform
 	helper.Transform.Position = common.NewVector2I(1, 2)
 	helper.Transform.Size = common.NewVector2I(45, 1)
 	helper.Layer = 5
-	window.AddChild(helper)
+	window.Transform.AddChildren(helper)
 
 	mailInput := ui.NewTextInput()
-	mailInput.Transform.Parent = window.Transform
 	mailInput.Transform.Position = common.NewVector2I(1, 3)
 	mailInput.Transform.Size = common.NewVector2I(45, 0)
 	mailInput.Active = true
 	mailInput.Layer = 5
 	mailInput.TextBuffer = app.config.Email
-	window.AddChild(mailInput)
+
+	window.Transform.AddChildren(mailInput)
 	app.ViewManager.ActiveInput = mailInput
 
 	pwInput := ui.NewTextInput()
-	pwInput.Transform.Parent = window.Transform
 	pwInput.Transform.Position = common.NewVector2I(1, 5)
 	pwInput.Transform.Size = common.NewVector2I(45, 0)
 	pwInput.Active = false
 	pwInput.MaskInput = true
 	pwInput.Layer = 5
-	window.AddChild(pwInput)
+	window.Transform.AddChildren(pwInput)
 
 	footer2 := ui.NewText()
 	footer2.Text = "Ctrl-s switch between email and password"
-	footer2.Transform.Parent = window.Transform
 	footer2.Transform.Position = common.NewVector2I(1, 8)
 	footer2.Transform.Size = common.NewVector2I(45, 1)
 	footer2.Layer = 5
-	window.AddChild(footer2)
+	window.Transform.AddChildren(footer2)
 
 	lw := &LoginWindow{
 		BaseEntity: &ui.BaseEntity{},
@@ -77,7 +71,11 @@ func NewLoginWindow(app *App) *LoginWindow {
 		App:        app,
 		Helper:     helper,
 	}
-	lw.AddChild(window)
+	lw.Transform.AddChildren(window)
+	lw.Transform.AnchorMin = common.NewVector2F(0.5, 0.5)
+	lw.Transform.AnchorMax = common.NewVector2F(0.5, 0.5)
+	lw.Transform.Size = common.NewVector2I(50, 10)
+	lw.Transform.Position = common.NewVector2I(-25, -5)
 	return lw
 }
 
@@ -101,7 +99,7 @@ func (lw *LoginWindow) Trylogin(email, pw, token string) {
 	} else {
 		log.Println("Logged in!")
 		lw.App.config.Save(lw.App.configPath)
-		lw.App.RemoveChild(lw, true)
+		lw.App.Transform.RemoveChild(lw, true)
 	}
 	lw.loggingIn = false
 }

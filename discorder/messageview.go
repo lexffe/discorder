@@ -13,7 +13,6 @@ import (
 
 type MessageView struct {
 	*ui.BaseEntity
-	Transform       *ui.Transform
 	App             *App
 	DisplayMessages []*DisplayMessage
 
@@ -43,22 +42,20 @@ type DisplayMessage struct {
 func NewMessageView(app *App) *MessageView {
 	mv := &MessageView{
 		BaseEntity:       &ui.BaseEntity{},
-		Transform:        &ui.Transform{},
 		App:              app,
 		MessageContainer: ui.NewSimpleEntity(),
 	}
 
 	t := ui.NewText()
-	t.Transform.Parent = mv.Transform
 	t.Transform.AnchorMin.Y = 1
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)
 	t.Layer = 5
 	t.BG = termbox.ColorYellow
 
-	mv.AddChild(t)
+	mv.Transform.AddChildren(t)
 	mv.ScrollText = t
 
-	mv.AddChild(mv.MessageContainer)
+	mv.Transform.AddChildren(mv.MessageContainer)
 
 	return mv
 }
@@ -145,8 +142,7 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 				return
 			}
 			msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
-			mv.App.ViewManager.AddChild(msw)
-			mv.App.ViewManager.activeWindow = msw
+			mv.App.ViewManager.SetActiveWindow(msw)
 		}
 		if mv.ScrollAmount != 0 {
 			mv.App.ViewManager.input.Active = false
@@ -167,8 +163,7 @@ func (mv *MessageView) OpenMessageSelectWindow(msg string) {
 		return
 	}
 	msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
-	mv.App.ViewManager.AddChild(msw)
-	mv.App.ViewManager.activeWindow = msw
+	mv.App.ViewManager.SetActiveWindow(msw)
 }
 
 func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
@@ -201,7 +196,7 @@ func (mv *MessageView) HandleMessageRemove(msg *discordgo.Message) {
 
 func (mv *MessageView) BuildTexts() {
 	// sizex, sizey := termbox.Size()
-	mv.MessageContainer.ClearChildren()
+	mv.MessageContainer.Transform.ClearChildren(true)
 	mv.MessageTexts = make([]*ui.Text, 0)
 
 	rect := mv.Transform.GetRect()
@@ -316,11 +311,11 @@ func (mv *MessageView) BuildTexts() {
 			isFirst = false
 		}
 
-		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, int(rect.Y)+y)
+		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, y)
 		text.Layer = mv.Layer
 		text.Userdata = item
 		mv.MessageTexts = append(mv.MessageTexts, text)
-		mv.MessageContainer.AddChild(text)
+		mv.MessageContainer.Transform.AddChildren(text)
 		if y < 0 {
 			break
 		}
@@ -518,10 +513,6 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 func (mv *MessageView) GetRequiredSize() common.Vector2F {
 	//log.Println("Called getreuidesize")
 	return common.Vector2F{}
-}
-
-func (mv *MessageView) GetTransform() *ui.Transform {
-	return mv.Transform
 }
 
 func (mv *MessageView) IsLayoutDynamic() bool {

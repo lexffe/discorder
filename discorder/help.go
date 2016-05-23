@@ -56,13 +56,12 @@ func NewHelpWindow(app *App) *HelpWindow {
 		text.Transform.AnchorMin = common.NewVector2I(0, 0)
 		text.Transform.AnchorMax = common.NewVector2I(1, 0)
 		text.Transform.Position = common.NewVector2I(0, curY)
-		text.Transform.Parent = window.Transform
 		text.BG = WindowTextBG
 		text.Text = v
 		curY += text.HeightRequired()
-		window.AddChild(text)
+		window.Transform.AddChildren(text)
 	}
-	hw.AddChild(window)
+	hw.Transform.AddChildren(window)
 	hw.Window = window
 	return hw
 }

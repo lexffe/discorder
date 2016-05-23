@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/0xAX/notificator"
+	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
@@ -65,8 +66,8 @@ func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error
 	}
 
 	app := &App{
-		notifications: notify,
 		BaseEntity:    &ui.BaseEntity{},
+		notifications: notify,
 		firstMessages: make(map[string]string),
 		debug:         debug,
 		dGoDebugLvl:   dgoDebug,
@@ -74,6 +75,7 @@ func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error
 		themePath:     themePath,
 		configDir:     configDir,
 	}
+	app.Transform.AnchorMax = common.NewVector2I(1, 1)
 
 	err = app.InitializeConfigFiles()
 	return app, err
@@ -147,7 +149,7 @@ func (app *App) init() {
 	termbox.SetInputMode(termbox.InputAlt)
 
 	app.ViewManager = NewViewManager(app)
-	app.AddChild(app.ViewManager)
+	app.Transform.AddChildren(app.ViewManager)
 
 	app.typingRoutine = NewTypingRoutine(app)
 	go app.typingRoutine.Run()

@@ -36,11 +36,12 @@ type ViewManager struct {
 }
 
 func NewViewManager(app *App) *ViewManager {
-	mv := &ViewManager{
+	vm := &ViewManager{
 		BaseEntity: &ui.BaseEntity{},
 		App:        app,
 	}
-	return mv
+	vm.Transform.AnchorMax = common.NewVector2I(1, 1)
+	return vm
 }
 
 func (v *ViewManager) OnInit() {
@@ -48,7 +49,8 @@ func (v *ViewManager) OnInit() {
 	mainContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
 	mainContainer.LayoutType = ui.LayoutTypeVertical
 	mainContainer.ForceExpandWidth = true
-	v.AddChild(mainContainer)
+
+	v.Transform.AddChildren(mainContainer)
 	v.mainContainer = mainContainer
 
 	// Add the header
@@ -56,21 +58,24 @@ func (v *ViewManager) OnInit() {
 	header.Text = "Discorder v" + VERSION + "(´ ▽ ` )ﾉ"
 	header.Transform.AnchorMin = common.NewVector2F(0.5, 0)
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
+	header.Transform.Position.X = float32(-utf8.RuneCountInString(header.Text))
 
-	mainContainer.AddChild(header)
+	mainContainer.Transform.AddChildren(header)
 	v.header = header
 
 	if v.App.debug {
 		debugBar := ui.NewText()
 		debugBar.Text = "debug"
 		debugBar.Layer = 9
-		mainContainer.AddChild(debugBar)
+
+		mainContainer.Transform.AddChildren(debugBar)
 		v.debugText = debugBar
 	}
 
 	// Launch the login
 	login := NewLoginWindow(v.App)
-	v.App.AddChild(login)
+
+	v.App.Transform.AddChildren(login)
 	login.CheckAutoLogin()
 }
 
@@ -79,49 +84,45 @@ func (v *ViewManager) OnReady() {
 	v.readyReceived = true
 
 	v.notificationsManager = NewNotificationsManager(v.App)
-	v.mainContainer.AddChild(v.notificationsManager)
+	v.mainContainer.Transform.AddChildren(v.notificationsManager)
 
 	// Initialize all the ui entities
 	mv := NewMessageView(v.App)
-	v.mainContainer.AddChild(mv)
+	v.mainContainer.Transform.AddChildren(mv)
 	v.mv = mv
 	v.SelectedMessageView = mv
 
 	typingDisplay := NewTypingDisplay(v.App)
 	typingDisplay.text.Layer = 9
-	v.mainContainer.AddChild(typingDisplay)
+	v.mainContainer.Transform.AddChildren(typingDisplay)
 	v.typingDisplay = typingDisplay
 
 	footerContainer := ui.NewContainer()
 	footerContainer.AllowZeroSize = false
-	v.mainContainer.AddChild(footerContainer)
+	v.mainContainer.Transform.AddChildren(footerContainer)
 
 	input := ui.NewTextInput()
 	input.Transform.AnchorMax = common.NewVector2F(1, 1)
 	input.Layer = 5
 	input.Active = true
 
-	footerContainer.AddChild(input)
-	input.Transform.Parent = footerContainer.Transform
+	footerContainer.Transform.AddChildren(input)
 	v.input = input
 	v.ActiveInput = input
-
 	footerContainer.ProxySize = input
 
 	inputHelper := ui.NewText()
 	inputHelper.Transform.AnchorMax = common.NewVector2I(1, 1)
 	inputHelper.Layer = 5
 	v.inputHelper = inputHelper
-	footerContainer.AddChild(inputHelper)
+	footerContainer.Transform.AddChildren(inputHelper)
 
 	inputHelper.Text = "Select a channel to send to"
 	length := utf8.RuneCountInString(inputHelper.Text)
-
-	inputHelper.Transform.Parent = footerContainer.Transform
 	v.input.Transform.Left = length + 1
 
 	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, input)
-	v.mainContainer.AddChild(v.mentionAutocompleter)
+	v.mainContainer.Transform.AddChildren(v.mentionAutocompleter)
 
 	v.ApplyConfig()
 	v.ApplyTheme()
@@ -187,24 +188,24 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 
 	if event.Type == termbox.EventKey {
 		switch event.Key {
-		case termbox.KeyCtrlG: // Select channel
-			if v.activeWindow != nil {
-				break
-			}
-		case termbox.KeyCtrlO: // Options
-			if v.activeWindow != nil {
-				break
-			}
-			hw := NewHelpWindow(v.App)
-			v.AddChild(hw)
-			v.activeWindow = hw
-			v.input.Active = false
-		case termbox.KeyCtrlS: // Select server
-			if v.activeWindow != nil {
-				break
-			}
-			ssw := NewSelectServerWindow(v.App, v.mv)
-			v.SetActiveWindow(ssw)
+		// case termbox.KeyCtrlG: // Select channel
+		// 	if v.activeWindow != nil {
+		// 		break
+		// 	}
+		// case termbox.KeyCtrlO: // Options
+		// 	if v.activeWindow != nil {
+		// 		break
+		// 	}
+		// 	hw := NewHelpWindow(v.App)
+		// 	v.AddChild(hw)
+		// 	v.activeWindow = hw
+		// 	v.input.Active = false
+		// case termbox.KeyCtrlS: // Select server
+		// 	if v.activeWindow != nil {
+		// 		break
+		// 	}
+		// 	ssw := NewSelectServerWindow(v.App, v.mv)
+		// 	v.SetActiveWindow(ssw)
 		case termbox.KeyEnter:
 			if v.activeWindow != nil {
 				break
@@ -247,18 +248,20 @@ func (v *ViewManager) CanOpenWindow() bool {
 }
 
 func (v *ViewManager) SetActiveWindow(e ui.Entity) {
-	v.AddChild(e)
+	v.Transform.AddChildren(e)
 	v.activeWindow = e
-	v.input.Active = false
+	if v.input != nil {
+		v.input.Active = false
+	}
 }
 
 func (v *ViewManager) CloseActiveWindow() {
 	if v.activeWindow != nil {
-		v.RemoveChild(v.activeWindow, true)
+		v.Transform.RemoveChild(v.activeWindow, true)
 		v.activeWindow = nil
 	}
 
-	if v.mv.ScrollAmount == 0 {
+	if v.SelectedMessageView.ScrollAmount == 0 {
 		v.input.Active = true
 	}
 }
@@ -271,9 +274,9 @@ func (v *ViewManager) ApplyTheme() {
 	v.App.ApplyThemeToText(v.notificationsManager.text, "notifications_bar")
 
 	ui.RunFuncConditional(v, func(e ui.Entity) bool {
-		list, ok := e.(*ui.ListWindow)
+		menu, ok := e.(*ui.MenuWindow)
 		if ok {
-			v.App.ApplyThemeToList(list)
+			v.App.ApplyThemeToMenu(menu)
 			return false
 		}
 

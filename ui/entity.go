@@ -43,7 +43,6 @@ func (b *BaseEntity) GetTransform() *Transform {
 	return &b.Transform
 }
 
-// Maybe reuse the slice...? probably miniscule performance hit to not...
 func (b *BaseEntity) Children(recursive bool) []Entity {
 	if b.Transform.Children == nil || len(b.Transform.Children) < 1 {
 		return nil

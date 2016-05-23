@@ -2,7 +2,6 @@ package ui
 
 import (
 	"github.com/jonas747/discorder/common"
-	"log"
 )
 
 type LayoutType int
@@ -14,7 +13,6 @@ const (
 
 type AutoLayoutContainer struct {
 	*BaseEntity
-	Transform                           *Transform
 	ForceExpandWidth, ForceExpandHeight bool
 	LayoutType                          LayoutType
 }
@@ -22,7 +20,6 @@ type AutoLayoutContainer struct {
 func NewAutoLayoutContainer() *AutoLayoutContainer {
 	return &AutoLayoutContainer{
 		BaseEntity: &BaseEntity{},
-		Transform:  &Transform{},
 	}
 }
 
@@ -152,10 +149,6 @@ func (c *Container) GetRequiredSize() common.Vector2F {
 
 func (c *Container) IsLayoutDynamic() bool {
 	return c.Dynamic
-}
-
-func (c *Container) Update() {
-	log.Println(c.Transform.Position, c.Transform.Size)
 }
 
 func (c *Container) Destroy() { c.DestroyChildren() }

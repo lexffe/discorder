@@ -54,17 +54,13 @@ func (app *App) GetThemeAttribute(key string, fg bool) termbox.Attribute {
 	return defaultAttrib
 }
 
-func (app *App) ApplyThemeToList(list *ui.ListWindow) {
-	list.NormalFG = app.GetThemeAttribute("element_normal", true)
-	list.NormalBG = app.GetThemeAttribute("element_normal", false)
-	list.MarkedFG = app.GetThemeAttribute("element_marked", true)
-	list.MarkedBG = app.GetThemeAttribute("element_marked", false)
-	list.SelectedFG = app.GetThemeAttribute("element_selected", true)
-	list.SelectedBG = app.GetThemeAttribute("element_selected", false)
-	list.MarkedSelectedFG = app.GetThemeAttribute("element_selected_marked", true)
-	list.MarkedSelectedBG = app.GetThemeAttribute("element_selected_marked", false)
+func (app *App) ApplyThemeToMenu(menu *ui.MenuWindow) {
+	menu.StyleNormal = app.GetThemeAttribPair("element_normal").AttribPair()
+	menu.StyleMarked = app.GetThemeAttribPair("element_marked").AttribPair()
+	menu.StyleSelected = app.GetThemeAttribPair("element_selected").AttribPair()
+	menu.StyleMarkedSelected = app.GetThemeAttribPair("element_selected_marked").AttribPair()
 
-	app.ApplyThemeToWindow(list.Window)
+	app.ApplyThemeToWindow(menu.Window)
 }
 
 func (app *App) ApplyThemeToWindow(window *ui.Window) {
@@ -131,7 +127,6 @@ func (t ThemeAttribPair) AttribPair() ui.AttribPair {
 type Color uint8
 
 func (c *Color) UnmarshalJSON(data []byte) error {
-	log.Println("Unmarshalling color")
 	var raw interface{}
 	err := json.Unmarshal(data, &raw)
 	if err != nil {

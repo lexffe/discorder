@@ -2,6 +2,7 @@ package discorder
 
 import (
 	"github.com/jonas747/discorder/common"
+	//"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
@@ -16,7 +17,7 @@ const (
 type ServerSelectWindow struct {
 	*ui.BaseEntity
 	App         *App
-	listWindow  *ui.ListWindow
+	menuWindow  *ui.MenuWindow
 	messageView *MessageView
 	viewManager *ViewManager
 }
@@ -37,10 +38,11 @@ func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWind
 		return nil
 	}
 
-	options := make([]*ui.ListItem, len(state.Guilds)+1)
+	options := make([]*ui.MenuItem, len(state.Guilds)+1)
 	for k, v := range state.Guilds {
-		options[k+1] = &ui.ListItem{
+		options[k+1] = &ui.MenuItem{
 			Str:      v.Name,
+			Info:     v.Name + "\n" + v.ID,
 			UserData: v,
 		}
 
@@ -55,24 +57,30 @@ func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWind
 			}
 		}
 	}
-	options[0] = &ui.ListItem{
+	options[0] = &ui.MenuItem{
 		Str:      "Direct Messages",
 		Selected: true,
 	}
 
-	listWindow := ui.NewListWindow()
-	listWindow.Transform.AnchorMin = common.NewVector2F(0.1, 0.5)
-	listWindow.Transform.AnchorMax = common.NewVector2F(0.9, 0.5)
-	listWindow.Transform.Size.Y = float32(len(options))
-	listWindow.Window.Footer = ServerSelectFooter
-	listWindow.Window.Title = ServerSelectTitle
-	listWindow.Transform.Position.Y = -float32(len(options)) / 2
+	menuWindow := ui.NewMenuWindow()
+	menuWindow.SetOptions(options)
 
-	app.ApplyThemeToList(listWindow)
+	menuWindow.Transform.AnchorMax = common.NewVector2F(1, 1)
 
-	listWindow.SetOptions(options)
-	ssw.listWindow = listWindow
-	ssw.AddChild(listWindow)
+	height := float32(menuWindow.OptionsHeight() + 5)
+	menuWindow.Transform.Size.Y = height
+	menuWindow.Window.Footer = ServerSelectFooter
+	menuWindow.Window.Title = ServerSelectTitle
+	menuWindow.Transform.Position.Y = -height / 2
+
+	app.ApplyThemeToMenu(menuWindow)
+
+	ssw.menuWindow = menuWindow
+	ssw.Transform.AddChildren(menuWindow)
+
+	ssw.Transform.AnchorMin = common.NewVector2F(0.1, 0.5)
+	ssw.Transform.AnchorMax = common.NewVector2F(0.9, 0.5)
+
 	return ssw
 }
 
@@ -81,7 +89,7 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 		switch event.Key {
 		case termbox.KeyEnter:
 			// The below does not strictly belong here does it?
-			selected := ssw.listWindow.GetSelected()
+			selected := ssw.menuWindow.GetSelected()
 
 			userdata, ok := selected.UserData.(*discordgo.Guild)
 
@@ -92,12 +100,11 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 				window = NewChannelSelectWindow(ssw.App, ssw.messageView, "")
 			}
 
-			ssw.App.ViewManager.RemoveChild(ssw, true)
-			ssw.App.ViewManager.AddChild(window)
-			ssw.App.ViewManager.activeWindow = window
+			ssw.App.ViewManager.Transform.RemoveChild(ssw, true)
+			ssw.App.ViewManager.SetActiveWindow(window)
 		case termbox.KeySpace:
 			// The below does not strictly belong here does it?
-			selected := ssw.listWindow.GetSelected()
+			selected := ssw.menuWindow.GetSelected()
 			userdata, ok := selected.UserData.(*discordgo.Guild)
 			if !ok {
 				break

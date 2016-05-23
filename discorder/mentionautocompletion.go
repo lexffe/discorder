@@ -12,7 +12,6 @@ import (
 type MentionAutoCompletion struct {
 	*ui.BaseEntity
 	App                     *App
-	Transform               *ui.Transform
 	input                   *ui.TextInput
 	mentionMatches          []*discordgo.Member
 	mentionSelect           int
@@ -24,7 +23,6 @@ type MentionAutoCompletion struct {
 func NewMentionAutoCompletion(app *App, input *ui.TextInput) *MentionAutoCompletion {
 	return &MentionAutoCompletion{
 		BaseEntity: &ui.BaseEntity{},
-		Transform:  &ui.Transform{},
 		App:        app,
 		input:      input,
 	}
@@ -52,7 +50,7 @@ func (ma *MentionAutoCompletion) Update() {
 
 		ma.Check()
 
-		ma.ClearChildren()
+		ma.Transform.ClearChildren(true)
 		if ma.isAutocompletingMention {
 			rect := ma.Transform.GetRect()
 			curX := float32(0)
@@ -60,7 +58,6 @@ func (ma *MentionAutoCompletion) Update() {
 				t := ui.NewText()
 
 				t.Transform.AnchorMax.Y = 1
-				t.Transform.Parent = ma.Transform
 				t.Transform.Position.X = curX
 
 				t.Text = v.User.Username
@@ -73,7 +70,8 @@ func (ma *MentionAutoCompletion) Update() {
 				if k == ma.mentionSelect {
 					t.BG = termbox.ColorYellow | termbox.AttrBold
 				}
-				ma.AddChild(t)
+
+				ma.Transform.AddChildren(t)
 				curX += float32(size) + 1
 				if curX > rect.W {
 					break
@@ -175,10 +173,6 @@ func (ma *MentionAutoCompletion) GetRequiredSize() common.Vector2F {
 		size = 1
 	}
 	return common.NewVector2I(0, size)
-}
-
-func (ma *MentionAutoCompletion) GetTransform() *ui.Transform {
-	return ma.Transform
 }
 
 func (ma *MentionAutoCompletion) IsLayoutDynamic() bool {

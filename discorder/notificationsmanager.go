@@ -11,26 +11,21 @@ import (
 
 type NotificationsManager struct {
 	*ui.BaseEntity
-	Transform *ui.Transform
-	App       *App
-	text      *ui.Text
+	App  *App
+	text *ui.Text
 }
 
 func NewNotificationsManager(app *App) *NotificationsManager {
-	t := ui.NewText()
-
 	nm := &NotificationsManager{
 		BaseEntity: &ui.BaseEntity{},
-		Transform:  &ui.Transform{},
 		App:        app,
-		text:       t,
+		text:       ui.NewText(),
 	}
 
-	t.Transform.Parent = nm.Transform
-	t.Transform.AnchorMax = common.NewVector2I(1, 1)
-	t.Layer = 8
-	t.BG = termbox.ColorYellow
-	nm.AddChild(t)
+	nm.text.Transform.AnchorMax = common.NewVector2I(1, 1)
+	nm.text.Layer = 8
+	nm.text.BG = termbox.ColorYellow
+	nm.Transform.AddChildren(nm.text)
 	return nm
 }
 
@@ -144,10 +139,6 @@ func (nm *NotificationsManager) Destroy() { nm.DestroyChildren() }
 
 func (nm *NotificationsManager) GetRequiredSize() common.Vector2F {
 	return common.NewVector2F(0, float32(nm.text.HeightRequired()))
-}
-
-func (nm *NotificationsManager) GetTransform() *ui.Transform {
-	return nm.Transform
 }
 
 func (nm *NotificationsManager) IsLayoutDynamic() bool {
