@@ -16,10 +16,12 @@ type MenuItem struct {
 
 type MenuWindow struct {
 	*BaseEntity
-	Window *Window
+	Window      *Window
+	LowerWindow *Window
 
-	MainContainer *AutoLayoutContainer
-	TopContainer  *Container
+	MainContainer  *AutoLayoutContainer
+	TopContainer   *Container
+	LowerContainer *Container
 
 	InfoText *Text
 
@@ -35,21 +37,27 @@ type MenuWindow struct {
 
 	texts []*Text
 	Dirty bool
+
+	Layer int
 }
 
-func NewMenuWindow() *MenuWindow {
+func NewMenuWindow(layer int) *MenuWindow {
 	mw := &MenuWindow{
-		BaseEntity:    &BaseEntity{},
-		MainContainer: NewAutoLayoutContainer(),
-		TopContainer:  NewContainer(),
-		InfoText:      NewText(),
+		BaseEntity:     &BaseEntity{},
+		Window:         NewWindow(),
+		LowerWindow:    NewWindow(),
+		MainContainer:  NewAutoLayoutContainer(),
+		TopContainer:   NewContainer(),
+		LowerContainer: NewContainer(),
+		InfoText:       NewText(),
+		Layer:          layer,
+		Dirty:          true,
 	}
 
 	window := NewWindow()
 	window.Transform.AnchorMax = common.NewVector2F(1, 1)
-
+	window.Layer = mw.Layer
 	mw.Transform.AddChildren(window)
-	mw.Window = window
 
 	mw.MainContainer.ForceExpandWidth = true
 	mw.TopContainer.Dynamic = true
@@ -58,8 +66,23 @@ func NewMenuWindow() *MenuWindow {
 	window.Transform.AddChildren(mw.MainContainer)
 	mw.MainContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
 
-	mw.MainContainer.Transform.AddChildren(mw.TopContainer, mw.InfoText)
+	mw.LowerWindow.Transform.AddChildren(mw.InfoText)
+	mw.LowerWindow.Transform.AnchorMax = common.NewVector2I(1, 1)
+
+	mw.LowerWindow.Layer = layer
+
+	mw.MainContainer.Transform.AddChildren(mw.TopContainer)
+
+	mw.MainContainer.Transform.AddChildren(mw.LowerContainer)
+
+	mw.LowerContainer.Transform.AddChildren(mw.LowerWindow)
+	mw.LowerContainer.Transform.AnchorMax = common.NewVector2I(1, 1)
+	mw.LowerContainer.ProxySize = mw.InfoText
+	mw.LowerContainer.AllowZeroSize = false
+
 	mw.InfoText.Text = "THIS IS INFOOO TEXT"
+	mw.InfoText.Transform.AnchorMax = common.NewVector2I(1, 1)
+	mw.InfoText.Layer = layer
 	return mw
 }
 
@@ -156,13 +179,15 @@ func (lw *MenuWindow) Rebuild() {
 	lw.texts = make([]*Text, len(lw.Options))
 
 	requiredHeight := lw.OptionsHeight()
-	rect := lw.Transform.GetRect()
+	rect := lw.TopContainer.Transform.GetRect()
 	_, termSizeY := termbox.Size()
 
 	y := 0
 	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
 		// If window is taller then scroll
-		y = int(float64(requiredHeight)*(float64(len(lw.Options)-lw.Selected)/float64(len(lw.Options)))) - int(rect.H/2)
+		heightPerOption := float64(requiredHeight) / float64(len(lw.Options))
+		y = int(heightPerOption*(float64(len(lw.Options)-(lw.Selected)))) - int(rect.H*2)
+		log.Println(y, heightPerOption)
 	}
 
 	for k, option := range lw.Options {
@@ -170,9 +195,14 @@ func (lw *MenuWindow) Rebuild() {
 		t.Text = option.Str
 		t.Transform.Position.Y = float32(y)
 		t.Transform.AnchorMax.X = 1
-
+		t.Layer = lw.Layer
 		y += t.HeightRequired()
-		log.Println(y)
+
+		if y >= termSizeY || y >= int(rect.H) || y <= 0 {
+			// Ignore if hidden/should be hidden
+			continue
+		}
+
 		lw.texts[k] = t
 		lw.TopContainer.Transform.AddChildren(t)
 
@@ -199,13 +229,17 @@ func (lw *MenuWindow) HandleInput(event termbox.Event) {
 	}
 }
 
+func (mw *MenuWindow) OnLayoutChanged() {
+	mw.Rebuild()
+}
+
 func (lw *MenuWindow) Destroy() { lw.DestroyChildren() }
 func (lw *MenuWindow) Update() {
 	if lw.Dirty {
 		lw.Rebuild()
 		lw.InfoText.Text = lw.GetSelected().Info
-		lw.Dirty = false
 	}
+	//	lw.Dirty = false
 }
 
 func (lw *MenuWindow) Scroll(dir Direction, amount int) {

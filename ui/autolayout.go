@@ -143,6 +143,10 @@ func (c *Container) GetRequiredSize() common.Vector2F {
 		return size
 	}
 
+	if c.Dynamic {
+		return common.NewVector2I(0, 0)
+	}
+
 	rect := c.Transform.GetRect()
 	return common.NewVector2F(rect.W, rect.H)
 }

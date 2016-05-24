@@ -71,7 +71,7 @@ var Commands = []*Command{
 		Category:    "Main",
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
-				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView)
+				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
 				app.ViewManager.SetActiveWindow(ssw)
 			}
 		},

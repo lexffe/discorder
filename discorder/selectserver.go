@@ -20,13 +20,15 @@ type ServerSelectWindow struct {
 	menuWindow  *ui.MenuWindow
 	messageView *MessageView
 	viewManager *ViewManager
+	Layer       int
 }
 
-func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWindow {
+func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *ServerSelectWindow {
 	ssw := &ServerSelectWindow{
 		BaseEntity:  &ui.BaseEntity{},
 		App:         app,
 		messageView: messageView,
+		Layer:       layer,
 	}
 
 	state := app.session.State
@@ -62,24 +64,25 @@ func NewSelectServerWindow(app *App, messageView *MessageView) *ServerSelectWind
 		Selected: true,
 	}
 
-	menuWindow := ui.NewMenuWindow()
+	menuWindow := ui.NewMenuWindow(layer)
 	menuWindow.SetOptions(options)
 
 	menuWindow.Transform.AnchorMax = common.NewVector2F(1, 1)
+	menuWindow.Transform.Top = 1
+	menuWindow.Transform.Bottom = 2
 
-	height := float32(menuWindow.OptionsHeight() + 5)
-	menuWindow.Transform.Size.Y = height
 	menuWindow.Window.Footer = ServerSelectFooter
 	menuWindow.Window.Title = ServerSelectTitle
-	menuWindow.Transform.Position.Y = -height / 2
 
 	app.ApplyThemeToMenu(menuWindow)
 
 	ssw.menuWindow = menuWindow
 	ssw.Transform.AddChildren(menuWindow)
 
-	ssw.Transform.AnchorMin = common.NewVector2F(0.1, 0.5)
-	ssw.Transform.AnchorMax = common.NewVector2F(0.9, 0.5)
+	ssw.Transform.AnchorMin = common.NewVector2F(0.1, 0)
+	ssw.Transform.AnchorMax = common.NewVector2F(0.9, 1)
+
+	//height := float32(menuWindow.OptionsHeight() + 5)
 
 	return ssw
 }

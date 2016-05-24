@@ -101,3 +101,7 @@ type DrawHandler interface {
 type Scrollable interface {
 	Scroll(dir Direction, amount int)
 }
+
+type LayoutChangeHandler interface {
+	OnLayoutChanged()
+}

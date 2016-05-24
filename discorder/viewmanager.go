@@ -244,7 +244,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 }
 
 func (v *ViewManager) CanOpenWindow() bool {
-	return v.activeWindow == nil
+	return v.activeWindow == nil && v.readyReceived
 }
 
 func (v *ViewManager) SetActiveWindow(e ui.Entity) {
