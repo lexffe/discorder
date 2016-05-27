@@ -4,7 +4,7 @@ An interactive command line discord client, currently in it's alpha state, so bu
 
 Discord server: https://discord.gg/0vYlUK2XBKlmxGrX
 
-Join for updates, and to suggest stuff or complain stuff, or just talk about stuff
+Join for updates, to suggest stuff, complain about stuff, or just talk about stuff
 
 ## Dev branch
 
