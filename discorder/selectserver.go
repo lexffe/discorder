@@ -60,11 +60,11 @@ func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *Serve
 		}
 	}
 	options[0] = &ui.MenuItem{
-		Str:      "Direct Messages",
-		Selected: true,
+		Str:         "Direct Messages",
+		Highlighted: true,
 	}
 
-	menuWindow := ui.NewMenuWindow(layer)
+	menuWindow := ui.NewMenuWindow(layer, app.ViewManager.UIManager)
 	menuWindow.SetOptions(options)
 
 	menuWindow.Transform.AnchorMax = common.NewVector2F(1, 1)
@@ -92,7 +92,7 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 		switch event.Key {
 		case termbox.KeyEnter:
 			// The below does not strictly belong here does it?
-			selected := ssw.menuWindow.GetSelected()
+			selected := ssw.menuWindow.GetHighlighted()
 
 			userdata, ok := selected.UserData.(*discordgo.Guild)
 
@@ -104,10 +104,10 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 			}
 
 			ssw.App.ViewManager.Transform.RemoveChild(ssw, true)
-			ssw.App.ViewManager.SetActiveWindow(window)
+			ssw.App.ViewManager.Transform.AddChildren(window)
 		case termbox.KeySpace:
 			// The below does not strictly belong here does it?
-			selected := ssw.menuWindow.GetSelected()
+			selected := ssw.menuWindow.GetHighlighted()
 			userdata, ok := selected.UserData.(*discordgo.Guild)
 			if !ok {
 				break

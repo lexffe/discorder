@@ -7,11 +7,11 @@ import (
 )
 
 type MenuItem struct {
-	Str      string
-	Marked   bool
-	Selected bool
-	Info     string
-	UserData interface{}
+	Str         string
+	Marked      bool
+	Highlighted bool
+	Info        string
+	UserData    interface{}
 }
 
 type MenuWindow struct {
@@ -23,7 +23,8 @@ type MenuWindow struct {
 	TopContainer   *Container
 	LowerContainer *Container
 
-	InfoText *Text
+	InfoText    *Text
+	SearchInput *TextInput
 
 	// Style
 	StyleNormal         AttribPair
@@ -33,7 +34,7 @@ type MenuWindow struct {
 
 	Options []*MenuItem
 
-	Selected int
+	Highlighted int
 
 	texts []*Text
 	Dirty bool
@@ -41,11 +42,11 @@ type MenuWindow struct {
 	Layer int
 }
 
-func NewMenuWindow(layer int) *MenuWindow {
+func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 	mw := &MenuWindow{
 		BaseEntity:     &BaseEntity{},
-		Window:         NewWindow(),
-		LowerWindow:    NewWindow(),
+		Window:         NewWindow(manager),
+		LowerWindow:    NewWindow(nil),
 		MainContainer:  NewAutoLayoutContainer(),
 		TopContainer:   NewContainer(),
 		LowerContainer: NewContainer(),
@@ -54,16 +55,15 @@ func NewMenuWindow(layer int) *MenuWindow {
 		Dirty:          true,
 	}
 
-	window := NewWindow()
-	window.Transform.AnchorMax = common.NewVector2F(1, 1)
-	window.Layer = mw.Layer
-	mw.Transform.AddChildren(window)
+	mw.Window.Transform.AnchorMax = common.NewVector2F(1, 1)
+	mw.Window.Layer = mw.Layer
+	mw.Transform.AddChildren(mw.Window)
 
 	mw.MainContainer.ForceExpandWidth = true
 	mw.TopContainer.Dynamic = true
 	mw.TopContainer.AllowZeroSize = true
 
-	window.Transform.AddChildren(mw.MainContainer)
+	mw.Window.Transform.AddChildren(mw.MainContainer)
 	mw.MainContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
 
 	mw.LowerWindow.Transform.AddChildren(mw.InfoText)
@@ -83,6 +83,8 @@ func NewMenuWindow(layer int) *MenuWindow {
 	mw.InfoText.Text = "THIS IS INFOOO TEXT"
 	mw.InfoText.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mw.InfoText.Layer = layer
+
+	manager.AddWindow(mw)
 	return mw
 }
 
@@ -121,24 +123,24 @@ func (lw *MenuWindow) AddMarked(index int) {
 	lw.Dirty = true
 }
 
-func (lw *MenuWindow) SetSelected(selected int) {
+func (lw *MenuWindow) SetHighlighted(Highlighted int) {
 	if len(lw.Options) < 1 {
 		return
 	}
 	// Remove previous selection
-	if lw.Selected < len(lw.Options) && lw.Selected >= 0 {
-		lw.Options[lw.Selected].Selected = false
+	if lw.Highlighted < len(lw.Options) && lw.Highlighted >= 0 {
+		lw.Options[lw.Highlighted].Highlighted = false
 	}
 
-	selected = lw.CheckBounds(selected)
-	lw.Options[selected].Selected = true
-	lw.Selected = selected
+	Highlighted = lw.CheckBounds(Highlighted)
+	lw.Options[Highlighted].Highlighted = true
+	lw.Highlighted = Highlighted
 
 	lw.Dirty = true
 }
 
-func (lw *MenuWindow) GetSelected() *MenuItem {
-	index := lw.CheckBounds(lw.Selected)
+func (lw *MenuWindow) GetHighlighted() *MenuItem {
+	index := lw.CheckBounds(lw.Highlighted)
 	return lw.Options[index]
 }
 
@@ -146,12 +148,12 @@ func (lw *MenuWindow) SetOptionsString(options []string) {
 	lw.Options = make([]*MenuItem, len(options))
 	for k, v := range options {
 		lw.Options[k] = &MenuItem{
-			Str:      v,
-			Marked:   false,
-			Selected: false,
+			Str:         v,
+			Marked:      false,
+			Highlighted: false,
 		}
-		if k == lw.Selected {
-			lw.Options[k].Selected = true
+		if k == lw.Highlighted {
+			lw.Options[k].Highlighted = true
 		}
 	}
 	lw.Dirty = true
@@ -186,7 +188,7 @@ func (lw *MenuWindow) Rebuild() {
 	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
 		// If window is taller then scroll
 		heightPerOption := float64(requiredHeight) / float64(len(lw.Options))
-		y = int(heightPerOption*(float64(len(lw.Options)-(lw.Selected)))) - int(rect.H*2)
+		y = int(heightPerOption*(float64(len(lw.Options)-(lw.Highlighted)))) - int(rect.H*2)
 		log.Println(y, heightPerOption)
 	}
 
@@ -207,18 +209,14 @@ func (lw *MenuWindow) Rebuild() {
 		lw.TopContainer.Transform.AddChildren(t)
 
 		switch {
-		case option.Selected && option.Marked:
-			t.FG = lw.StyleMarkedSelected.FG
-			t.BG = lw.StyleMarkedSelected.BG
-		case option.Selected:
-			t.FG = lw.StyleSelected.FG
-			t.BG = lw.StyleSelected.BG
+		case option.Highlighted && option.Marked:
+			t.Style = lw.StyleMarkedSelected
+		case option.Highlighted:
+			t.Style = lw.StyleSelected
 		case option.Marked:
-			t.FG = lw.StyleMarked.FG
-			t.BG = lw.StyleMarked.BG
+			t.Style = lw.StyleMarked
 		default:
-			t.FG = lw.StyleNormal.FG
-			t.BG = lw.StyleNormal.BG
+			t.Style = lw.StyleNormal
 		}
 	}
 }
@@ -237,7 +235,7 @@ func (lw *MenuWindow) Destroy() { lw.DestroyChildren() }
 func (lw *MenuWindow) Update() {
 	if lw.Dirty {
 		lw.Rebuild()
-		lw.InfoText.Text = lw.GetSelected().Info
+		lw.InfoText.Text = lw.GetHighlighted().Info
 	}
 	//	lw.Dirty = false
 }
@@ -245,12 +243,12 @@ func (lw *MenuWindow) Update() {
 func (lw *MenuWindow) Scroll(dir Direction, amount int) {
 	switch dir {
 	case DirUp:
-		lw.SetSelected(lw.Selected - amount)
+		lw.SetHighlighted(lw.Highlighted - amount)
 	case DirDown:
-		lw.SetSelected(lw.Selected + amount)
+		lw.SetHighlighted(lw.Highlighted + amount)
 	case DirEnd:
-		lw.SetSelected(len(lw.Options) - 1)
+		lw.SetHighlighted(len(lw.Options) - 1)
 	case DirStart:
-		lw.SetSelected(0)
+		lw.SetHighlighted(0)
 	}
 }

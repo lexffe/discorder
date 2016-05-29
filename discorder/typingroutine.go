@@ -25,7 +25,7 @@ func NewTypingRoutine(app *App) *TypingRoutine {
 	return &TypingRoutine{
 		app:          app,
 		typingEvtIn:  make(chan *discordgo.TypingStart),
-		selfTypingIn: make(chan string),
+		selfTypingIn: make(chan string, 5),
 		typing:       make([]*TypingWrapper, 0),
 		stop:         make(chan *sync.WaitGroup),
 	}

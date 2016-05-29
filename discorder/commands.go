@@ -38,9 +38,9 @@ var Commands = []*Command{
 			words, _ := args.Bool("words")
 			dir, _ := args.String("direction")
 			moveDir := StringToDir(dir)
-
-			if app.ViewManager.ActiveInput != nil && app.ViewManager.ActiveInput.Active {
-				app.ViewManager.ActiveInput.MoveCursor(moveDir, amount, words)
+			input := app.ViewManager.UIManager.ActiveInput
+			if input != nil && input.Active {
+				input.MoveCursor(moveDir, amount, words)
 			}
 		},
 	},
@@ -59,9 +59,9 @@ var Commands = []*Command{
 			dir, _ := args.String("direction")
 
 			moveDir := StringToDir(dir)
-
-			if app.ViewManager.ActiveInput != nil && app.ViewManager.ActiveInput.Active {
-				app.ViewManager.ActiveInput.Erase(moveDir, amount, words)
+			input := app.ViewManager.UIManager.ActiveInput
+			if input != nil && input.Active {
+				input.Erase(moveDir, amount, words)
 			}
 		},
 	},
@@ -72,7 +72,7 @@ var Commands = []*Command{
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
-				app.ViewManager.SetActiveWindow(ssw)
+				app.ViewManager.Transform.AddChildren(ssw)
 			}
 		},
 	},
@@ -94,7 +94,7 @@ var Commands = []*Command{
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
-				app.ViewManager.SetActiveWindow(hw)
+				app.ViewManager.Transform.AddChildren(hw)
 			}
 		},
 	},
@@ -122,8 +122,9 @@ var Commands = []*Command{
 			dir, _ := args.String("direction")
 			moveDir := StringToDir(dir)
 
-			if app.ViewManager.activeWindow != nil {
-				ui.RunFuncConditional(app.ViewManager.activeWindow, func(e ui.Entity) bool {
+			window := app.ViewManager.UIManager.CurrentWindow()
+			if window != nil {
+				ui.RunFuncConditional(window, func(e ui.Entity) bool {
 					scrollable, ok := e.(ui.Scrollable)
 					if ok {
 						scrollable.Scroll(moveDir, amount)
@@ -201,8 +202,9 @@ var Commands = []*Command{
 		Description: "Closes the active window",
 		Category:    "Main",
 		Run: func(app *App, args Arguments) {
-			if app.ViewManager.activeWindow != nil {
-				app.ViewManager.CloseActiveWindow()
+			window := app.ViewManager.UIManager.CurrentWindow()
+			if window != nil {
+				app.ViewManager.Transform.RemoveChild(window, true)
 			}
 		},
 	},

@@ -64,11 +64,10 @@ func (ma *MentionAutoCompletion) Update() {
 				size := utf8.RuneCountInString(t.Text)
 				t.Transform.Size.X = float32(size)
 
-				t.FG = termbox.ColorGreen
-				t.BG = termbox.ColorBlack
-
 				if k == ma.mentionSelect {
-					t.BG = termbox.ColorYellow | termbox.AttrBold
+					ma.App.ApplyThemeToText(t, "element_selected")
+				} else {
+					ma.App.ApplyThemeToText(t, "element_normal")
 				}
 
 				ma.Transform.AddChildren(t)

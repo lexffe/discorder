@@ -21,8 +21,9 @@ type Text struct {
 
 	Mode int
 
+	// If attribs is empty, uses style instead
 	Attribs map[int]AttribPair
-	BG, FG  termbox.Attribute // Not used if Attribs is specified
+	Style   AttribPair
 
 	Layer    int
 	Userdata interface{}
@@ -51,7 +52,7 @@ func (t *Text) Draw() {
 		attribs = t.Attribs
 	} else {
 		attribs = map[int]AttribPair{
-			0: AttribPair{t.FG, t.BG},
+			0: t.Style,
 		}
 	}
 

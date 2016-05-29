@@ -18,13 +18,13 @@ type ViewManager struct {
 
 	mv                  *MessageView // Will be changed when multiple message views
 	SelectedMessageView *MessageView
-	ActiveInput         *ui.TextInput
 
-	activeWindow ui.Entity
-	inputHelper  *ui.Text
-	input        *ui.TextInput
-	debugText    *ui.Text
-	header       *ui.Text
+	UIManager *ui.Manager
+
+	inputHelper *ui.Text
+	MainInput   *ui.TextInput
+	debugText   *ui.Text
+	header      *ui.Text
 
 	mentionAutocompleter *MentionAutoCompletion
 	notificationsManager *NotificationsManager
@@ -39,6 +39,7 @@ func NewViewManager(app *App) *ViewManager {
 	vm := &ViewManager{
 		BaseEntity: &ui.BaseEntity{},
 		App:        app,
+		UIManager:  ui.NewManager(),
 	}
 	vm.Transform.AnchorMax = common.NewVector2I(1, 1)
 	return vm
@@ -101,15 +102,14 @@ func (v *ViewManager) OnReady() {
 	footerContainer.AllowZeroSize = false
 	v.mainContainer.Transform.AddChildren(footerContainer)
 
-	input := ui.NewTextInput()
-	input.Transform.AnchorMax = common.NewVector2F(1, 1)
-	input.Layer = 5
-	input.Active = true
+	MainInput := ui.NewTextInput(v.UIManager)
+	MainInput.Transform.AnchorMax = common.NewVector2F(1, 1)
+	MainInput.Layer = 5
+	MainInput.SetActive(true)
 
-	footerContainer.Transform.AddChildren(input)
-	v.input = input
-	v.ActiveInput = input
-	footerContainer.ProxySize = input
+	footerContainer.Transform.AddChildren(MainInput)
+	v.MainInput = MainInput
+	footerContainer.ProxySize = MainInput
 
 	inputHelper := ui.NewText()
 	inputHelper.Transform.AnchorMax = common.NewVector2I(1, 1)
@@ -119,9 +119,9 @@ func (v *ViewManager) OnReady() {
 
 	inputHelper.Text = "Select a channel to send to"
 	length := utf8.RuneCountInString(inputHelper.Text)
-	v.input.Transform.Left = length + 1
+	v.MainInput.Transform.Left = length + 1
 
-	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, input)
+	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, MainInput)
 	v.mainContainer.Transform.AddChildren(v.mentionAutocompleter)
 
 	v.ApplyConfig()
@@ -168,7 +168,7 @@ func (v *ViewManager) Update() {
 		v.inputHelper.Text = preStr + "#" + name + ":"
 		length := utf8.RuneCountInString(v.inputHelper.Text)
 		v.inputHelper.Transform.Size.X = float32(length)
-		v.input.Transform.Left = length
+		v.MainInput.Transform.Left = length
 	}
 
 	if v.App.debug {
@@ -176,7 +176,7 @@ func (v *ViewManager) Update() {
 		v.debugText.Text = fmt.Sprintf("Number of entities %d, Req queue length: %d", len(children), v.App.requestRoutine.GetQueueLenth())
 	}
 
-	if v.input != nil && v.input.TextBuffer != "" {
+	if v.MainInput != nil && v.MainInput.TextBuffer != "" {
 		v.App.typingRoutine.selfTypingIn <- v.talkingChannel
 	}
 }
@@ -199,7 +199,7 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 		// 	hw := NewHelpWindow(v.App)
 		// 	v.AddChild(hw)
 		// 	v.activeWindow = hw
-		// 	v.input.Active = false
+		// 	v.MainInput.Active = false
 		// case termbox.KeyCtrlS: // Select server
 		// 	if v.activeWindow != nil {
 		// 		break
@@ -207,20 +207,12 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 		// 	ssw := NewSelectServerWindow(v.App, v.mv)
 		// 	v.SetActiveWindow(ssw)
 		case termbox.KeyEnter:
-			if v.activeWindow != nil {
-				break
-			}
-
-			if v.mv.ScrollAmount != 0 {
-				break
-			}
-
 			if v.talkingChannel == "" {
 				log.Println("you're trying to send a message to nobody buddy D:")
 				break
 			}
 
-			if v.input.TextBuffer == "" {
+			if v.MainInput.TextBuffer == "" {
 				break // Nothing to see here...
 			}
 
@@ -229,9 +221,9 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 					v.mentionAutocompleter.isAutocompletingMention = false
 				}
 			} else {
-				toSend := v.input.TextBuffer
-				v.input.TextBuffer = ""
-				v.input.CursorLocation = 0
+				toSend := v.MainInput.TextBuffer
+				v.MainInput.TextBuffer = ""
+				v.MainInput.CursorLocation = 0
 				go func() {
 					_, err := v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
 					if err != nil {
@@ -244,31 +236,12 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 }
 
 func (v *ViewManager) CanOpenWindow() bool {
-	return v.activeWindow == nil && v.readyReceived
-}
-
-func (v *ViewManager) SetActiveWindow(e ui.Entity) {
-	v.Transform.AddChildren(e)
-	v.activeWindow = e
-	if v.input != nil {
-		v.input.Active = false
-	}
-}
-
-func (v *ViewManager) CloseActiveWindow() {
-	if v.activeWindow != nil {
-		v.Transform.RemoveChild(v.activeWindow, true)
-		v.activeWindow = nil
-	}
-
-	if v.SelectedMessageView.ScrollAmount == 0 {
-		v.input.Active = true
-	}
+	return v.readyReceived
 }
 
 func (v *ViewManager) ApplyTheme() {
 	v.App.ApplyThemeToText(v.inputHelper, "send_prompt")
-	v.App.ApplyThemeToText(v.input.Text, "input_chat")
+	v.App.ApplyThemeToText(v.MainInput.Text, "input_chat")
 	v.App.ApplyThemeToText(v.header, "title_bar")
 	v.App.ApplyThemeToText(v.typingDisplay.text, "typing_bar")
 	v.App.ApplyThemeToText(v.notificationsManager.text, "notifications_bar")
@@ -287,13 +260,4 @@ func (v *ViewManager) ApplyTheme() {
 		}
 		return true
 	})
-}
-
-func (v *ViewManager) SetActiveInput(input *ui.TextInput) {
-	if v.ActiveInput != nil {
-		v.ActiveInput.Active = false
-	}
-
-	v.ActiveInput = input
-	input.Active = true
 }

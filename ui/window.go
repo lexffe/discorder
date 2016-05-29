@@ -21,14 +21,20 @@ type Window struct {
 
 	BorderBG, BorderFG termbox.Attribute
 	FillBG             termbox.Attribute
+
+	Manager *Manager
 }
 
-func NewWindow() *Window {
+func NewWindow(manager *Manager) *Window {
 	w := &Window{
 		BaseEntity: &BaseEntity{},
 		BorderBG:   DefaultWindowBorderBG,
 		BorderFG:   DefaultWindowBorderFG,
 		FillBG:     DefaultWindowFillBG,
+		Manager:    manager,
+	}
+	if manager != nil {
+		manager.AddWindow(w)
 	}
 	return w
 }
@@ -97,5 +103,10 @@ func (w *Window) Draw() {
 	}
 }
 
-func (w *Window) Destroy() { w.DestroyChildren() }
-func (w *Window) Init()    {}
+func (w *Window) Destroy() {
+	if w.Manager != nil {
+		w.Manager.RemoveWindow(w)
+	}
+	w.DestroyChildren()
+}
+func (w *Window) Init() {}

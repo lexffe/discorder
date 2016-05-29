@@ -43,7 +43,7 @@ func NewHelpWindow(app *App) *HelpWindow {
 
 	curY := 1
 
-	window := ui.NewWindow()
+	window := ui.NewWindow(app.ViewManager.UIManager)
 	window.Title = "Help"
 	window.Footer = "Hmmm - Mr Smilery"
 	window.Transform.AnchorMax = common.NewVector2F(0.5, 0.5)
@@ -56,7 +56,7 @@ func NewHelpWindow(app *App) *HelpWindow {
 		text.Transform.AnchorMin = common.NewVector2I(0, 0)
 		text.Transform.AnchorMax = common.NewVector2I(1, 0)
 		text.Transform.Position = common.NewVector2I(0, curY)
-		text.BG = WindowTextBG
+		app.ApplyThemeToText(text, "text_other")
 		text.Text = v
 		curY += text.HeightRequired()
 		window.Transform.AddChildren(text)

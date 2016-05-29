@@ -71,8 +71,7 @@ func (app *App) ApplyThemeToWindow(window *ui.Window) {
 
 func (app *App) ApplyThemeToText(text *ui.Text, key string) {
 	pair := app.GetThemeAttribPair(key)
-	text.BG = pair.BG.Attribute()
-	text.FG = pair.FG.Attribute()
+	text.Style = pair.AttribPair()
 }
 
 func (t *Theme) Read() ([]byte, error) {

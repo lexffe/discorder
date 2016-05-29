@@ -50,7 +50,8 @@ func NewMessageView(app *App) *MessageView {
 	t.Transform.AnchorMin.Y = 1
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)
 	t.Layer = 5
-	t.BG = termbox.ColorYellow
+
+	app.ApplyThemeToText(t, "text_special")
 
 	mv.Transform.AddChildren(t)
 	mv.ScrollText = t
@@ -105,65 +106,64 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
 		mv.TextsDirty = true // ;)
 
-		if mv.App.ViewManager.activeWindow != nil {
-			return
-		}
+		// if mv.App.ViewManager.activeWindow != nil {
+		// 	return
+		// }
 
-		switch event.Key {
-		case termbox.KeyArrowUp:
-			mv.ScrollAmount += 1
-			mv.DisplayMessagesDirty = true
-		case termbox.KeyArrowDown:
-			mv.ScrollAmount -= 1
-			if mv.ScrollAmount < 0 {
-				mv.ScrollAmount = 0
-			}
-			mv.DisplayMessagesDirty = true
-		case termbox.KeyPgup:
-			mv.ScrollAmount += 10
-			mv.DisplayMessagesDirty = true
-		case termbox.KeyPgdn:
-			mv.ScrollAmount -= 10
-			if mv.ScrollAmount < 0 {
-				mv.ScrollAmount = 0
-			}
-			mv.DisplayMessagesDirty = true
-		case termbox.KeyHome, termbox.KeyEnd:
-			mv.ScrollAmount = 0
-			mv.DisplayMessagesDirty = true
-		case termbox.KeyEnter:
-			if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
-				return
-			}
+		// switch event.Key {
+		// case termbox.KeyArrowUp:
+		// 	mv.ScrollAmount += 1
+		// 	mv.DisplayMessagesDirty = true
+		// case termbox.KeyArrowDown:
+		// 	mv.ScrollAmount -= 1
+		// 	if mv.ScrollAmount < 0 {
+		// 		mv.ScrollAmount = 0
+		// 	}
+		// 	mv.DisplayMessagesDirty = true
+		// case termbox.KeyPgup:
+		// 	mv.ScrollAmount += 10
+		// 	mv.DisplayMessagesDirty = true
+		// case termbox.KeyPgdn:
+		// 	mv.ScrollAmount -= 10
+		// 	if mv.ScrollAmount < 0 {
+		// 		mv.ScrollAmount = 0
+		// 	}
+		// 	mv.DisplayMessagesDirty = true
+		// case termbox.KeyHome, termbox.KeyEnd:
+		// 	mv.ScrollAmount = 0
+		// 	mv.DisplayMessagesDirty = true
+		// case termbox.KeyEnter:
+		// 	if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
+		// 		return
+		// 	}
 
-			text := mv.MessageTexts[0]
-			selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
-			if !ok || selectedDisplayMsg.IsLogMessage {
-				return
-			}
-			msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
-			mv.App.ViewManager.SetActiveWindow(msw)
-		}
-		if mv.ScrollAmount != 0 {
-			mv.App.ViewManager.input.Active = false
-		} else {
-			mv.App.ViewManager.input.Active = true
-		}
+		// 	text := mv.MessageTexts[0]
+		// 	selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
+		// 	if !ok || selectedDisplayMsg.IsLogMessage {
+		// 		return
+		// 	}
+		// 	msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
+		// 	mv.App.ViewManager.SetActiveWindow(msw)
+		// }
+		// if mv.ScrollAmount != 0 {
+		// 	mv.App.ViewManager.input.Active = false
+		// } else {
+		// 	mv.App.ViewManager.input.Active = true
+		// }
 	}
 }
 
 func (mv *MessageView) OpenMessageSelectWindow(msg string) {
-	if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
-		return
-	}
+	// if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
+	// 	return
+	// }
 
-	text := mv.MessageTexts[0]
-	selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
-	if !ok || selectedDisplayMsg.IsLogMessage {
-		return
-	}
-	msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
-	mv.App.ViewManager.SetActiveWindow(msw)
+	// text := mv.MessageTexts[0]
+	// selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
+	// if !ok || selectedDisplayMsg.IsLogMessage {
+	// 	return
+	// }
+	// msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
 }
 
 func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
@@ -302,7 +302,7 @@ func (mv *MessageView) BuildTexts() {
 
 		if mv.ScrollAmount != 0 && isFirst {
 			if item.IsLogMessage {
-				text.BG = termbox.ColorBlue | termbox.AttrBold
+				mv.App.ApplyThemeToText(text, "element_selected")
 			} else {
 				for k, v := range text.Attribs {
 					text.Attribs[k] = ui.AttribPair{v.FG, termbox.ColorBlue | termbox.AttrBold}

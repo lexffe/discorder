@@ -28,7 +28,7 @@ type LoginWindow struct {
 }
 
 func NewLoginWindow(app *App) *LoginWindow {
-	window := ui.NewWindow()
+	window := ui.NewWindow(app.ViewManager.UIManager)
 	window.Transform.AnchorMax = common.NewVector2F(1, 1)
 	window.Title = "Login"
 
@@ -39,7 +39,7 @@ func NewLoginWindow(app *App) *LoginWindow {
 	helper.Layer = 5
 	window.Transform.AddChildren(helper)
 
-	mailInput := ui.NewTextInput()
+	mailInput := ui.NewTextInput(app.ViewManager.UIManager)
 	mailInput.Transform.Position = common.NewVector2I(1, 3)
 	mailInput.Transform.Size = common.NewVector2I(45, 0)
 	mailInput.Active = true
@@ -47,15 +47,16 @@ func NewLoginWindow(app *App) *LoginWindow {
 	mailInput.TextBuffer = app.config.Email
 
 	window.Transform.AddChildren(mailInput)
-	app.ViewManager.ActiveInput = mailInput
 
-	pwInput := ui.NewTextInput()
+	pwInput := ui.NewTextInput(app.ViewManager.UIManager)
 	pwInput.Transform.Position = common.NewVector2I(1, 5)
 	pwInput.Transform.Size = common.NewVector2I(45, 0)
 	pwInput.Active = false
 	pwInput.MaskInput = true
 	pwInput.Layer = 5
 	window.Transform.AddChildren(pwInput)
+
+	app.ViewManager.UIManager.SetActiveInput(mailInput)
 
 	footer2 := ui.NewText()
 	footer2.Text = "Ctrl-s switch between email and password"
@@ -123,17 +124,17 @@ func (lw *LoginWindow) OnCommand(cmd *Command, args Arguments) {
 		if lw.CurInputState == InputStateEmail {
 			lw.App.config.Email = lw.EmailInput.TextBuffer
 			lw.CurInputState = InputStatePassword
-			lw.App.ViewManager.SetActiveInput(lw.PWInput)
+			lw.App.ViewManager.UIManager.SetActiveInput(lw.PWInput)
 		} else {
 			pw := lw.PWInput.TextBuffer
 			lw.Trylogin(lw.App.config.Email, pw, "")
 		}
 	} else if cmd.Name == "scroll" {
 		if lw.CurInputState == InputStateEmail {
-			lw.App.ViewManager.SetActiveInput(lw.PWInput)
+			lw.App.ViewManager.UIManager.SetActiveInput(lw.PWInput)
 			lw.CurInputState = InputStatePassword
 		} else {
-			lw.App.ViewManager.SetActiveInput(lw.EmailInput)
+			lw.App.ViewManager.UIManager.SetActiveInput(lw.EmailInput)
 			lw.CurInputState = InputStateEmail
 		}
 	}

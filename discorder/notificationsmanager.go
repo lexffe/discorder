@@ -5,7 +5,6 @@ import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
-	"github.com/nsf/termbox-go"
 	"log"
 )
 
@@ -24,7 +23,7 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 
 	nm.text.Transform.AnchorMax = common.NewVector2I(1, 1)
 	nm.text.Layer = 8
-	nm.text.BG = termbox.ColorYellow
+	app.ApplyThemeToText(nm.text, "notifications_bar")
 	nm.Transform.AddChildren(nm.text)
 	return nm
 }

@@ -15,16 +15,21 @@ type TextInput struct {
 	CursorLocation int
 	Active         bool
 	MaskInput      bool // Replecas everything with "*"
+
+	Manager *Manager
 }
 
-func NewTextInput() *TextInput {
+func NewTextInput(manager *Manager) *TextInput {
 	input := &TextInput{
 		BaseEntity: &BaseEntity{},
 		Text:       NewText(),
+		Manager:    manager,
 	}
 
 	input.Transform.AddChildren(input.Text)
 	input.Text.Transform.AnchorMax = common.NewVector2I(1, 1)
+
+	manager.AddInput(input, false)
 
 	return input
 }
@@ -103,7 +108,6 @@ func (ti *TextInput) MoveCursor(dir Direction, amount int, byWords bool) {
 
 func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
 	bufLen := utf8.RuneCountInString(ti.TextBuffer)
-
 	switch dir {
 	case DirLeft:
 		if bufLen == 0 {
@@ -165,7 +169,18 @@ func (ti *TextInput) GetDrawLayer() int {
 	return ti.Layer
 }
 
-func (ti *TextInput) Destroy() { ti.DestroyChildren() }
+func (ti *TextInput) Destroy() {
+	ti.Manager.RemoveInput(ti, true)
+	ti.DestroyChildren()
+}
+
+func (ti *TextInput) SetActive(active bool) {
+	if active {
+		ti.Manager.SetActiveInput(ti)
+	} else {
+		ti.Active = false
+	}
+}
 
 // Implement LayoutElement
 func (ti *TextInput) GetRequiredSize() common.Vector2F {

@@ -3,7 +3,6 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
-	"github.com/nsf/termbox-go"
 )
 
 // Shows whos typing
@@ -23,7 +22,7 @@ func NewTypingDisplay(app *App) *TypingDisplay {
 	}
 
 	td.text.Transform.AnchorMax = common.NewVector2I(1, 1)
-	td.text.FG = termbox.ColorCyan
+	app.ApplyThemeToText(td.text, "typing_bar")
 	td.Transform.AddChildren(td.text)
 
 	return td
