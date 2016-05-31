@@ -98,6 +98,7 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 
 	mw.MainContainer.Transform.AddChildren(mw.SearchInput)
 	mw.SearchInput.Layer = mw.Layer + 1
+	mw.SearchInput.HideCursorWhenEmpty = true
 	manager.SetActiveInput(mw.SearchInput)
 
 	mw.MainContainer.Transform.AddChildren(mw.LowerContainer)
@@ -107,7 +108,7 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 	mw.LowerContainer.ProxySize = mw.InfoText
 	mw.LowerContainer.AllowZeroSize = false
 
-	mw.InfoText.Text = "THIS IS INFOOO TEXT"
+	mw.InfoText.Text = "Information"
 	mw.InfoText.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mw.InfoText.Layer = layer
 

@@ -10,11 +10,12 @@ type TextInput struct {
 	*BaseEntity
 	Text *Text
 
-	Layer          int
-	TextBuffer     string
-	CursorLocation int
-	Active         bool
-	MaskInput      bool // Replecas everything with "*"
+	Layer               int
+	TextBuffer          string
+	CursorLocation      int
+	Active              bool
+	MaskInput           bool // Replecas everything with "*"
+	HideCursorWhenEmpty bool
 
 	Manager *Manager
 }
@@ -150,11 +151,11 @@ func (ti *TextInput) Update() {
 	} else {
 		ti.Text.Text = ti.TextBuffer
 	}
-	ti.Text.Layer = ti.Layer
+
 }
 
 func (ti *TextInput) Draw() {
-	if ti.Active {
+	if ti.Active && ti.TextBuffer != "" {
 		rect := ti.Transform.GetRect()
 		if rect.W < 1 {
 			return
@@ -162,6 +163,8 @@ func (ti *TextInput) Draw() {
 		x := (ti.CursorLocation % int(rect.W)) + int(rect.X)
 		y := int(rect.Y) + (ti.CursorLocation / int(rect.W))
 		SafeSetCursor(x, y)
+	} else if ti.Active && ti.HideCursorWhenEmpty {
+		termbox.HideCursor()
 	}
 }
 
