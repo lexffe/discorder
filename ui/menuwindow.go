@@ -4,6 +4,8 @@ import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
 	"log"
+	"sort"
+	"strings"
 )
 
 type MenuItem struct {
@@ -12,6 +14,24 @@ type MenuItem struct {
 	Highlighted bool
 	Info        string
 	UserData    interface{}
+
+	matches int
+}
+
+type MenuItemSlice []*MenuItem
+
+func (mi MenuItemSlice) Len() int {
+	return len([]*MenuItem(mi))
+}
+
+func (mi MenuItemSlice) Less(a, b int) bool {
+	return mi[a].matches < mi[b].matches
+}
+
+func (mi MenuItemSlice) Swap(i, j int) {
+	temp := mi[i]
+	mi[i] = mi[j]
+	mi[j] = temp
 }
 
 type MenuWindow struct {
@@ -40,6 +60,8 @@ type MenuWindow struct {
 	Dirty bool
 
 	Layer int
+
+	lastSearch string
 }
 
 func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
@@ -51,6 +73,7 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 		TopContainer:   NewContainer(),
 		LowerContainer: NewContainer(),
 		InfoText:       NewText(),
+		SearchInput:    NewTextInput(manager),
 		Layer:          layer,
 		Dirty:          true,
 	}
@@ -72,6 +95,10 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 	mw.LowerWindow.Layer = layer
 
 	mw.MainContainer.Transform.AddChildren(mw.TopContainer)
+
+	mw.MainContainer.Transform.AddChildren(mw.SearchInput)
+	mw.SearchInput.Layer = mw.Layer + 1
+	manager.SetActiveInput(mw.SearchInput)
 
 	mw.MainContainer.Transform.AddChildren(mw.LowerContainer)
 
@@ -178,7 +205,9 @@ func (lw *MenuWindow) Rebuild() {
 	//lw.AddChild(lw.Window)
 	lw.TopContainer.Transform.ClearChildren(true)
 
-	lw.texts = make([]*Text, len(lw.Options))
+	options := lw.FilteredOptions()
+
+	lw.texts = make([]*Text, len(options))
 
 	requiredHeight := lw.OptionsHeight()
 	rect := lw.TopContainer.Transform.GetRect()
@@ -187,12 +216,12 @@ func (lw *MenuWindow) Rebuild() {
 	y := 0
 	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
 		// If window is taller then scroll
-		heightPerOption := float64(requiredHeight) / float64(len(lw.Options))
-		y = int(heightPerOption*(float64(len(lw.Options)-(lw.Highlighted)))) - int(rect.H*2)
+		heightPerOption := float64(requiredHeight) / float64(len(options))
+		y = int(heightPerOption*(float64(len(options)-(lw.Highlighted)))) - int(rect.H*2)
 		log.Println(y, heightPerOption)
 	}
 
-	for k, option := range lw.Options {
+	for k, option := range options {
 		t := NewText()
 		t.Text = option.Str
 		t.Transform.Position.Y = float32(y)
@@ -221,6 +250,40 @@ func (lw *MenuWindow) Rebuild() {
 	}
 }
 
+func (mw *MenuWindow) FilteredOptions() []*MenuItem {
+	if mw.lastSearch == "" {
+		return mw.Options
+	}
+
+	searchFields := strings.FieldsFunc(mw.lastSearch, fieldsFunc)
+
+	filtered := make([]*MenuItem, 0)
+	for _, option := range mw.Options {
+		split := strings.FieldsFunc(option.Str, fieldsFunc)
+
+		matches := 0
+		for _, searchField := range searchFields {
+			for _, optionField := range split {
+				if strings.Contains(strings.ToLower(optionField), strings.ToLower(searchField)) {
+					matches++
+				}
+			}
+		}
+		option.matches = matches
+		if matches > 0 {
+			filtered = append(filtered, option)
+		}
+	}
+
+	sort.Sort(MenuItemSlice(filtered))
+
+	return filtered
+}
+
+func fieldsFunc(r rune) bool {
+	return r == ' ' || r == '_'
+}
+
 func (lw *MenuWindow) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize {
 		lw.Dirty = true
@@ -233,10 +296,16 @@ func (mw *MenuWindow) OnLayoutChanged() {
 
 func (lw *MenuWindow) Destroy() { lw.DestroyChildren() }
 func (lw *MenuWindow) Update() {
+	if lw.lastSearch != lw.SearchInput.TextBuffer {
+		lw.lastSearch = lw.SearchInput.TextBuffer
+		lw.Dirty = true
+	}
+
 	if lw.Dirty {
 		lw.Rebuild()
 		lw.InfoText.Text = lw.GetHighlighted().Info
 	}
+
 	//	lw.Dirty = false
 }
 

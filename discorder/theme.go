@@ -60,6 +60,9 @@ func (app *App) ApplyThemeToMenu(menu *ui.MenuWindow) {
 	menu.StyleSelected = app.GetThemeAttribPair("element_selected").AttribPair()
 	menu.StyleMarkedSelected = app.GetThemeAttribPair("element_selected_marked").AttribPair()
 
+	app.ApplyThemeToText(menu.SearchInput.Text, "text_special")
+	app.ApplyThemeToText(menu.InfoText, "text_other")
+
 	app.ApplyThemeToWindow(menu.Window)
 }
 
