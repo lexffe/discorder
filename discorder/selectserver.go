@@ -1,6 +1,7 @@
 package discorder
 
 import (
+	"fmt"
 	"github.com/jonas747/discorder/common"
 	//"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
@@ -31,41 +32,7 @@ func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *Serve
 		Layer:       layer,
 	}
 
-	state := app.session.State
-	state.RLock()
-	defer state.RUnlock()
-
-	if len(state.Guilds) < 1 {
-		log.Println("No guilds, probably starting up still...")
-		return nil
-	}
-
-	options := make([]*ui.MenuItem, len(state.Guilds)+1)
-	for k, v := range state.Guilds {
-		options[k+1] = &ui.MenuItem{
-			Str:      v.Name,
-			Info:     v.Name + "\n" + v.ID,
-			UserData: v,
-		}
-
-		// Check if were listening to one of the channel on this servers
-	OUTER:
-		for _, channel := range v.Channels {
-			for _, listening := range messageView.Channels {
-				if listening == channel.ID {
-					options[k+1].Marked = true
-					break OUTER // We only need 1 so no need to continue
-				}
-			}
-		}
-	}
-	options[0] = &ui.MenuItem{
-		Str:         "Direct Messages",
-		Highlighted: true,
-	}
-
 	menuWindow := ui.NewMenuWindow(layer, app.ViewManager.UIManager)
-	menuWindow.SetOptions(options)
 
 	menuWindow.Transform.AnchorMax = common.NewVector2F(1, 1)
 	menuWindow.Transform.Top = 1
@@ -82,9 +49,88 @@ func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *Serve
 	ssw.Transform.AnchorMin = common.NewVector2F(0.1, 0)
 	ssw.Transform.AnchorMax = common.NewVector2F(0.9, 1)
 
+	ssw.GenMenu()
 	//height := float32(menuWindow.OptionsHeight() + 5)
 
 	return ssw
+}
+
+func (ssw *ServerSelectWindow) GenMenu() {
+	state := ssw.App.session.State
+	state.RLock()
+	defer state.RUnlock()
+
+	if len(state.Guilds) < 1 {
+		log.Println("No guilds, probably starting up still...")
+		return
+	}
+
+	// Generate guild options
+	rootOptions := make([]*ui.MenuItem, len(state.Guilds)+1)
+	for k, guild := range state.Guilds {
+		guildOption := &ui.MenuItem{
+			Name:     guild.Name,
+			IsDir:    true,
+			UserData: guild,
+			Info:     fmt.Sprintf("Members: %d\nID:%s", len(guild.Members), guild.ID),
+			Children: make([]*ui.MenuItem, len(guild.Channels)),
+		}
+
+		// Generate chanel options
+		for i, channel := range guild.Channels {
+			marked := false
+			for _, listening := range ssw.messageView.Channels {
+				if listening == channel.ID {
+					marked = true
+					break
+				}
+			}
+			channelOption := &ui.MenuItem{
+				Name:     "#" + channel.Name,
+				UserData: channel,
+				Info:     fmt.Sprintf("Topic %s", channel.Topic),
+				Marked:   marked,
+			}
+			guildOption.Children[i] = channelOption
+			if marked {
+				guildOption.Marked = true
+			}
+		}
+		rootOptions[k+1] = guildOption
+	}
+	rootOptions[0] = &ui.MenuItem{
+		Name:        "Direct Messages",
+		Highlighted: true,
+		IsDir:       true,
+		Children:    make([]*ui.MenuItem, len(state.PrivateChannels)),
+	}
+
+	for i, channel := range state.PrivateChannels {
+		marked := false
+		if ssw.messageView.ShowAllPrivate {
+			marked = true
+		} else {
+			for _, listening := range ssw.messageView.Channels {
+				if listening == channel.ID {
+					marked = true
+					break
+				}
+			}
+		}
+
+		channelOption := &ui.MenuItem{
+			Name:     GetChannelNameOrRecipient(channel),
+			UserData: channel,
+			Info:     fmt.Sprintf("Topic %s", channel.Topic),
+			Marked:   marked,
+		}
+		if marked {
+			rootOptions[0].Marked = true
+		}
+		rootOptions[0].Children[i] = channelOption
+	}
+
+	ssw.menuWindow.SetOptions(rootOptions)
 }
 
 func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {

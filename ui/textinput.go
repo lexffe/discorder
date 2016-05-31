@@ -10,25 +10,27 @@ type TextInput struct {
 	*BaseEntity
 	Text *Text
 
-	Layer               int
 	TextBuffer          string
 	CursorLocation      int
 	Active              bool
 	MaskInput           bool // Replecas everything with "*"
 	HideCursorWhenEmpty bool
+	Layer               int
 
 	Manager *Manager
 }
 
-func NewTextInput(manager *Manager) *TextInput {
+func NewTextInput(manager *Manager, layer int) *TextInput {
 	input := &TextInput{
 		BaseEntity: &BaseEntity{},
 		Text:       NewText(),
 		Manager:    manager,
+		Layer:      layer,
 	}
 
 	input.Transform.AddChildren(input.Text)
 	input.Text.Transform.AnchorMax = common.NewVector2I(1, 1)
+	input.Text.Layer = layer
 
 	manager.AddInput(input, false)
 
@@ -155,7 +157,10 @@ func (ti *TextInput) Update() {
 }
 
 func (ti *TextInput) Draw() {
-	if ti.Active && ti.TextBuffer != "" {
+	if !ti.Active {
+		return
+	}
+	if ti.TextBuffer != "" || (ti.TextBuffer == "" && !ti.HideCursorWhenEmpty) {
 		rect := ti.Transform.GetRect()
 		if rect.W < 1 {
 			return
@@ -163,7 +168,7 @@ func (ti *TextInput) Draw() {
 		x := (ti.CursorLocation % int(rect.W)) + int(rect.X)
 		y := int(rect.Y) + (ti.CursorLocation / int(rect.W))
 		SafeSetCursor(x, y)
-	} else if ti.Active && ti.HideCursorWhenEmpty {
+	} else if ti.HideCursorWhenEmpty {
 		termbox.HideCursor()
 	}
 }

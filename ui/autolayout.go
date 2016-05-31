@@ -31,7 +31,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 	numDynammic := 0
 	elements := make([]LayoutElement, 0)
 	// Get number of dynamic elements and calulate leftover space for them
-	RunFuncConditional(a, func(e Entity) bool {
+	RunFuncCondTraverse(a, func(e Entity) bool {
 		if e == a {
 			return true
 		}

@@ -151,6 +151,7 @@ type KeybindKey struct {
 	Char    string
 }
 
+// Generic command handler
 type CommandHandler interface {
 	OnCommand(cmd *Command, args Arguments)
 }

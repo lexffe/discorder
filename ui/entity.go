@@ -26,14 +26,30 @@ func RunFunc(e Entity, f func(e Entity)) {
 	}
 }
 
-// Same as above but only runs on children if f returns true
-func RunFuncConditional(e Entity, f func(e Entity) bool) {
+// Same as above but stops completely if f returns false
+func RunFuncCond(e Entity, f func(e Entity) bool) bool {
+	cont := f(e)
+	if !cont {
+		return false
+	}
+
+	for _, child := range e.Children(false) {
+		cont := RunFuncCond(child, f)
+		if !cont {
+			return false
+		}
+	}
+	return true
+}
+
+// Same as above but instead of stopping completely, will not traverse the children of e when f returns false
+func RunFuncCondTraverse(e Entity, f func(e Entity) bool) {
 	traverseChildren := f(e)
 	if traverseChildren {
 		children := e.Children(false) // We wanna make sure we do it in the proper order
 		if children != nil {
 			for _, child := range children {
-				RunFuncConditional(child, f)
+				RunFuncCondTraverse(child, f)
 			}
 		}
 	}
@@ -100,6 +116,14 @@ type DrawHandler interface {
 
 type Scrollable interface {
 	Scroll(dir Direction, amount int)
+}
+
+type SelectAble interface {
+	Select()
+}
+
+type BackHandler interface {
+	Back()
 }
 
 type LayoutChangeHandler interface {

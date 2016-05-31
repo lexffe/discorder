@@ -102,9 +102,8 @@ func (v *ViewManager) OnReady() {
 	footerContainer.AllowZeroSize = false
 	v.mainContainer.Transform.AddChildren(footerContainer)
 
-	MainInput := ui.NewTextInput(v.UIManager)
+	MainInput := ui.NewTextInput(v.UIManager, 5)
 	MainInput.Transform.AnchorMax = common.NewVector2F(1, 1)
-	MainInput.Layer = 5
 	MainInput.SetActive(true)
 
 	footerContainer.Transform.AddChildren(MainInput)
@@ -206,32 +205,35 @@ func (v *ViewManager) HandleInput(event termbox.Event) {
 		// 	}
 		// 	ssw := NewSelectServerWindow(v.App, v.mv)
 		// 	v.SetActiveWindow(ssw)
-		case termbox.KeyEnter:
-			if v.talkingChannel == "" {
-				log.Println("you're trying to send a message to nobody buddy D:")
-				break
-			}
 
-			if v.MainInput.TextBuffer == "" {
-				break // Nothing to see here...
-			}
-
-			if v.mentionAutocompleter.isAutocompletingMention {
-				if v.mentionAutocompleter.PerformAutocompleteMention() {
-					v.mentionAutocompleter.isAutocompletingMention = false
-				}
-			} else {
-				toSend := v.MainInput.TextBuffer
-				v.MainInput.TextBuffer = ""
-				v.MainInput.CursorLocation = 0
-				go func() {
-					_, err := v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
-					if err != nil {
-						log.Println("Error sending message: ", err)
-					}
-				}()
-			}
 		}
+	}
+}
+
+func (v *ViewManager) SendFromTextBuffer() {
+	if v.talkingChannel == "" {
+		log.Println("you're trying to send a message to nobody buddy D:")
+		return
+	}
+
+	if v.MainInput.TextBuffer == "" {
+		return // Nothing to see here...
+	}
+
+	if v.mentionAutocompleter.isAutocompletingMention {
+		if v.mentionAutocompleter.PerformAutocompleteMention() {
+			v.mentionAutocompleter.isAutocompletingMention = false
+		}
+	} else {
+		toSend := v.MainInput.TextBuffer
+		v.MainInput.TextBuffer = ""
+		v.MainInput.CursorLocation = 0
+		go func() {
+			_, err := v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
+			if err != nil {
+				log.Println("Error sending message: ", err)
+			}
+		}()
 	}
 }
 
@@ -246,7 +248,7 @@ func (v *ViewManager) ApplyTheme() {
 	v.App.ApplyThemeToText(v.typingDisplay.text, "typing_bar")
 	v.App.ApplyThemeToText(v.notificationsManager.text, "notifications_bar")
 
-	ui.RunFuncConditional(v, func(e ui.Entity) bool {
+	ui.RunFuncCondTraverse(v, func(e ui.Entity) bool {
 		menu, ok := e.(*ui.MenuWindow)
 		if ok {
 			v.App.ApplyThemeToMenu(menu)

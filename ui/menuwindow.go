@@ -9,13 +9,41 @@ import (
 )
 
 type MenuItem struct {
-	Str         string
+	Name  string
+	IsDir bool
+
 	Marked      bool
 	Highlighted bool
 	Info        string
-	UserData    interface{}
 
-	matches int
+	UserData interface{}
+	matches  int
+
+	Children []*MenuItem
+}
+
+func (mi *MenuItem) GetDisplayName() string {
+	if mi.IsDir {
+		return "[Dir] " + mi.Name
+	}
+	return mi.Name
+}
+
+// Runs f recursively on all children
+func (mi *MenuItem) RunFunc(f func(mi *MenuItem) bool) bool {
+	cont := f(mi)
+	if !cont {
+		return false
+	}
+	if mi.Children != nil && len(mi.Children) > 0 {
+		for _, v := range mi.Children {
+			cont := v.RunFunc(f)
+			if !cont {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 type MenuItemSlice []*MenuItem
@@ -52,7 +80,10 @@ type MenuWindow struct {
 	StyleSelected       AttribPair
 	StyleMarkedSelected AttribPair
 
-	Options []*MenuItem
+	Options         []*MenuItem
+	FilteredOptions []*MenuItem
+
+	CurDir []string
 
 	Highlighted int
 
@@ -61,6 +92,7 @@ type MenuWindow struct {
 
 	Layer int
 
+	OnSelect   func(*MenuItem)
 	lastSearch string
 }
 
@@ -73,7 +105,7 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 		TopContainer:   NewContainer(),
 		LowerContainer: NewContainer(),
 		InfoText:       NewText(),
-		SearchInput:    NewTextInput(manager),
+		SearchInput:    NewTextInput(manager, layer+1),
 		Layer:          layer,
 		Dirty:          true,
 	}
@@ -97,7 +129,6 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 	mw.MainContainer.Transform.AddChildren(mw.TopContainer)
 
 	mw.MainContainer.Transform.AddChildren(mw.SearchInput)
-	mw.SearchInput.Layer = mw.Layer + 1
 	mw.SearchInput.HideCursorWhenEmpty = true
 	manager.SetActiveInput(mw.SearchInput)
 
@@ -117,18 +148,18 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 }
 
 // Makes sure index is within len(options)
-func (lw *MenuWindow) CheckBounds(index int) int {
+func (mw *MenuWindow) CheckBounds(index int) int {
 	if index < 0 {
 		return 0
 	}
-	if index >= len(lw.Options) {
-		return len(lw.Options) - 1
+	if index >= len(mw.FilteredOptions) {
+		return len(mw.FilteredOptions) - 1
 	}
 	return index
 }
 
-func (lw *MenuWindow) GetIndex(item *MenuItem) int {
-	for k, v := range lw.Options {
+func (mw *MenuWindow) GetIndex(item *MenuItem) int {
+	for k, v := range mw.Options {
 		if item == v {
 			return k
 		}
@@ -137,97 +168,99 @@ func (lw *MenuWindow) GetIndex(item *MenuItem) int {
 	return -1
 }
 
-func (lw *MenuWindow) RemoveMarked(index int) {
-	index = lw.CheckBounds(index)
-	lw.Options[index].Marked = false
+func (mw *MenuWindow) RemoveMarked(index int) {
+	index = mw.CheckBounds(index)
+	mw.FilteredOptions[index].Marked = false
 
-	lw.Dirty = true
+	mw.Dirty = true
 }
 
-func (lw *MenuWindow) AddMarked(index int) {
-	index = lw.CheckBounds(index)
-	lw.Options[index].Marked = true
+func (mw *MenuWindow) AddMarked(index int) {
+	index = mw.CheckBounds(index)
+	mw.FilteredOptions[index].Marked = true
 
-	lw.Dirty = true
+	mw.Dirty = true
 }
 
-func (lw *MenuWindow) SetHighlighted(Highlighted int) {
-	if len(lw.Options) < 1 {
+func (mw *MenuWindow) SetHighlighted(Highlighted int) {
+	if len(mw.FilteredOptions) < 1 {
 		return
 	}
 	// Remove previous selection
-	if lw.Highlighted < len(lw.Options) && lw.Highlighted >= 0 {
-		lw.Options[lw.Highlighted].Highlighted = false
+	if mw.Highlighted < len(mw.FilteredOptions) && mw.Highlighted >= 0 {
+		mw.FilteredOptions[mw.Highlighted].Highlighted = false
 	}
 
-	Highlighted = lw.CheckBounds(Highlighted)
-	lw.Options[Highlighted].Highlighted = true
-	lw.Highlighted = Highlighted
+	Highlighted = mw.CheckBounds(Highlighted)
+	mw.FilteredOptions[Highlighted].Highlighted = true
+	mw.Highlighted = Highlighted
 
-	lw.Dirty = true
+	mw.Dirty = true
 }
 
-func (lw *MenuWindow) GetHighlighted() *MenuItem {
-	index := lw.CheckBounds(lw.Highlighted)
-	return lw.Options[index]
+func (mw *MenuWindow) GetHighlighted() *MenuItem {
+	if len(mw.FilteredOptions) < 1 {
+		return nil
+	}
+	index := mw.CheckBounds(mw.Highlighted)
+	return mw.FilteredOptions[index]
 }
 
-func (lw *MenuWindow) SetOptionsString(options []string) {
-	lw.Options = make([]*MenuItem, len(options))
+func (mw *MenuWindow) SetOptionsString(options []string) {
+	mw.Options = make([]*MenuItem, len(options))
 	for k, v := range options {
-		lw.Options[k] = &MenuItem{
-			Str:         v,
+		mw.Options[k] = &MenuItem{
+			Name:        v,
 			Marked:      false,
 			Highlighted: false,
 		}
-		if k == lw.Highlighted {
-			lw.Options[k].Highlighted = true
+		if k == mw.Highlighted {
+			mw.Options[k].Highlighted = true
 		}
 	}
-	lw.Dirty = true
+	mw.Dirty = true
 }
 
-func (lw *MenuWindow) SetOptions(options []*MenuItem) {
-	lw.Options = options
-	lw.Dirty = true
+func (mw *MenuWindow) SetOptions(options []*MenuItem) {
+	mw.Options = options
+	mw.Dirty = true
 }
 
-func (lw *MenuWindow) OptionsHeight() int {
+func (mw *MenuWindow) OptionsHeight() int {
 	h := 0
-	rect := lw.Transform.GetRect()
-	for _, v := range lw.Options {
-		h += HeightRequired(v.Str, int(rect.W))
+	rect := mw.Transform.GetRect()
+	for _, v := range mw.FilteredOptions {
+		h += HeightRequired(v.GetDisplayName(), int(rect.W))
 	}
 	return h
 }
 
-func (lw *MenuWindow) Rebuild() {
-	//lw.ClearChildren()
-	//lw.AddChild(lw.Window)
-	lw.TopContainer.Transform.ClearChildren(true)
+func (mw *MenuWindow) Rebuild() {
+	//mw.ClearChildren()
+	//mw.AddChild(mw.Window)
+	mw.TopContainer.Transform.ClearChildren(true)
+	options := mw.FilteredOptions
 
-	options := lw.FilteredOptions()
+	mw.texts = make([]*Text, len(options))
 
-	lw.texts = make([]*Text, len(options))
-
-	requiredHeight := lw.OptionsHeight()
-	rect := lw.TopContainer.Transform.GetRect()
+	requiredHeight := mw.OptionsHeight()
+	rect := mw.TopContainer.Transform.GetRect()
 	_, termSizeY := termbox.Size()
 
 	y := 0
 	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
 		// If window is taller then scroll
 		heightPerOption := float64(requiredHeight) / float64(len(options))
-		y = int(heightPerOption*(float64(len(options)-(lw.Highlighted)))) - int(rect.H*2)
+		y = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - int(rect.H*2)
 		log.Println(y, heightPerOption)
 	}
 
 	for k, option := range options {
 		t := NewText()
-		t.Text = option.Str
+		t.Text = option.GetDisplayName()
 		t.Transform.Position.Y = float32(y)
 		t.Transform.AnchorMax.X = 1
-		t.Layer = lw.Layer
+		t.Layer = mw.Layer
 		y += t.HeightRequired()
 
 		if y >= termSizeY || y >= int(rect.H) || y <= 0 {
@@ -235,32 +268,51 @@ func (lw *MenuWindow) Rebuild() {
 			continue
 		}
 
-		lw.texts[k] = t
-		lw.TopContainer.Transform.AddChildren(t)
+		mw.texts[k] = t
+		mw.TopContainer.Transform.AddChildren(t)
 
 		switch {
 		case option.Highlighted && option.Marked:
-			t.Style = lw.StyleMarkedSelected
+			t.Style = mw.StyleMarkedSelected
 		case option.Highlighted:
-			t.Style = lw.StyleSelected
+			t.Style = mw.StyleSelected
 		case option.Marked:
-			t.Style = lw.StyleMarked
+			t.Style = mw.StyleMarked
 		default:
-			t.Style = lw.StyleNormal
+			t.Style = mw.StyleNormal
 		}
 	}
 }
 
-func (mw *MenuWindow) FilteredOptions() []*MenuItem {
-	if mw.lastSearch == "" {
-		return mw.Options
+func (mw *MenuWindow) FilterOptions() []*MenuItem {
+	// Get the options in the current dir
+	inDir := FilterOptionsByPath(mw.CurDir, mw.Options)
+	searchApplied := SearchFilter(mw.lastSearch, inDir)
+	return searchApplied
+}
+
+func FilterOptionsByPath(path []string, options []*MenuItem) []*MenuItem {
+	if len(path) < 1 {
+		return options
 	}
 
-	searchFields := strings.FieldsFunc(mw.lastSearch, fieldsFunc)
+	for _, v := range options {
+		if v.Name == path[0] {
+			return FilterOptionsByPath(path[1:], v.Children)
+		}
+	}
+	return nil
+}
 
+func SearchFilter(searchBy string, in []*MenuItem) []*MenuItem {
+	if searchBy == "" {
+		return in
+	}
+
+	searchFields := strings.FieldsFunc(searchBy, fieldsFunc)
 	filtered := make([]*MenuItem, 0)
-	for _, option := range mw.Options {
-		split := strings.FieldsFunc(option.Str, fieldsFunc)
+	for _, option := range in {
+		split := strings.FieldsFunc(option.Name, fieldsFunc)
 
 		matches := 0
 		for _, searchField := range searchFields {
@@ -275,9 +327,7 @@ func (mw *MenuWindow) FilteredOptions() []*MenuItem {
 			filtered = append(filtered, option)
 		}
 	}
-
 	sort.Sort(MenuItemSlice(filtered))
-
 	return filtered
 }
 
@@ -285,9 +335,9 @@ func fieldsFunc(r rune) bool {
 	return r == ' ' || r == '_'
 }
 
-func (lw *MenuWindow) HandleInput(event termbox.Event) {
+func (mw *MenuWindow) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize {
-		lw.Dirty = true
+		mw.Dirty = true
 	}
 }
 
@@ -295,30 +345,55 @@ func (mw *MenuWindow) OnLayoutChanged() {
 	mw.Rebuild()
 }
 
-func (lw *MenuWindow) Destroy() { lw.DestroyChildren() }
-func (lw *MenuWindow) Update() {
-	if lw.lastSearch != lw.SearchInput.TextBuffer {
-		lw.lastSearch = lw.SearchInput.TextBuffer
-		lw.Dirty = true
+func (mw *MenuWindow) Destroy() { mw.DestroyChildren() }
+func (mw *MenuWindow) Update() {
+	if mw.lastSearch != mw.SearchInput.TextBuffer {
+		mw.lastSearch = mw.SearchInput.TextBuffer
+		mw.Dirty = true
 	}
 
-	if lw.Dirty {
-		lw.Rebuild()
-		lw.InfoText.Text = lw.GetHighlighted().Info
+	if mw.Dirty {
+		mw.FilteredOptions = mw.FilterOptions()
+		mw.Rebuild()
+		highlighted := mw.GetHighlighted()
+		if highlighted != nil {
+			mw.InfoText.Text = highlighted.Info
+		} else {
+			mw.InfoText.Text = "???"
+		}
 	}
 
-	//	lw.Dirty = false
+	//	mw.Dirty = false
 }
 
-func (lw *MenuWindow) Scroll(dir Direction, amount int) {
+func (mw *MenuWindow) Scroll(dir Direction, amount int) {
 	switch dir {
 	case DirUp:
-		lw.SetHighlighted(lw.Highlighted - amount)
+		mw.SetHighlighted(mw.Highlighted - amount)
 	case DirDown:
-		lw.SetHighlighted(lw.Highlighted + amount)
+		mw.SetHighlighted(mw.Highlighted + amount)
 	case DirEnd:
-		lw.SetHighlighted(len(lw.Options) - 1)
+		mw.SetHighlighted(len(mw.Options) - 1)
 	case DirStart:
-		lw.SetHighlighted(0)
+		mw.SetHighlighted(0)
+	}
+}
+
+func (mw *MenuWindow) Select() {
+	highlighted := mw.GetHighlighted()
+	if highlighted == nil {
+		return
+	}
+
+	if highlighted.IsDir {
+		mw.CurDir = append(mw.CurDir, highlighted.Name)
+		mw.Dirty = true
+	}
+}
+
+func (mw *MenuWindow) Back() {
+	if len(mw.CurDir) > 0 {
+		mw.CurDir = mw.CurDir[:len(mw.CurDir)-1]
+		mw.Dirty = true
 	}
 }

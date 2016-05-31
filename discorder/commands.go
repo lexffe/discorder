@@ -124,7 +124,7 @@ var Commands = []*Command{
 
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window != nil {
-				ui.RunFuncConditional(window, func(e ui.Entity) bool {
+				ui.RunFuncCondTraverse(window, func(e ui.Entity) bool {
 					scrollable, ok := e.(ui.Scrollable)
 					if ok {
 						scrollable.Scroll(moveDir, amount)
@@ -141,6 +141,23 @@ var Commands = []*Command{
 		Name:        "select",
 		Description: "Select the currently highlighted element",
 		Category:    "Misc",
+		Run: func(app *App, args Arguments) {
+			window := app.ViewManager.UIManager.CurrentWindow()
+			if window == nil {
+				app.ViewManager.SendFromTextBuffer()
+				return
+			}
+
+			ui.RunFuncCond(window, func(e ui.Entity) bool {
+				cast, ok := e.(ui.SelectAble)
+				if ok {
+					cast.Select()
+					return false
+				}
+
+				return true
+			})
+		},
 	},
 	&Command{
 		Name:        "mark",
@@ -198,12 +215,28 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "close_window",
+		Name:        "back",
 		Description: "Closes the active window",
 		Category:    "Main",
 		Run: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
-			if window != nil {
+			if window == nil {
+				return
+			}
+
+			handled := false
+			ui.RunFuncCond(window, func(e ui.Entity) bool {
+				cast, ok := e.(ui.BackHandler)
+				if ok {
+					cast.Back()
+					handled = true
+					return false
+				}
+
+				return true
+			})
+
+			if !handled { // Do the default action
 				app.ViewManager.Transform.RemoveChild(window, true)
 			}
 		},
