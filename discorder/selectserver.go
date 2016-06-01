@@ -196,5 +196,7 @@ func (ssw *ServerSelectWindow) Destroy() {
 func (ssw *ServerSelectWindow) Back() {
 	if len(ssw.menuWindow.CurDir) < 1 {
 		ssw.Transform.Parent.RemoveChild(ssw, true)
+	} else {
+		ssw.menuWindow.Back()
 	}
 }

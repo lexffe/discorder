@@ -92,8 +92,9 @@ type MenuWindow struct {
 
 	Layer int
 
-	OnSelect   func(*MenuItem)
-	lastSearch string
+	OnSelect             func(*MenuItem)
+	lastSearch           string
+	shouldResetHighlight bool // if true resets highlight on next update
 
 	manager *Manager
 }
@@ -353,13 +354,25 @@ func (mw *MenuWindow) Destroy() {
 	mw.DestroyChildren()
 }
 func (mw *MenuWindow) Update() {
+	shouldResetHighlight := false
 	if mw.lastSearch != mw.SearchInput.TextBuffer {
 		mw.lastSearch = mw.SearchInput.TextBuffer
 		mw.Dirty = true
+		shouldResetHighlight = true
 	}
 
 	if mw.Dirty {
+		if shouldResetHighlight || mw.shouldResetHighlight {
+			if mw.Highlighted < len(mw.FilteredOptions) && mw.Highlighted >= 0 {
+				mw.FilteredOptions[mw.Highlighted].Highlighted = false
+			}
+		}
 		mw.FilteredOptions = mw.FilterOptions()
+		if shouldResetHighlight || mw.shouldResetHighlight {
+			mw.SetHighlighted(0)
+			mw.shouldResetHighlight = false
+		}
+
 		mw.Rebuild()
 		highlighted := mw.GetHighlighted()
 		if highlighted != nil {
@@ -394,6 +407,7 @@ func (mw *MenuWindow) Select() {
 	if highlighted.IsDir {
 		mw.CurDir = append(mw.CurDir, highlighted.Name)
 		mw.Dirty = true
+		mw.shouldResetHighlight = true
 	}
 }
 
@@ -401,5 +415,7 @@ func (mw *MenuWindow) Back() {
 	if len(mw.CurDir) > 0 {
 		mw.CurDir = mw.CurDir[:len(mw.CurDir)-1]
 		mw.Dirty = true
+		mw.shouldResetHighlight = true
+		log.Println("Leaving category")
 	}
 }
