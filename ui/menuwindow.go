@@ -416,6 +416,5 @@ func (mw *MenuWindow) Back() {
 		mw.CurDir = mw.CurDir[:len(mw.CurDir)-1]
 		mw.Dirty = true
 		mw.shouldResetHighlight = true
-		log.Println("Leaving category")
 	}
 }
