@@ -52,6 +52,8 @@ func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *Serve
 	ssw.GenMenu()
 	//height := float32(menuWindow.OptionsHeight() + 5)
 
+	app.ViewManager.UIManager.AddWindow(ssw)
+
 	return ssw
 }
 
@@ -186,4 +188,13 @@ func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
 	}
 }
 
-func (ssw *ServerSelectWindow) Destroy() { ssw.DestroyChildren() }
+func (ssw *ServerSelectWindow) Destroy() {
+	ssw.App.ViewManager.UIManager.RemoveWindow(ssw)
+	ssw.DestroyChildren()
+}
+
+func (ssw *ServerSelectWindow) Back() {
+	if len(ssw.menuWindow.CurDir) < 1 {
+		ssw.Transform.Parent.RemoveChild(ssw, true)
+	}
+}

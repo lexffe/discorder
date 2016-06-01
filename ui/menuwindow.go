@@ -94,6 +94,8 @@ type MenuWindow struct {
 
 	OnSelect   func(*MenuItem)
 	lastSearch string
+
+	manager *Manager
 }
 
 func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
@@ -108,6 +110,7 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 		SearchInput:    NewTextInput(manager, layer+1),
 		Layer:          layer,
 		Dirty:          true,
+		manager:        manager,
 	}
 
 	mw.Window.Transform.AnchorMax = common.NewVector2F(1, 1)
@@ -345,7 +348,10 @@ func (mw *MenuWindow) OnLayoutChanged() {
 	mw.Rebuild()
 }
 
-func (mw *MenuWindow) Destroy() { mw.DestroyChildren() }
+func (mw *MenuWindow) Destroy() {
+	mw.manager.RemoveWindow(mw)
+	mw.DestroyChildren()
+}
 func (mw *MenuWindow) Update() {
 	if mw.lastSearch != mw.SearchInput.TextBuffer {
 		mw.lastSearch = mw.SearchInput.TextBuffer

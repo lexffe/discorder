@@ -10,13 +10,13 @@ var Commands = []*Command{
 	&Command{
 		Name:        "commands",
 		Description: "Opens up the command window with all commands available",
-		Category:    "Hidden",
+		Category:    []string{"Hidden"},
 		Run:         func(app *App, args Arguments) {},
 	},
 	&Command{
 		Name:        "settings",
 		Description: "Opens up the help window",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				// hw := NewHelpWindow(app)
@@ -27,7 +27,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "move_cursor",
 		Description: "Moves cursor in specified direction",
-		Category:    "Misc",
+		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
@@ -47,7 +47,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "erase",
 		Description: "Erase text",
-		Category:    "Misc",
+		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
@@ -68,7 +68,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "servers",
 		Description: "Opens up the server window",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
@@ -79,7 +79,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "channels",
 		Description: "Opens up the channel window",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				// ssw := NewChannelSelectWindow(app, app.ViewManager.SelectedMessageView, guild)
@@ -90,7 +90,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "help",
 		Description: "Opens up the help window",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
@@ -101,7 +101,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "message_window",
 		Description: "Opens message window",
-		Category:    "Misc",
+		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "message", Optional: true, Datatype: ArgumentDataTypeString},
 		},
@@ -112,7 +112,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "scroll",
 		Description: "Scrolls currently active view",
-		Category:    "Misc",
+		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
@@ -140,7 +140,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "select",
 		Description: "Select the currently highlighted element",
-		Category:    "Misc",
+		Category:    []string{"Misc"},
 		Run: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
@@ -162,12 +162,12 @@ var Commands = []*Command{
 	&Command{
 		Name:        "mark",
 		Description: "Toggles the currently highlited element",
-		Category:    "Misc",
+		Category:    []string{"Misc"},
 	},
 	&Command{
 		Name:        "clear_log",
 		Description: "Clear the logbuffer",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			logRoutine.Clear()
 		},
@@ -175,7 +175,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "reload_theme",
 		Description: "Reloads the current theme",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			userTheme := app.themePath
 			if userTheme == "" {
@@ -193,31 +193,31 @@ var Commands = []*Command{
 	&Command{
 		Name:        "delete",
 		Description: "Deletes a message",
-		Category:    "Util",
+		Category:    []string{"Util"},
 	},
 	&Command{
 		Name:        "game",
 		Description: "Sets the game you're playing",
-		Category:    "Util",
+		Category:    []string{"Util"},
 	},
 	&Command{
 		Name:        "send_message",
 		Description: "Sends a message",
-		Category:    "Util",
+		Category:    []string{"Util"},
 		Run: func(app *App, args Arguments) {
 		},
 	},
 	&Command{
 		Name:        "set_nick",
 		Description: "Sets your nickname on a server (if possible)",
-		Category:    "Main",
+		Category:    []string{"Discord"},
 		Run: func(app *App, args Arguments) {
 		},
 	},
 	&Command{
 		Name:        "back",
 		Description: "Closes the active window",
-		Category:    "Main",
+		Category:    []string{"Misc"},
 		Run: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
@@ -244,7 +244,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "quit",
 		Description: "Quit discorder",
-		Category:    "Main",
+		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			go app.Stop()
 		},

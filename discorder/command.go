@@ -19,8 +19,9 @@ type Command struct {
 	Name        string
 	Description string
 	Args        []*ArgumentDef
-	Category    string
+	Category    []string
 	Run         func(app *App, args Arguments)
+	StatusFunc  func(app *App)
 }
 
 type ArgumentDef struct {
