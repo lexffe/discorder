@@ -53,7 +53,7 @@ func (mi MenuItemSlice) Len() int {
 }
 
 func (mi MenuItemSlice) Less(a, b int) bool {
-	return mi[a].matches < mi[b].matches
+	return mi[a].matches > mi[b].matches
 }
 
 func (mi MenuItemSlice) Swap(i, j int) {
