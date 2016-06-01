@@ -418,3 +418,12 @@ func (mw *MenuWindow) Back() {
 		mw.shouldResetHighlight = true
 	}
 }
+
+func (mw *MenuWindow) RunFunc(f func(item *MenuItem) bool) {
+	for _, v := range mw.Options {
+		cont := v.RunFunc(f)
+		if !cont {
+			return
+		}
+	}
+}

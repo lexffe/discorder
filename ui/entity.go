@@ -122,6 +122,10 @@ type SelectAble interface {
 	Select()
 }
 
+type ToggleAble interface {
+	Toggle()
+}
+
 type BackHandler interface {
 	Back()
 }

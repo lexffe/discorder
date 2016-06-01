@@ -160,9 +160,25 @@ var Commands = []*Command{
 		},
 	},
 	&Command{
-		Name:        "mark",
+		Name:        "toggle",
 		Description: "Toggles the currently highlited element",
 		Category:    []string{"Misc"},
+		Run: func(app *App, args Arguments) {
+			window := app.ViewManager.UIManager.CurrentWindow()
+			if window == nil {
+				return
+			}
+
+			ui.RunFuncCond(window, func(e ui.Entity) bool {
+				cast, ok := e.(ui.ToggleAble)
+				if ok {
+					cast.Toggle()
+					return false
+				}
+
+				return true
+			})
+		},
 	},
 	&Command{
 		Name:        "clear_log",
@@ -193,17 +209,17 @@ var Commands = []*Command{
 	&Command{
 		Name:        "delete",
 		Description: "Deletes a message",
-		Category:    []string{"Util"},
+		Category:    []string{"Discord"},
 	},
 	&Command{
 		Name:        "game",
 		Description: "Sets the game you're playing",
-		Category:    []string{"Util"},
+		Category:    []string{"Discord"},
 	},
 	&Command{
 		Name:        "send_message",
 		Description: "Sends a message",
-		Category:    []string{"Util"},
+		Category:    []string{"Discord"},
 		Run: func(app *App, args Arguments) {
 		},
 	},

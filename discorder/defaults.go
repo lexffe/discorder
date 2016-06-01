@@ -14,7 +14,7 @@ var DefaultKeybinds = []byte(`[
 	{"key": "ArrowDown", "command": "scroll", "args": {"amount": 1, "direction": "down"}},
 	
 	{"key": "Enter", "command": "select"},
-	{"key": "CtrlSpace", "command": "mark"},
+	{"key": "CtrlSpace", "command": "toggle"},
 	{"key": "Backspace", "command": "erase", "args": {"amount": 1, "direction": "left"}},
 	{"key": "Backspace2", "command": "erase", "args": {"amount": 1, "direction": "left"}},
 	{"key": "Delete", "command": "erase", "args": {"amount": 1, "direction": "right"}},

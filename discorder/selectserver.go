@@ -6,7 +6,6 @@ import (
 	//"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
-	"github.com/nsf/termbox-go"
 	"log"
 )
 
@@ -135,59 +134,6 @@ func (ssw *ServerSelectWindow) GenMenu() {
 	ssw.menuWindow.SetOptions(rootOptions)
 }
 
-func (ssw *ServerSelectWindow) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		switch event.Key {
-		case termbox.KeyEnter:
-			// The below does not strictly belong here does it?
-			selected := ssw.menuWindow.GetHighlighted()
-
-			userdata, ok := selected.UserData.(*discordgo.Guild)
-
-			var window *ChannelSelectWindow
-			if ok {
-				window = NewChannelSelectWindow(ssw.App, ssw.messageView, userdata.ID)
-			} else {
-				window = NewChannelSelectWindow(ssw.App, ssw.messageView, "")
-			}
-
-			ssw.App.ViewManager.Transform.RemoveChild(ssw, true)
-			ssw.App.ViewManager.Transform.AddChildren(window)
-		case termbox.KeySpace:
-			// The below does not strictly belong here does it?
-			selected := ssw.menuWindow.GetHighlighted()
-			userdata, ok := selected.UserData.(*discordgo.Guild)
-			if !ok {
-				break
-			}
-			toggleTo := true
-		OUTER:
-			for _, v := range userdata.Channels {
-				for _, c := range ssw.messageView.Channels {
-					if v.ID == c {
-						toggleTo = false
-						break OUTER
-					}
-				}
-			}
-
-			for _, v := range userdata.Channels {
-				if v.Type != "text" && !v.IsPrivate {
-					continue
-				}
-
-				if toggleTo {
-					ssw.messageView.AddChannel(v.ID)
-					selected.Marked = true
-				} else {
-					ssw.messageView.RemoveChannel(v.ID)
-					selected.Marked = false
-				}
-			}
-		}
-	}
-}
-
 func (ssw *ServerSelectWindow) Destroy() {
 	ssw.App.ViewManager.UIManager.RemoveWindow(ssw)
 	ssw.DestroyChildren()
@@ -199,4 +145,122 @@ func (ssw *ServerSelectWindow) Back() {
 	} else {
 		ssw.menuWindow.Back()
 	}
+}
+
+func (ssw *ServerSelectWindow) Select() {
+	element := ssw.menuWindow.GetHighlighted()
+	if element == nil {
+		return
+	}
+
+	if element.IsDir {
+		ssw.menuWindow.Select()
+		return
+	}
+
+	if element.UserData == nil {
+		return
+	}
+
+	cast, ok := element.UserData.(*discordgo.Channel)
+	if !ok {
+		return
+	}
+
+	log.Println("Selected ", GetChannelNameOrRecipient(cast))
+	ssw.App.ViewManager.talkingChannel = cast.ID
+}
+
+func (ssw *ServerSelectWindow) Toggle() {
+	element := ssw.menuWindow.GetHighlighted()
+	if element == nil {
+		return
+	}
+
+	if element.UserData == nil {
+		return
+	}
+
+	switch t := element.UserData.(type) {
+	case *discordgo.Channel:
+		ssw.ToggleChannel(t, element)
+	case *discordgo.Guild:
+		ssw.ToggleGuild(t, element)
+	case string:
+		ssw.ToggleDirectMessages()
+	}
+}
+
+func (ssw *ServerSelectWindow) ToggleGuild(guild *discordgo.Guild, element *ui.MenuItem) {
+
+	toggleTo := true
+OUTER:
+	for _, v := range guild.Channels {
+		for _, c := range ssw.messageView.Channels {
+			if v.ID == c {
+				toggleTo = false
+				break OUTER
+			}
+		}
+	}
+
+	element.Marked = toggleTo
+	for _, v := range guild.Channels {
+		if v.Type != "text" && !v.IsPrivate {
+			continue
+		}
+
+		if toggleTo {
+			ssw.messageView.AddChannel(v.ID)
+		} else {
+			ssw.messageView.RemoveChannel(v.ID)
+		}
+	}
+
+	ssw.menuWindow.RunFunc(func(item *ui.MenuItem) bool {
+		cast, ok := item.UserData.(*discordgo.Channel)
+		if ok && cast.GuildID == guild.ID {
+			item.Marked = toggleTo
+		}
+		return true
+	})
+
+	ssw.messageView.ShowAllPrivate = toggleTo
+	ssw.menuWindow.Dirty = true
+}
+
+func (ssw *ServerSelectWindow) ToggleChannel(channel *discordgo.Channel, element *ui.MenuItem) {
+	element.Marked = !element.Marked
+
+	//Reflect changes to messageview
+	if element.Marked {
+		ssw.messageView.AddChannel(channel.ID)
+	} else {
+		ssw.messageView.RemoveChannel(channel.ID)
+	}
+	ssw.menuWindow.Dirty = true
+
+	if channel.IsPrivate {
+		all := true
+		ssw.menuWindow.RunFunc(func(item *ui.MenuItem) bool {
+			cast, ok := item.UserData.(*discordgo.Channel)
+			if ok && cast.IsPrivate {
+				if !item.Marked {
+					all = false
+					return false
+				}
+			}
+			return true
+		})
+
+		if all {
+			ssw.App.ViewManager.mv.ShowAllPrivate = true
+		} else {
+			ssw.App.ViewManager.mv.ShowAllPrivate = false
+		}
+	}
+}
+
+func (ssw *ServerSelectWindow) ToggleDirectMessages() {
+
 }
