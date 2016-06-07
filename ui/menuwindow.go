@@ -253,7 +253,7 @@ func (mw *MenuWindow) Rebuild() {
 	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
 		// If window is taller then scroll
 		heightPerOption := float64(requiredHeight) / float64(len(options))
-		y = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - int(rect.H*2)
+		y = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - int(requiredHeight/2)
 	}
 
 	for k, option := range options {
