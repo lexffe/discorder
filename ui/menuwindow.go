@@ -210,23 +210,22 @@ func (mw *MenuWindow) GetHighlighted() *MenuItem {
 }
 
 func (mw *MenuWindow) SetOptionsString(options []string) {
-	mw.Options = make([]*MenuItem, len(options))
+	newOptions := make([]*MenuItem, len(options))
 	for k, v := range options {
-		mw.Options[k] = &MenuItem{
+		newOptions[k] = &MenuItem{
 			Name:        v,
 			Marked:      false,
 			Highlighted: false,
 		}
-		if k == mw.Highlighted {
-			mw.Options[k].Highlighted = true
-		}
 	}
-	mw.Dirty = true
+	mw.SetOptions(newOptions)
 }
 
 func (mw *MenuWindow) SetOptions(options []*MenuItem) {
 	mw.Options = options
 	mw.Dirty = true
+	mw.FilteredOptions = mw.FilterOptions()
+	mw.SetHighlighted(0)
 }
 
 func (mw *MenuWindow) OptionsHeight() int {
@@ -334,7 +333,7 @@ func SearchFilter(searchBy string, in []*MenuItem) []*MenuItem {
 }
 
 func fieldsFunc(r rune) bool {
-	return r == ' ' || r == '_'
+	return r == ' ' || r == '_' || r == '-'
 }
 
 func (mw *MenuWindow) HandleInput(event termbox.Event) {
