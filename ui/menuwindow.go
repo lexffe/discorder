@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
+	"log"
 	"sort"
 	"strings"
 )
@@ -284,30 +285,10 @@ func (mw *MenuWindow) Rebuild() {
 
 	mw.texts = make([]*Text, len(options))
 
-	requiredHeight := mw.OptionsHeight()
-	rect := mw.MenuItemContainer.Transform.GetRect()
-	_, termSizeY := termbox.Size()
-
-	// Calculate scroll
-	//y := 0
-	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
-		// If window is taller then scroll
-		heightPerOption := float64(requiredHeight) / float64(len(options))
-		mw.MenuItemContainer.Transform.Top = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
-	}
-
 	for k, option := range options {
 		t := NewText()
 		t.Text = option.GetDisplayName()
-		//t.Transform.Position.Y = float32(y)
-		//t.Transform.AnchorMax.X = 1
 		t.Layer = mw.Layer
-		//y += t.HeightRequired()
-
-		//if y >= termSizeY || y >= int(rect.H) || y <= 0 {
-		// Ignore if hidden/should be hidden
-		// continue
-		//}
 
 		mw.texts[k] = t
 		mw.MenuItemContainer.Transform.AddChildren(t)
@@ -377,9 +358,9 @@ func fieldsFunc(r rune) bool {
 	return r == ' ' || r == '_' || r == '-'
 }
 
-func (mw *MenuWindow) OnLayoutChanged() {
-	mw.Rebuild()
-}
+// func (mw *MenuWindow) OnLayoutChanged() {
+// 	mw.Rebuild()
+// }
 
 func (mw *MenuWindow) Destroy() {
 	mw.manager.RemoveWindow(mw)
@@ -404,7 +385,7 @@ func (mw *MenuWindow) Update() {
 			mw.SetHighlighted(0)
 			mw.shouldResetHighlight = false
 		}
-
+		log.Println("MW Is dirty, rebuilding")
 		mw.Rebuild()
 		highlighted := mw.GetHighlighted()
 		if highlighted != nil {
@@ -414,7 +395,21 @@ func (mw *MenuWindow) Update() {
 		}
 	}
 
-	//	mw.Dirty = false
+	requiredHeight := mw.OptionsHeight()
+	rect := mw.MenuItemContainer.Transform.GetRect()
+	_, termSizeY := termbox.Size()
+
+	// Calculate scroll
+	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
+		// If window is taller then scroll
+		heightPerOption := float64(requiredHeight) / float64(len(mw.FilteredOptions))
+		scroll := int(heightPerOption*(float64(len(mw.FilteredOptions)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
+		mw.MenuItemContainer.Transform.Top = scroll
+		mw.MenuItemContainer.Transform.Bottom = -scroll
+		//log.Println(mw.MenuItemContainer.Transform.Top, heightPerOption, requiredHeight, "Hmm", mw.Highlighted, rect.H)
+	}
+
+	mw.Dirty = false
 }
 
 func (mw *MenuWindow) Scroll(dir Direction, amount int) {
