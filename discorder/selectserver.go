@@ -70,11 +70,11 @@ func (ssw *ServerSelectWindow) GenMenu() {
 	rootOptions := make([]*ui.MenuItem, len(state.Guilds)+1)
 	for k, guild := range state.Guilds {
 		guildOption := &ui.MenuItem{
-			Name:     guild.Name,
-			IsDir:    true,
-			UserData: guild,
-			Info:     fmt.Sprintf("Members: %d\nID:%s", len(guild.Members), guild.ID),
-			Children: make([]*ui.MenuItem, len(guild.Channels)),
+			Name:       guild.Name,
+			IsCategory: true,
+			UserData:   guild,
+			Info:       fmt.Sprintf("Members: %d\nID:%s", len(guild.Members), guild.ID),
+			Children:   make([]*ui.MenuItem, len(guild.Channels)),
 		}
 
 		// Generate chanel options
@@ -102,7 +102,7 @@ func (ssw *ServerSelectWindow) GenMenu() {
 	rootOptions[0] = &ui.MenuItem{
 		Name:        "Direct Messages",
 		Highlighted: true,
-		IsDir:       true,
+		IsCategory:  true,
 		Children:    make([]*ui.MenuItem, len(state.PrivateChannels)),
 	}
 
@@ -139,21 +139,13 @@ func (ssw *ServerSelectWindow) Destroy() {
 	ssw.DestroyChildren()
 }
 
-func (ssw *ServerSelectWindow) Back() {
-	if len(ssw.menuWindow.CurDir) < 1 {
-		ssw.Transform.Parent.RemoveChild(ssw, true)
-	} else {
-		ssw.menuWindow.Back()
-	}
-}
-
 func (ssw *ServerSelectWindow) Select() {
 	element := ssw.menuWindow.GetHighlighted()
 	if element == nil {
 		return
 	}
 
-	if element.IsDir {
+	if element.IsCategory {
 		ssw.menuWindow.Select()
 		return
 	}

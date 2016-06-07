@@ -51,8 +51,8 @@ var DefaultTheme = []byte(`{
 		"text_other": {},
 		"text_special": { "fg": {"color": "cyan"} },
 		"input_chat": {},
-		"send_prompt": { "fg": {"color": "green", "bold": true}	},
 		"input_other": {},
+		"send_prompt": { "fg": {"color": "green", "bold": true}	},
 		"search": { "fg": {"color": "yellow", "bold": true}	}
 	}
 }`)

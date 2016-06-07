@@ -11,17 +11,9 @@ var Commands = []*Command{
 		Name:        "commands",
 		Description: "Opens up the command window with all commands available",
 		Category:    []string{"Hidden"},
-		Run:         func(app *App, args Arguments) {},
-	},
-	&Command{
-		Name:        "settings",
-		Description: "Opens up the help window",
-		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
-			if app.ViewManager.CanOpenWindow() {
-				// hw := NewHelpWindow(app)
-				// app.ViewManager.SetActiveWindow(hw)
-			}
+			cw := NewCommandWindow(app, 5)
+			app.ViewManager.Transform.AddChildren(cw)
 		},
 	},
 	&Command{
@@ -68,7 +60,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "servers",
 		Description: "Opens up the server window",
-		Category:    []string{"Main"},
+		Category:    []string{"Windows"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
@@ -79,7 +71,7 @@ var Commands = []*Command{
 	&Command{
 		Name:        "channels",
 		Description: "Opens up the channel window",
-		Category:    []string{"Main"},
+		Category:    []string{"Windows"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				// ssw := NewChannelSelectWindow(app, app.ViewManager.SelectedMessageView, guild)
@@ -90,7 +82,6 @@ var Commands = []*Command{
 	&Command{
 		Name:        "help",
 		Description: "Opens up the help window",
-		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
@@ -183,7 +174,6 @@ var Commands = []*Command{
 	&Command{
 		Name:        "clear_log",
 		Description: "Clear the logbuffer",
-		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			logRoutine.Clear()
 		},
@@ -191,7 +181,6 @@ var Commands = []*Command{
 	&Command{
 		Name:        "reload_theme",
 		Description: "Reloads the current theme",
-		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			userTheme := app.themePath
 			if userTheme == "" {
@@ -244,9 +233,10 @@ var Commands = []*Command{
 			ui.RunFuncCond(window, func(e ui.Entity) bool {
 				cast, ok := e.(ui.BackHandler)
 				if ok {
-					cast.Back()
-					handled = true
-					return false
+					handled = cast.Back()
+					if handled {
+						return false
+					}
 				}
 
 				return true
@@ -260,7 +250,6 @@ var Commands = []*Command{
 	&Command{
 		Name:        "quit",
 		Description: "Quit discorder",
-		Category:    []string{"Main"},
 		Run: func(app *App, args Arguments) {
 			go app.Stop()
 		},

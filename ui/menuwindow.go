@@ -3,14 +3,13 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
-	"log"
 	"sort"
 	"strings"
 )
 
 type MenuItem struct {
-	Name  string
-	IsDir bool
+	Name       string
+	IsCategory bool
 
 	Marked      bool
 	Highlighted bool
@@ -23,7 +22,7 @@ type MenuItem struct {
 }
 
 func (mi *MenuItem) GetDisplayName() string {
-	if mi.IsDir {
+	if mi.IsCategory {
 		return "[Dir] " + mi.Name
 	}
 	return mi.Name
@@ -256,7 +255,6 @@ func (mw *MenuWindow) Rebuild() {
 		// If window is taller then scroll
 		heightPerOption := float64(requiredHeight) / float64(len(options))
 		y = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - int(rect.H*2)
-		log.Println(y, heightPerOption)
 	}
 
 	for k, option := range options {
@@ -404,19 +402,22 @@ func (mw *MenuWindow) Select() {
 		return
 	}
 
-	if highlighted.IsDir {
+	if highlighted.IsCategory {
 		mw.CurDir = append(mw.CurDir, highlighted.Name)
 		mw.Dirty = true
 		mw.shouldResetHighlight = true
 	}
 }
 
-func (mw *MenuWindow) Back() {
+func (mw *MenuWindow) Back() bool {
 	if len(mw.CurDir) > 0 {
 		mw.CurDir = mw.CurDir[:len(mw.CurDir)-1]
 		mw.Dirty = true
 		mw.shouldResetHighlight = true
+		return true
 	}
+
+	return false
 }
 
 func (mw *MenuWindow) RunFunc(f func(item *MenuItem) bool) {

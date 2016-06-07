@@ -96,6 +96,10 @@ func (app *App) Login(user, password, token string) error {
 	}
 
 	session.LogLevel = app.dGoDebugLvl
+	if app.dGoDebugLvl >= discordgo.LogDebug {
+		session.Debug = true
+	}
+
 	app.session = session
 
 	if err != nil {

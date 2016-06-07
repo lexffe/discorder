@@ -31,6 +31,7 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 	}
 
 	// Happens when we haven't received ready yet
+	// TODO Put them in queue instead
 	if app.session.State.User == nil {
 		return
 	}

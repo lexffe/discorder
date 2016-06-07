@@ -127,7 +127,7 @@ type ToggleAble interface {
 }
 
 type BackHandler interface {
-	Back()
+	Back() bool // Return false for not handled
 }
 
 type LayoutChangeHandler interface {

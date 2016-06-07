@@ -2,6 +2,7 @@ package discorder
 
 import (
 	"encoding/json"
+	"github.com/jonas747/discorder/ui"
 	"github.com/nsf/termbox-go"
 	"strings"
 )
@@ -22,6 +23,15 @@ type Command struct {
 	Category    []string
 	Run         func(app *App, args Arguments)
 	StatusFunc  func(app *App)
+}
+
+func (cmd *Command) GenMenuItem() *ui.MenuItem {
+	cmdItem := &ui.MenuItem{
+		Name:     cmd.Name,
+		Info:     cmd.Description,
+		UserData: cmd,
+	}
+	return cmdItem
 }
 
 type ArgumentDef struct {
