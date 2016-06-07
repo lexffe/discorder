@@ -261,14 +261,13 @@ func (app *App) Draw() {
 	termbox.Flush()
 }
 
-func (app *App) RunCommand(command *Command, args Arguments) {
+func (app *App) RunCommand(command Command, args Arguments) {
 	if command == nil {
 		log.Println("Tried to run a nonexstant command")
 		return
 	}
-	if command.Run != nil {
-		command.Run(app, args)
-	}
+
+	command.Run(app, args)
 
 	ui.RunFunc(app, func(e ui.Entity) {
 		cmdHandler, ok := e.(CommandHandler)

@@ -41,7 +41,7 @@ func GetCategoryFromPath(other []string, categories []*CommandCategory) *Command
 	return nil
 }
 
-func (cc *CommandCategory) GenMenu(cmds []*Command, categories []*CommandCategory) *ui.MenuItem {
+func (cc *CommandCategory) GenMenu(app *App, cmds []Command, categories []*CommandCategory) *ui.MenuItem {
 	item := &ui.MenuItem{
 		Name:       cc.Name,
 		Info:       cc.Description,
@@ -51,14 +51,14 @@ func (cc *CommandCategory) GenMenu(cmds []*Command, categories []*CommandCategor
 
 	// Add sub categories
 	for _, sub := range cc.Children {
-		subItem := sub.GenMenu(cmds, categories)
+		subItem := sub.GenMenu(app, cmds, categories)
 		item.Children = append(item.Children, subItem)
 	}
 
 	// Add commands
 	for _, cmd := range cmds {
-		if GetCategoryFromPath(cmd.Category, categories) == cc {
-			item.Children = append(item.Children, cmd.GenMenuItem())
+		if GetCategoryFromPath(cmd.GetCategory(), categories) == cc {
+			item.Children = append(item.Children, app.GenMenuItemFromCommand(cmd))
 		}
 	}
 	return item

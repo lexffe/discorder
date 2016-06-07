@@ -16,19 +16,53 @@ const (
 	ArgumentDataTypeBool
 )
 
-type Command struct {
+type SimpleCommand struct {
 	Name        string
 	Description string
 	Args        []*ArgumentDef
 	Category    []string
-	Run         func(app *App, args Arguments)
-	StatusFunc  func(app *App)
+	RunFunc     func(app *App, args Arguments)
+	StatusFunc  func(app *App) string
 }
 
-func (cmd *Command) GenMenuItem() *ui.MenuItem {
+func (s *SimpleCommand) GetName() string {
+	return s.Name
+}
+
+func (s *SimpleCommand) GetDescription(app *App) string {
+	desc := s.Description
+	if s.StatusFunc != nil {
+		desc += "\n" + s.StatusFunc(app)
+	}
+	return desc
+}
+
+func (s *SimpleCommand) GetArgs() []*ArgumentDef {
+	return s.Args
+}
+
+func (s *SimpleCommand) GetCategory() []string {
+	return s.Category
+}
+
+func (s *SimpleCommand) Run(app *App, args Arguments) {
+	if s.RunFunc != nil {
+		s.RunFunc(app, args)
+	}
+}
+
+type Command interface {
+	GetName() string
+	GetDescription(app *App) string
+	GetArgs() []*ArgumentDef
+	GetCategory() []string
+	Run(app *App, args Arguments)
+}
+
+func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
 	cmdItem := &ui.MenuItem{
-		Name:     cmd.Name,
-		Info:     cmd.Description,
+		Name:     cmd.GetName(),
+		Info:     cmd.GetDescription(app),
 		UserData: cmd,
 	}
 	return cmdItem
@@ -164,7 +198,7 @@ type KeybindKey struct {
 
 // Generic command handler
 type CommandHandler interface {
-	OnCommand(cmd *Command, args Arguments)
+	OnCommand(cmd Command, args Arguments)
 }
 
 var SpecialKeys = map[string]termbox.Key{

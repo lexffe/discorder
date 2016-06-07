@@ -44,13 +44,13 @@ func (cw *CommandWindow) GenMenu() {
 
 	for _, category := range CommandCategories {
 		// Category
-		options = append(options, category.GenMenu(Commands, CommandCategories))
+		options = append(options, category.GenMenu(cw.app, Commands, CommandCategories))
 	}
 
 	// Add the top level commands
 	for _, cmd := range Commands {
-		if len(cmd.Category) < 1 {
-			options = append(options, cmd.GenMenuItem())
+		if len(cmd.GetCategory()) < 1 {
+			options = append(options, cw.app.GenMenuItemFromCommand(cmd))
 		}
 	}
 
@@ -67,4 +67,28 @@ func (cw *CommandWindow) Update() {
 		cw.GenMenu()
 		cw.generated = true
 	}
+}
+
+func (cw *CommandWindow) OnSelect() {
+	element := cw.menuWindow.GetHighlighted()
+	if element == nil {
+		return
+	}
+
+	if element.IsCategory {
+		cw.menuWindow.Select()
+		return
+	}
+
+	if element.UserData == nil {
+		return // We can't deal
+	}
+
+	cmd, ok := element.UserData.(*Command)
+	if !ok {
+		return // We must be doing something very wrong somewhere
+	}
+
+	execWindow := NewCommandExecWindow(cw.app, cmd)
+	cw.app.ViewManager.Transform.AddChildren(execWindow)
 }

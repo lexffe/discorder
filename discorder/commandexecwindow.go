@@ -12,3 +12,7 @@ func NewCommandExecWindow(app *App, command *Command) *CommandExecWindow {
 	window := &CommandExecWindow{}
 	return window
 }
+
+func (cew *CommandExecWindow) Destroy() {
+	cew.DestroyChildren()
+}

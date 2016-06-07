@@ -117,8 +117,8 @@ func (lw *LoginWindow) Update() {
 		lw.Helper.Text = "Logging in..."
 	}
 }
-func (lw *LoginWindow) OnCommand(cmd *Command, args Arguments) {
-	if cmd.Name == "select" {
+func (lw *LoginWindow) OnCommand(cmd Command, args Arguments) {
+	if cmd.GetName() == "select" {
 		if lw.CurInputState == InputStateEmail {
 			lw.App.config.Email = lw.EmailInput.TextBuffer
 			lw.CurInputState = InputStatePassword
@@ -127,7 +127,7 @@ func (lw *LoginWindow) OnCommand(cmd *Command, args Arguments) {
 			pw := lw.PWInput.TextBuffer
 			lw.Trylogin(lw.App.config.Email, pw, "")
 		}
-	} else if cmd.Name == "scroll" {
+	} else if cmd.GetName() == "scroll" {
 		if lw.CurInputState == InputStateEmail {
 			lw.App.ViewManager.UIManager.SetActiveInput(lw.PWInput)
 			lw.CurInputState = InputStatePassword

@@ -6,17 +6,17 @@ import (
 	"path/filepath"
 )
 
-var Commands = []*Command{
-	&Command{
+var Commands = []Command{
+	&SimpleCommand{
 		Name:        "commands",
 		Description: "Opens up the command window with all commands available",
 		Category:    []string{"Hidden"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			cw := NewCommandWindow(app, 5)
 			app.ViewManager.Transform.AddChildren(cw)
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "move_cursor",
 		Description: "Moves cursor in specified direction",
 		Category:    []string{"Misc"},
@@ -25,7 +25,7 @@ var Commands = []*Command{
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
 			&ArgumentDef{Name: "word", Optional: true, Datatype: ArgumentDataTypeBool},
 		},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
 			words, _ := args.Bool("words")
 			dir, _ := args.String("direction")
@@ -36,7 +36,7 @@ var Commands = []*Command{
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "erase",
 		Description: "Erase text",
 		Category:    []string{"Misc"},
@@ -45,7 +45,7 @@ var Commands = []*Command{
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
 			&ArgumentDef{Name: "words", Optional: true, Datatype: ArgumentDataTypeBool},
 		},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
 			words, _ := args.Bool("words")
 			dir, _ := args.String("direction")
@@ -57,50 +57,50 @@ var Commands = []*Command{
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "servers",
 		Description: "Opens up the server window",
 		Category:    []string{"Windows"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
 				app.ViewManager.Transform.AddChildren(ssw)
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "channels",
 		Description: "Opens up the channel window",
 		Category:    []string{"Windows"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				// ssw := NewChannelSelectWindow(app, app.ViewManager.SelectedMessageView, guild)
 				// app.ViewManager.SetActiveWindow(ssw)
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "help",
 		Description: "Opens up the help window",
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
 				app.ViewManager.Transform.AddChildren(hw)
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "message_window",
 		Description: "Opens message window",
 		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "message", Optional: true, Datatype: ArgumentDataTypeString},
 		},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			app.ViewManager.SelectedMessageView.OpenMessageSelectWindow("")
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "scroll",
 		Description: "Scrolls currently active view",
 		Category:    []string{"Misc"},
@@ -108,7 +108,7 @@ var Commands = []*Command{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
 		},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
 			dir, _ := args.String("direction")
 			moveDir := StringToDir(dir)
@@ -128,11 +128,11 @@ var Commands = []*Command{
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "select",
 		Description: "Select the currently highlighted element",
 		Category:    []string{"Misc"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
 				app.ViewManager.SendFromTextBuffer()
@@ -150,11 +150,11 @@ var Commands = []*Command{
 			})
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "toggle",
 		Description: "Toggles the currently highlited element",
 		Category:    []string{"Misc"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
 				return
@@ -171,17 +171,17 @@ var Commands = []*Command{
 			})
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "clear_log",
 		Description: "Clear the logbuffer",
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			logRoutine.Clear()
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "reload_theme",
 		Description: "Reloads the current theme",
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			userTheme := app.themePath
 			if userTheme == "" {
 				userTheme = filepath.Join(app.configDir, "themes", app.config.Theme)
@@ -195,35 +195,35 @@ var Commands = []*Command{
 			app.ViewManager.ApplyTheme()
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "delete",
 		Description: "Deletes a message",
 		Category:    []string{"Discord"},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "game",
 		Description: "Sets the game you're playing",
 		Category:    []string{"Discord"},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "send_message",
 		Description: "Sends a message",
 		Category:    []string{"Discord"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "set_nick",
 		Description: "Sets your nickname on a server (if possible)",
 		Category:    []string{"Discord"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "back",
 		Description: "Closes the active window",
 		Category:    []string{"Misc"},
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
 				return
@@ -247,10 +247,10 @@ var Commands = []*Command{
 			}
 		},
 	},
-	&Command{
+	&SimpleCommand{
 		Name:        "quit",
 		Description: "Quit discorder",
-		Run: func(app *App, args Arguments) {
+		RunFunc: func(app *App, args Arguments) {
 			go app.Stop()
 		},
 	},
@@ -274,9 +274,9 @@ func StringToDir(dir string) ui.Direction {
 	return ui.DirLeft
 }
 
-func GetCommandByName(name string) *Command {
+func GetCommandByName(name string) Command {
 	for _, cmd := range Commands {
-		if cmd.Name == name {
+		if cmd.GetName() == name {
 			return cmd
 		}
 	}
