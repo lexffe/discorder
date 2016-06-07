@@ -122,7 +122,7 @@ func (ssw *ServerSelectWindow) GenMenu() {
 		channelOption := &ui.MenuItem{
 			Name:     GetChannelNameOrRecipient(channel),
 			UserData: channel,
-			Info:     fmt.Sprintf("Topic %s", channel.Topic),
+			Info:     fmt.Sprintf("ID: %s", channel.ID),
 			Marked:   marked,
 		}
 		if marked {
