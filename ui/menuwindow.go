@@ -7,18 +7,32 @@ import (
 	"strings"
 )
 
+type DataType int
+
+const (
+	DataTypeInt DataType = iota
+	DataTypeFloat
+	DataTypeString
+	DataTypeBool
+)
+
 type MenuItem struct {
 	Name       string
 	IsCategory bool
+
+	IsInput   bool
+	InputType DataType
 
 	Marked      bool
 	Highlighted bool
 	Info        string
 
 	UserData interface{}
-	matches  int
 
 	Children []*MenuItem
+
+	matches int
+	text    *Text
 }
 
 func (mi *MenuItem) GetDisplayName() string {
@@ -66,9 +80,10 @@ type MenuWindow struct {
 	Window      *Window
 	LowerWindow *Window
 
-	MainContainer  *AutoLayoutContainer
-	TopContainer   *Container
-	LowerContainer *Container
+	MainContainer     *AutoLayoutContainer
+	TopContainer      *Container
+	MenuItemContainer *AutoLayoutContainer
+	LowerContainer    *Container
 
 	InfoText    *Text
 	SearchInput *TextInput
@@ -98,19 +113,20 @@ type MenuWindow struct {
 	manager *Manager
 }
 
-func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
+func NewMenuWindow(layer int, manager *Manager, searchEnabled bool) *MenuWindow {
 	mw := &MenuWindow{
-		BaseEntity:     &BaseEntity{},
-		Window:         NewWindow(manager),
-		LowerWindow:    NewWindow(nil),
-		MainContainer:  NewAutoLayoutContainer(),
-		TopContainer:   NewContainer(),
-		LowerContainer: NewContainer(),
-		InfoText:       NewText(),
-		SearchInput:    NewTextInput(manager, layer+1),
-		Layer:          layer,
-		Dirty:          true,
-		manager:        manager,
+		BaseEntity:        &BaseEntity{},
+		Window:            NewWindow(manager),
+		LowerWindow:       NewWindow(nil),
+		MainContainer:     NewAutoLayoutContainer(),
+		TopContainer:      NewContainer(),
+		MenuItemContainer: NewAutoLayoutContainer(),
+		LowerContainer:    NewContainer(),
+		InfoText:          NewText(),
+		SearchInput:       NewTextInput(manager, layer+1),
+		Layer:             layer,
+		Dirty:             true,
+		manager:           manager,
 	}
 
 	mw.Window.Transform.AnchorMax = common.NewVector2F(1, 1)
@@ -120,6 +136,10 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 	mw.MainContainer.ForceExpandWidth = true
 	mw.TopContainer.Dynamic = true
 	mw.TopContainer.AllowZeroSize = true
+
+	mw.MenuItemContainer.Transform.AnchorMax = common.NewVector2I(1, 1)
+	mw.TopContainer.Transform.AddChildren(mw.MenuItemContainer)
+	mw.MenuItemContainer.ForceExpandWidth = true
 
 	mw.Window.Transform.AddChildren(mw.MainContainer)
 	mw.MainContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
@@ -131,9 +151,11 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 
 	mw.MainContainer.Transform.AddChildren(mw.TopContainer)
 
-	mw.MainContainer.Transform.AddChildren(mw.SearchInput)
-	mw.SearchInput.HideCursorWhenEmpty = true
-	manager.SetActiveInput(mw.SearchInput)
+	if searchEnabled {
+		mw.MainContainer.Transform.AddChildren(mw.SearchInput)
+		mw.SearchInput.HideCursorWhenEmpty = true
+		manager.SetActiveInput(mw.SearchInput)
+	}
 
 	mw.MainContainer.Transform.AddChildren(mw.LowerContainer)
 
@@ -145,7 +167,6 @@ func NewMenuWindow(layer int, manager *Manager) *MenuWindow {
 	mw.InfoText.Text = "Information"
 	mw.InfoText.Transform.AnchorMax = common.NewVector2I(1, 1)
 	mw.InfoText.Layer = layer
-
 	manager.AddWindow(mw)
 	return mw
 }
@@ -174,31 +195,49 @@ func (mw *MenuWindow) GetIndex(item *MenuItem) int {
 func (mw *MenuWindow) RemoveMarked(index int) {
 	index = mw.CheckBounds(index)
 	mw.FilteredOptions[index].Marked = false
-
-	mw.Dirty = true
+	mw.ApplyStyleToItem(mw.FilteredOptions[index])
 }
 
 func (mw *MenuWindow) AddMarked(index int) {
 	index = mw.CheckBounds(index)
 	mw.FilteredOptions[index].Marked = true
-
-	mw.Dirty = true
+	mw.ApplyStyleToItem(mw.FilteredOptions[index])
 }
 
-func (mw *MenuWindow) SetHighlighted(Highlighted int) {
+func (mw *MenuWindow) SetHighlighted(highlighted int) {
 	if len(mw.FilteredOptions) < 1 {
 		return
 	}
 	// Remove previous selection
 	if mw.Highlighted < len(mw.FilteredOptions) && mw.Highlighted >= 0 {
-		mw.FilteredOptions[mw.Highlighted].Highlighted = false
+		curHighlighted := mw.FilteredOptions[mw.Highlighted]
+		curHighlighted.Highlighted = false
+		mw.ApplyStyleToItem(curHighlighted)
 	}
 
-	Highlighted = mw.CheckBounds(Highlighted)
-	mw.FilteredOptions[Highlighted].Highlighted = true
-	mw.Highlighted = Highlighted
+	highlighted = mw.CheckBounds(highlighted)
+	mw.FilteredOptions[highlighted].Highlighted = true
+	mw.Highlighted = highlighted
+	mw.ApplyStyleToItem(mw.FilteredOptions[highlighted])
 
-	mw.Dirty = true
+	//mw.Dirty = true
+}
+
+func (mw *MenuWindow) ApplyStyleToItem(item *MenuItem) {
+	if item.text == nil {
+		return
+	}
+
+	switch {
+	case item.Highlighted && item.Marked:
+		item.text.Style = mw.StyleMarkedSelected
+	case item.Highlighted:
+		item.text.Style = mw.StyleSelected
+	case item.Marked:
+		item.text.Style = mw.StyleMarked
+	default:
+		item.text.Style = mw.StyleNormal
+	}
 }
 
 func (mw *MenuWindow) GetHighlighted() *MenuItem {
@@ -240,37 +279,38 @@ func (mw *MenuWindow) OptionsHeight() int {
 func (mw *MenuWindow) Rebuild() {
 	//mw.ClearChildren()
 	//mw.AddChild(mw.Window)
-	mw.TopContainer.Transform.ClearChildren(true)
+	mw.MenuItemContainer.Transform.ClearChildren(true)
 	options := mw.FilteredOptions
 
 	mw.texts = make([]*Text, len(options))
 
 	requiredHeight := mw.OptionsHeight()
-	rect := mw.TopContainer.Transform.GetRect()
+	rect := mw.MenuItemContainer.Transform.GetRect()
 	_, termSizeY := termbox.Size()
 
-	y := 0
+	// Calculate scroll
+	//y := 0
 	if requiredHeight > termSizeY || requiredHeight > int(rect.H) {
 		// If window is taller then scroll
 		heightPerOption := float64(requiredHeight) / float64(len(options))
-		y = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
+		mw.MenuItemContainer.Transform.Top = int(heightPerOption*(float64(len(options)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
 	}
 
 	for k, option := range options {
 		t := NewText()
 		t.Text = option.GetDisplayName()
-		t.Transform.Position.Y = float32(y)
-		t.Transform.AnchorMax.X = 1
+		//t.Transform.Position.Y = float32(y)
+		//t.Transform.AnchorMax.X = 1
 		t.Layer = mw.Layer
-		y += t.HeightRequired()
+		//y += t.HeightRequired()
 
-		if y >= termSizeY || y >= int(rect.H) || y <= 0 {
-			// Ignore if hidden/should be hidden
-			continue
-		}
+		//if y >= termSizeY || y >= int(rect.H) || y <= 0 {
+		// Ignore if hidden/should be hidden
+		// continue
+		//}
 
 		mw.texts[k] = t
-		mw.TopContainer.Transform.AddChildren(t)
+		mw.MenuItemContainer.Transform.AddChildren(t)
 
 		switch {
 		case option.Highlighted && option.Marked:
@@ -282,6 +322,7 @@ func (mw *MenuWindow) Rebuild() {
 		default:
 			t.Style = mw.StyleNormal
 		}
+		option.text = t
 	}
 }
 
@@ -334,12 +375,6 @@ func SearchFilter(searchBy string, in []*MenuItem) []*MenuItem {
 
 func fieldsFunc(r rune) bool {
 	return r == ' ' || r == '_' || r == '-'
-}
-
-func (mw *MenuWindow) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventResize {
-		mw.Dirty = true
-	}
 }
 
 func (mw *MenuWindow) OnLayoutChanged() {

@@ -31,7 +31,7 @@ func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *Serve
 		Layer:       layer,
 	}
 
-	menuWindow := ui.NewMenuWindow(layer, app.ViewManager.UIManager)
+	menuWindow := ui.NewMenuWindow(layer, app.ViewManager.UIManager, true)
 
 	menuWindow.Transform.AnchorMax = common.NewVector2F(1, 1)
 	menuWindow.Transform.Top = 1
