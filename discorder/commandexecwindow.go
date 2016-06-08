@@ -3,6 +3,8 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"strconv"
+	"strings"
 )
 
 type CommandExecWindow struct {
@@ -69,4 +71,47 @@ func (cew *CommandExecWindow) GenMenu() {
 	}
 	items = append(items, exec)
 	cew.menuWindow.SetOptions(items)
+}
+
+func (cew *CommandExecWindow) Select() {
+	element := cew.menuWindow.GetHighlighted()
+	if element == nil {
+		return
+	}
+
+	if element.IsCategory {
+		cew.menuWindow.Select()
+		return
+	}
+
+	if element.Name == "Execute" {
+		cew.Execute()
+	}
+}
+
+func (cew *CommandExecWindow) Execute() {
+	args := make(map[string]interface{})
+	for _, item := range cew.menuWindow.Options {
+		if !item.IsInput {
+			continue
+		}
+		buf := item.Input.TextBuffer
+		switch item.InputType {
+		case ui.DataTypeString:
+			args[item.Name] = buf
+		case ui.DataTypeBool:
+			lowerBuf := strings.ToLower(buf)
+			b, _ := strconv.ParseBool(lowerBuf)
+			args[item.Name] = b
+		case ui.DataTypeInt:
+			i, _ := strconv.ParseInt(buf, 10, 64)
+			args[item.Name] = i
+		case ui.DataTypeFloat:
+			f, _ := strconv.ParseFloat(buf, 64)
+			args[item.Name] = f
+		}
+	}
+
+	cew.app.RunCommand(cew.command, Arguments(args))
+	cew.Transform.Parent.RemoveChild(cew, true)
 }

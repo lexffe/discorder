@@ -74,17 +74,32 @@ func (a Arguments) Get(key string) (val interface{}, ok bool) {
 }
 
 func (a Arguments) Int(key string) (val int, ok bool) {
-	fVal, ok := a.Float(key)
-	if !ok {
-		return 0, false
-	}
-
-	val = int(fVal)
-	ok = true
+	var i64 int64
+	i64, ok = a.Int64(key)
+	val = int(i64)
 	return
 }
 
-func (a Arguments) Float(key string) (val float64, ok bool) {
+func (a Arguments) Int64(key string) (val int64, ok bool) {
+	raw, ok := a.Get(key)
+	if !ok {
+		return
+	}
+
+	switch v := raw.(type) {
+	case float64:
+		var temp float64
+		temp, ok = a.Float64(key)
+		val = int64(temp)
+	case int64:
+		ok = true
+		val = v
+	}
+
+	return
+}
+
+func (a Arguments) Float64(key string) (val float64, ok bool) {
 	raw, ok := a.Get(key)
 	if !ok {
 		return

@@ -201,11 +201,17 @@ var Commands = []Command{
 		Category:    []string{"Discord"},
 	},
 	&SimpleCommand{
-		Name:        "game",
-		Description: "Sets the game you're playing",
+		Name:        "status",
+		Description: "Updates your discord status",
 		Category:    []string{"Discord"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "game", Description: "What game you should appear playing as", Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "idle", Description: "How long you've been idle in seconds", Datatype: ui.DataTypeInt},
+		},
+		RunFunc: func(app *App, args Arguments) {
+			game, _ := args.String("game")
+			idle, _ := args.Int("idle")
+			app.session.UpdateStatus(idle, game)
 		},
 	},
 	&SimpleCommand{

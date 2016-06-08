@@ -22,7 +22,7 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 	}
 
 	nm.text.Transform.AnchorMax = common.NewVector2I(1, 1)
-	nm.text.Layer = 8
+	nm.text.Layer = 2
 	app.ApplyThemeToText(nm.text, "notifications_bar")
 	nm.Transform.AddChildren(nm.text)
 	return nm

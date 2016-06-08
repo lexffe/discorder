@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
-	"log"
 	"sort"
 	"strings"
 )
@@ -33,8 +32,8 @@ type MenuItem struct {
 	Children []*MenuItem
 
 	matches int
-	text    *Text
-	input   *TextInput
+	Text    *Text
+	Input   *TextInput
 }
 
 func (mi *MenuItem) GetDisplayName() string {
@@ -220,9 +219,8 @@ func (mw *MenuWindow) SetHighlighted(index int) {
 	index = mw.CheckBounds(index)
 	highlighted := mw.FilteredOptions[index]
 	highlighted.Highlighted = true
-
 	if highlighted.IsInput {
-		mw.manager.SetActiveInput(highlighted.input)
+		mw.manager.SetActiveInput(highlighted.Input)
 	}
 
 	mw.Highlighted = index
@@ -232,19 +230,19 @@ func (mw *MenuWindow) SetHighlighted(index int) {
 }
 
 func (mw *MenuWindow) ApplyStyleToItem(item *MenuItem) {
-	if item.text == nil {
+	if item.Text == nil {
 		return
 	}
 
 	switch {
 	case item.Highlighted && item.Marked:
-		item.text.Style = mw.StyleMarkedSelected
+		item.Text.Style = mw.StyleMarkedSelected
 	case item.Highlighted:
-		item.text.Style = mw.StyleSelected
+		item.Text.Style = mw.StyleSelected
 	case item.Marked:
-		item.text.Style = mw.StyleMarked
+		item.Text.Style = mw.StyleMarked
 	default:
-		item.text.Style = mw.StyleNormal
+		item.Text.Style = mw.StyleNormal
 	}
 }
 
@@ -299,14 +297,14 @@ func (mw *MenuWindow) Rebuild() {
 			t = input.Text
 			mw.MenuItemContainer.Transform.AddChildren(input)
 			input.MinHeight = 1
-			option.input = input
+			option.Input = input
 		} else {
 			t = NewText()
 			t.Text = option.GetDisplayName()
 			t.Layer = mw.Layer
 			mw.MenuItemContainer.Transform.AddChildren(t)
 		}
-
+		option.Text = t
 		mw.texts[k] = t
 
 		switch {
@@ -319,7 +317,6 @@ func (mw *MenuWindow) Rebuild() {
 		default:
 			t.Style = mw.StyleNormal
 		}
-		option.text = t
 	}
 }
 
@@ -402,7 +399,6 @@ func (mw *MenuWindow) Update() {
 			mw.SetHighlighted(0)
 			mw.shouldResetHighlight = false
 		}
-		log.Println("MW Is dirty, rebuilding")
 		mw.Rebuild()
 		highlighted := mw.GetHighlighted()
 		if highlighted != nil {
@@ -423,7 +419,6 @@ func (mw *MenuWindow) Update() {
 		scroll := int(heightPerOption*(float64(len(mw.FilteredOptions)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
 		mw.MenuItemContainer.Transform.Top = scroll
 		mw.MenuItemContainer.Transform.Bottom = -scroll
-		//log.Println(mw.MenuItemContainer.Transform.Top, heightPerOption, requiredHeight, "Hmm", mw.Highlighted, rect.H)
 	}
 
 	mw.Dirty = false
