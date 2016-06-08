@@ -7,6 +7,7 @@ import (
 	"github.com/jonas747/discordgo"
 	"github.com/nsf/termbox-go"
 	"log"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -242,7 +243,11 @@ func (mv *MessageView) BuildTexts() {
 				if !isPrivate {
 					guild, err := mv.App.session.State.Guild(channel.GuildID)
 					if err == nil {
-						channelName = guild.Name + "/#" + channelName
+						guildName := guild.Name
+						if mv.App.config.ShortGuilds {
+							guildName = ShortName(guildName)
+						}
+						channelName = guildName + "/#" + channelName
 					}
 				}
 			}
@@ -512,4 +517,14 @@ func (mv *MessageView) GetRequiredSize() common.Vector2F {
 
 func (mv *MessageView) IsLayoutDynamic() bool {
 	return true
+}
+
+func ShortName(in string) string {
+	fields := strings.Fields(in)
+	out := ""
+	for _, field := range fields {
+		firstRune := []rune(field)[0]
+		out += string(firstRune)
+	}
+	return out
 }
