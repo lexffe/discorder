@@ -4,6 +4,7 @@ import (
 	"github.com/jonas747/discorder/ui"
 	"log"
 	"path/filepath"
+	"strconv"
 )
 
 var Commands = []Command{
@@ -266,6 +267,20 @@ var Commands = []Command{
 		Description: "Quit discorder",
 		RunFunc: func(app *App, args Arguments) {
 			go app.Stop()
+		},
+	},
+	&SimpleCommand{
+		Name:        "short_guilds",
+		Description: "Displays a mini version of guilds in message view",
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "on", Datatype: ui.DataTypeBool, CurVal: func(app *App) string {
+				return strconv.FormatBool(app.config.ShortGuilds)
+			}},
+		},
+		RunFunc: func(app *App, args Arguments) {
+			shortguilds, _ := args.Bool("on")
+			app.config.ShortGuilds = shortguilds
+			log.Println("Set short_guilds to", shortguilds)
 		},
 	},
 }

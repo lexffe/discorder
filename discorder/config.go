@@ -16,11 +16,14 @@ import (
 
 type Config struct {
 	Email             string   `json:"email"`
-	AuthToken         string   `json:"authToken"` // Not used currently, but planned
+	AuthToken         string   `json:"auth_token"` // Not used currently, but planned
 	Theme             string   `json:"theme"`
-	AllPrivateMode    bool     `json:"allPrivateMode"`
-	LastChannel       string   `json:"lastChannel"`
-	ListeningChannels []string `json:"listeningChannels"`
+	AllPrivateMode    bool     `json:"all_privateMode"`
+	LastChannel       string   `json:"last_channel"`
+	ListeningChannels []string `json:"listening_cannels"`
+
+	// General settings
+	ShortGuilds bool `json:"short_guilds"`
 }
 
 func LoadOrCreateConfig(path string) (*Config, error) {

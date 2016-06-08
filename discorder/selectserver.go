@@ -45,8 +45,9 @@ func NewSelectServerWindow(app *App, messageView *MessageView, layer int) *Serve
 	ssw.menuWindow = menuWindow
 	ssw.Transform.AddChildren(menuWindow)
 
-	ssw.Transform.AnchorMin = common.NewVector2F(0.1, 0)
-	ssw.Transform.AnchorMax = common.NewVector2F(0.9, 1)
+	ssw.Transform.AnchorMax = common.NewVector2F(1, 1)
+	ssw.Transform.Right = 2
+	ssw.Transform.Left = 1
 
 	ssw.GenMenu()
 	//height := float32(menuWindow.OptionsHeight() + 5)

@@ -11,8 +11,9 @@ type MenuItem struct {
 	Name       string
 	IsCategory bool
 
-	IsInput   bool
-	InputType DataType
+	IsInput          bool
+	InputType        DataType
+	InputDefaultText string
 
 	Marked      bool
 	Highlighted bool
@@ -290,6 +291,7 @@ func (mw *MenuWindow) Rebuild() {
 			input.MinHeight = 1
 			option.Input = input
 			input.DataType = option.InputType
+			input.TextBuffer = option.InputDefaultText
 		} else {
 			t = NewText()
 			t.Text = option.GetDisplayName()

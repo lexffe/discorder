@@ -62,6 +62,11 @@ func (cew *CommandExecWindow) GenMenu() {
 			InputType: arg.Datatype,
 			UserData:  arg,
 		}
+
+		if arg.CurVal != nil {
+			input.InputDefaultText = arg.CurVal(cew.app)
+		}
+
 		items = append(items, helper, input)
 	}
 

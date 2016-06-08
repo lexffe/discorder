@@ -25,6 +25,15 @@ func (s *SimpleCommand) GetDescription(app *App) string {
 	if s.StatusFunc != nil {
 		desc += "\n" + s.StatusFunc(app)
 	}
+
+	if len(s.Args) > 0 {
+		for _, v := range s.Args {
+			if v.CurVal != nil {
+				desc += "\nCurrent " + v.Name + ":" + v.CurVal(app)
+			}
+		}
+	}
+
 	return desc
 }
 
@@ -64,6 +73,7 @@ type ArgumentDef struct {
 	Description string
 	Optional    bool
 	Datatype    ui.DataType
+	CurVal      func(app *App) string
 }
 
 type Arguments map[string]interface{}
