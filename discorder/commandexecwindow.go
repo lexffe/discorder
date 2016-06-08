@@ -33,6 +33,8 @@ func NewCommandExecWindow(layer int, app *App, command Command) *CommandExecWind
 
 	execWindow.Transform.AddChildren(execWindow.menuWindow)
 
+	execWindow.Transform.Top = 2
+	execWindow.Transform.Bottom = 2
 	execWindow.Transform.AnchorMin = common.NewVector2F(0.1, 0)
 	execWindow.Transform.AnchorMax = common.NewVector2F(0.9, 1)
 
@@ -52,8 +54,9 @@ func (cew *CommandExecWindow) GenMenu() {
 	items := make([]*ui.MenuItem, 0)
 	for _, arg := range cew.command.GetArgs() {
 		helper := &ui.MenuItem{
-			Name: arg.Name,
-			Info: arg.Description,
+			Name:       arg.Name,
+			Info:       arg.Description,
+			Decorative: true,
 		}
 		input := &ui.MenuItem{
 			Name:      arg.Name,

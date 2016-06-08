@@ -382,6 +382,7 @@ func (app *App) InitializeConfigFiles() error {
 	if app.themePath != "" {
 		app.userTheme = LoadTheme(app.themePath)
 	} else if app.config.Theme != "" {
+		log.Println("Loading theme ", filepath.Join(themesDir, app.config.Theme))
 		app.userTheme = LoadTheme(filepath.Join(themesDir, app.config.Theme))
 	}
 	return nil

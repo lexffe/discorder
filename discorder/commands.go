@@ -113,7 +113,6 @@ var Commands = []Command{
 			amount, _ := args.Int("amount")
 			dir, _ := args.String("direction")
 			moveDir := StringToDir(dir)
-
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window != nil {
 				ui.RunFuncCondTraverse(window, func(e ui.Entity) bool {

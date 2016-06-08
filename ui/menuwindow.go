@@ -3,6 +3,7 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
+	"log"
 	"sort"
 	"strings"
 )
@@ -10,6 +11,7 @@ import (
 type MenuItem struct {
 	Name       string
 	IsCategory bool
+	Decorative bool // Not selectable
 
 	IsInput          bool
 	InputType        DataType
@@ -89,10 +91,10 @@ type MenuWindow struct {
 
 	Options         []*MenuItem
 	FilteredOptions []*MenuItem
+	Selectables     []int
+	Highlighted     int
 
 	CurDir []string
-
-	Highlighted int
 
 	texts []*Text
 	Dirty bool
@@ -261,15 +263,18 @@ func (mw *MenuWindow) SetOptionsString(options []string) {
 func (mw *MenuWindow) SetOptions(options []*MenuItem) {
 	mw.Options = options
 	mw.Dirty = true
-	mw.FilteredOptions = mw.FilterOptions()
-	mw.SetHighlighted(0)
+	mw.shouldResetHighlight = true
 }
 
 func (mw *MenuWindow) OptionsHeight() int {
 	h := 0
 	rect := mw.Transform.GetRect()
 	for _, v := range mw.FilteredOptions {
-		h += HeightRequired(v.GetDisplayName(), int(rect.W))
+		if v.IsInput {
+			h++
+		} else {
+			h += HeightRequired(v.GetDisplayName(), int(rect.W))
+		}
 	}
 	return h
 }
@@ -314,11 +319,19 @@ func (mw *MenuWindow) Rebuild() {
 	}
 }
 
-func (mw *MenuWindow) FilterOptions() []*MenuItem {
+func (mw *MenuWindow) FilterOptions() {
 	// Get the options in the current dir
 	inDir := FilterOptionsByPath(mw.CurDir, mw.Options)
 	searchApplied := SearchFilter(mw.lastSearch, inDir)
-	return searchApplied
+
+	mw.Selectables = make([]int, 0)
+	for k, option := range searchApplied {
+		if !option.Decorative {
+			mw.Selectables = append(mw.Selectables, k)
+		}
+	}
+
+	mw.FilteredOptions = searchApplied
 }
 
 func FilterOptionsByPath(path []string, options []*MenuItem) []*MenuItem {
@@ -388,12 +401,14 @@ func (mw *MenuWindow) Update() {
 				mw.FilteredOptions[mw.Highlighted].Highlighted = false
 			}
 		}
-		mw.FilteredOptions = mw.FilterOptions()
+		mw.FilterOptions()
+		mw.Rebuild()
 		if shouldResetHighlight || mw.shouldResetHighlight {
-			mw.SetHighlighted(0)
+			if len(mw.Selectables) > 0 {
+				mw.SetHighlighted(mw.Selectables[0])
+			}
 			mw.shouldResetHighlight = false
 		}
-		mw.Rebuild()
 	}
 
 	requiredHeight := mw.OptionsHeight()
@@ -407,21 +422,46 @@ func (mw *MenuWindow) Update() {
 		scroll := int(heightPerOption*(float64(len(mw.FilteredOptions)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
 		mw.MenuItemContainer.Transform.Top = scroll
 		mw.MenuItemContainer.Transform.Bottom = -scroll
+		log.Println("scroll ion")
+		log.Println(scroll, requiredHeight)
 	}
 
 	mw.Dirty = false
 }
 
+func (mw *MenuWindow) CheckBoundsSelectedable(index int) int {
+	if index < 0 {
+		return 0
+	}
+	if index >= len(mw.Selectables) {
+		return len(mw.Selectables) - 1
+	}
+	return index
+}
+
 func (mw *MenuWindow) Scroll(dir Direction, amount int) {
+	if len(mw.Selectables) < 1 {
+		return
+	}
+
+	selectedableIndex := 0
+	for k, v := range mw.Selectables {
+		if v == mw.Highlighted {
+			selectedableIndex = k
+			break
+		}
+	}
 	switch dir {
 	case DirUp:
-		mw.SetHighlighted(mw.Highlighted - amount)
+		selectedableIndex -= amount
+		mw.SetHighlighted(mw.Selectables[mw.CheckBoundsSelectedable(selectedableIndex)])
 	case DirDown:
-		mw.SetHighlighted(mw.Highlighted + amount)
+		selectedableIndex += amount
+		mw.SetHighlighted(mw.Selectables[mw.CheckBoundsSelectedable(selectedableIndex)])
 	case DirEnd:
-		mw.SetHighlighted(len(mw.Options) - 1)
+		mw.SetHighlighted(mw.Selectables[len(mw.Selectables)-1])
 	case DirStart:
-		mw.SetHighlighted(0)
+		mw.SetHighlighted(mw.Selectables[0])
 	}
 }
 
