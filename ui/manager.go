@@ -1,5 +1,9 @@
 package ui
 
+import (
+	"log"
+)
+
 type Manager struct {
 	Windows     []Entity
 	TextInputs  []*TextInput
@@ -62,4 +66,5 @@ func (u *Manager) RemoveInput(input *TextInput, reAssignActive bool) {
 	if reAssignActive && len(u.TextInputs) > 0 {
 		u.SetActiveInput(u.TextInputs[len(u.TextInputs)-1])
 	}
+	log.Println(len(u.TextInputs))
 }

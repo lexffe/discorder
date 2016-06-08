@@ -87,10 +87,10 @@ func (t *Transform) RemoveChild(child Entity, destroy bool) {
 // Revmoves and optinally clears children
 func (t *Transform) ClearChildren(destroy bool) {
 	for _, v := range t.Children {
-		v.GetTransform().Parent = nil
 		if destroy {
 			v.Destroy()
 		}
+		v.GetTransform().Parent = nil
 	}
 	t.Children = []Entity{}
 }
