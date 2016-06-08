@@ -217,7 +217,7 @@ func (mw *MenuWindow) SetHighlighted(index int) {
 	mw.Highlighted = index
 	mw.ApplyStyleToItem(highlighted)
 
-	//mw.Dirty = true
+	mw.InfoText.Text = highlighted.Info
 }
 
 func (mw *MenuWindow) ApplyStyleToItem(item *MenuItem) {
@@ -392,12 +392,6 @@ func (mw *MenuWindow) Update() {
 			mw.shouldResetHighlight = false
 		}
 		mw.Rebuild()
-		highlighted := mw.GetHighlighted()
-		if highlighted != nil {
-			mw.InfoText.Text = highlighted.Info
-		} else {
-			mw.InfoText.Text = "???"
-		}
 	}
 
 	requiredHeight := mw.OptionsHeight()
