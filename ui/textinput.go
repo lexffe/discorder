@@ -3,7 +3,17 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
+	"strconv"
 	"unicode/utf8"
+)
+
+type DataType int
+
+const (
+	DataTypeString DataType = iota
+	DataTypeInt
+	DataTypeFloat
+	DataTypeBool
 )
 
 type TextInput struct {
@@ -17,6 +27,7 @@ type TextInput struct {
 	HideCursorWhenEmpty bool
 	Layer               int
 
+	DataType  DataType
 	MinHeight int
 
 	Manager *Manager
@@ -53,6 +64,16 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 	}
 	if char == 0 {
 		return
+	}
+
+	switch ti.DataType {
+	case DataTypeInt:
+		_, err := strconv.Atoi(string(char))
+		if err != nil {
+			return
+		}
+	case DataTypeBool:
+	case DataTypeFloat:
 	}
 
 	bufLen := utf8.RuneCountInString(ti.TextBuffer)

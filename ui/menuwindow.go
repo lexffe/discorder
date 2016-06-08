@@ -7,15 +7,6 @@ import (
 	"strings"
 )
 
-type DataType int
-
-const (
-	DataTypeInt DataType = iota
-	DataTypeFloat
-	DataTypeString
-	DataTypeBool
-)
-
 type MenuItem struct {
 	Name       string
 	IsCategory bool
@@ -298,6 +289,7 @@ func (mw *MenuWindow) Rebuild() {
 			mw.MenuItemContainer.Transform.AddChildren(input)
 			input.MinHeight = 1
 			option.Input = input
+			input.DataType = option.InputType
 		} else {
 			t = NewText()
 			t.Text = option.GetDisplayName()
