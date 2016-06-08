@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
-	"log"
 	"sort"
 	"strings"
 )
@@ -422,10 +421,10 @@ func (mw *MenuWindow) Update() {
 		scroll := int(heightPerOption*(float64(len(mw.FilteredOptions)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
 		mw.MenuItemContainer.Transform.Top = scroll
 		mw.MenuItemContainer.Transform.Bottom = -scroll
-		log.Println("scroll ion")
-		log.Println(scroll, requiredHeight)
+	} else {
+		mw.MenuItemContainer.Transform.Top = 0
+		mw.MenuItemContainer.Transform.Bottom = -0
 	}
-	log.Println(rect, mw.MenuItemContainer.Transform.GetRect())
 	mw.Dirty = false
 }
 
