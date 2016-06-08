@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/nsf/termbox-go"
-	"log"
 	"sort"
 	"strings"
 )
@@ -115,10 +114,10 @@ func NewMenuWindow(layer int, manager *Manager, searchEnabled bool) *MenuWindow 
 		LowerWindow:       NewWindow(nil),
 		MainContainer:     NewAutoLayoutContainer(),
 		TopContainer:      NewContainer(),
+		SearchInput:       NewTextInput(manager, layer+1),
 		MenuItemContainer: NewAutoLayoutContainer(),
 		LowerContainer:    NewContainer(),
 		InfoText:          NewText(),
-		SearchInput:       NewTextInput(manager, layer+1),
 		Layer:             layer,
 		Dirty:             true,
 		manager:           manager,
@@ -146,9 +145,9 @@ func NewMenuWindow(layer int, manager *Manager, searchEnabled bool) *MenuWindow 
 
 	mw.MainContainer.Transform.AddChildren(mw.TopContainer)
 
+	mw.MainContainer.Transform.AddChildren(mw.SearchInput)
+	mw.SearchInput.HideCursorWhenEmpty = true
 	if searchEnabled {
-		mw.MainContainer.Transform.AddChildren(mw.SearchInput)
-		mw.SearchInput.HideCursorWhenEmpty = true
 		manager.SetActiveInput(mw.SearchInput)
 	}
 
@@ -422,8 +421,8 @@ func (mw *MenuWindow) Update() {
 		scroll := int(heightPerOption*(float64(len(mw.FilteredOptions)-(mw.Highlighted)))) - (requiredHeight - int(rect.H/2))
 		mw.MenuItemContainer.Transform.Top = scroll
 		mw.MenuItemContainer.Transform.Bottom = -scroll
-		log.Println("scroll ion")
-		log.Println(scroll, requiredHeight)
+		// log.Println("scroll ion")
+		// log.Println(scroll, requiredHeight)
 	}
 
 	mw.Dirty = false
