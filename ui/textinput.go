@@ -73,6 +73,11 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 			return
 		}
 	case DataTypeBool:
+		if char == 't' || char == 'T' {
+			ti.TextBuffer = "true"
+		} else {
+			ti.TextBuffer = "false"
+		}
 	case DataTypeFloat:
 	}
 
