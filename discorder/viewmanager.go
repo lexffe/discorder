@@ -62,7 +62,7 @@ func (v *ViewManager) OnInit() {
 	header.Text = "Discorder v" + VERSION + "(´ ▽ ` )ﾉ"
 	header.Transform.AnchorMin = common.NewVector2F(0.5, 0)
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
-	header.Transform.Position.X = float32(-utf8.RuneCountInString(header.Text))
+	header.Transform.Position.X = float32(-utf8.RuneCountInString(header.Text) / 2)
 
 	rootContainer.Transform.AddChildren(header)
 	v.header = header
