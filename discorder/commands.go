@@ -21,9 +21,9 @@ var Commands = []Command{
 		Description: "Moves cursor in specified direction",
 		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
-			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
-			&ArgumentDef{Name: "word", Optional: true, Datatype: ArgumentDataTypeBool},
+			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
+			&ArgumentDef{Name: "word", Optional: true, Datatype: ui.DataTypeBool},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
@@ -41,9 +41,9 @@ var Commands = []Command{
 		Description: "Erase text",
 		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
-			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
-			&ArgumentDef{Name: "words", Optional: true, Datatype: ArgumentDataTypeBool},
+			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
+			&ArgumentDef{Name: "words", Optional: true, Datatype: ui.DataTypeBool},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
@@ -94,7 +94,7 @@ var Commands = []Command{
 		Description: "Opens message window",
 		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "message", Optional: true, Datatype: ArgumentDataTypeString},
+			&ArgumentDef{Name: "message", Optional: true, Datatype: ui.DataTypeString},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			app.ViewManager.SelectedMessageView.OpenMessageSelectWindow("")
@@ -105,8 +105,8 @@ var Commands = []Command{
 		Description: "Scrolls currently active view",
 		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "direction", Optional: false, Datatype: ArgumentDataTypeString},
-			&ArgumentDef{Name: "amount", Optional: false, Datatype: ArgumentDataTypeInt},
+			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
@@ -204,6 +204,9 @@ var Commands = []Command{
 		Name:        "game",
 		Description: "Sets the game you're playing",
 		Category:    []string{"Discord"},
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "game", Description: "What game you should appear playing as", Datatype: ui.DataTypeString},
+		},
 	},
 	&SimpleCommand{
 		Name:        "send_message",

@@ -7,15 +7,6 @@ import (
 	"strings"
 )
 
-type ArgumentDataType int
-
-const (
-	ArgumentDataTypeInt ArgumentDataType = iota
-	ArgumentDataTypeFloat
-	ArgumentDataTypeString
-	ArgumentDataTypeBool
-)
-
 type SimpleCommand struct {
 	Name        string
 	Description string
@@ -69,9 +60,10 @@ func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
 }
 
 type ArgumentDef struct {
-	Name     string
-	Optional bool
-	Datatype ArgumentDataType
+	Name        string
+	Description string
+	Optional    bool
+	Datatype    ui.DataType
 }
 
 type Arguments map[string]interface{}

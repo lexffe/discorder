@@ -17,6 +17,8 @@ type TextInput struct {
 	HideCursorWhenEmpty bool
 	Layer               int
 
+	MinHeight int
+
 	Manager *Manager
 }
 
@@ -193,7 +195,11 @@ func (ti *TextInput) SetActive(active bool) {
 // Implement LayoutElement
 func (ti *TextInput) GetRequiredSize() common.Vector2F {
 	rect := ti.Transform.GetRect()
-	return common.NewVector2F(rect.W, float32(ti.Text.HeightRequired()))
+	height := ti.Text.HeightRequired()
+	if height < ti.MinHeight {
+		height = ti.MinHeight
+	}
+	return common.NewVector2F(rect.W, float32(height))
 }
 
 func (ti *TextInput) IsLayoutDynamic() bool {

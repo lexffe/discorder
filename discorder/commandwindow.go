@@ -69,7 +69,7 @@ func (cw *CommandWindow) Update() {
 	}
 }
 
-func (cw *CommandWindow) OnSelect() {
+func (cw *CommandWindow) Select() {
 	element := cw.menuWindow.GetHighlighted()
 	if element == nil {
 		return
@@ -84,11 +84,13 @@ func (cw *CommandWindow) OnSelect() {
 		return // We can't deal
 	}
 
-	cmd, ok := element.UserData.(*Command)
+	cmd, ok := element.UserData.(Command)
 	if !ok {
 		return // We must be doing something very wrong somewhere
 	}
 
-	execWindow := NewCommandExecWindow(cw.app, cmd)
+	execWindow := NewCommandExecWindow(7, cw.app, cmd)
 	cw.app.ViewManager.Transform.AddChildren(execWindow)
+
+	//cw.Transform.Parent.RemoveChild(cw, true)
 }

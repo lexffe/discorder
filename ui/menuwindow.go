@@ -34,6 +34,7 @@ type MenuItem struct {
 
 	matches int
 	text    *Text
+	input   *TextInput
 }
 
 func (mi *MenuItem) GetDisplayName() string {
@@ -205,7 +206,7 @@ func (mw *MenuWindow) AddMarked(index int) {
 	mw.ApplyStyleToItem(mw.FilteredOptions[index])
 }
 
-func (mw *MenuWindow) SetHighlighted(highlighted int) {
+func (mw *MenuWindow) SetHighlighted(index int) {
 	if len(mw.FilteredOptions) < 1 {
 		return
 	}
@@ -216,10 +217,16 @@ func (mw *MenuWindow) SetHighlighted(highlighted int) {
 		mw.ApplyStyleToItem(curHighlighted)
 	}
 
-	highlighted = mw.CheckBounds(highlighted)
-	mw.FilteredOptions[highlighted].Highlighted = true
-	mw.Highlighted = highlighted
-	mw.ApplyStyleToItem(mw.FilteredOptions[highlighted])
+	index = mw.CheckBounds(index)
+	highlighted := mw.FilteredOptions[index]
+	highlighted.Highlighted = true
+
+	if highlighted.IsInput {
+		mw.manager.SetActiveInput(highlighted.input)
+	}
+
+	mw.Highlighted = index
+	mw.ApplyStyleToItem(highlighted)
 
 	//mw.Dirty = true
 }
@@ -286,12 +293,21 @@ func (mw *MenuWindow) Rebuild() {
 	mw.texts = make([]*Text, len(options))
 
 	for k, option := range options {
-		t := NewText()
-		t.Text = option.GetDisplayName()
-		t.Layer = mw.Layer
+		var t *Text
+		if option.IsInput {
+			input := NewTextInput(mw.manager, mw.Layer)
+			t = input.Text
+			mw.MenuItemContainer.Transform.AddChildren(input)
+			input.MinHeight = 1
+			option.input = input
+		} else {
+			t = NewText()
+			t.Text = option.GetDisplayName()
+			t.Layer = mw.Layer
+			mw.MenuItemContainer.Transform.AddChildren(t)
+		}
 
 		mw.texts[k] = t
-		mw.MenuItemContainer.Transform.AddChildren(t)
 
 		switch {
 		case option.Highlighted && option.Marked:

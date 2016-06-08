@@ -106,32 +106,6 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
 		mv.TextsDirty = true // ;)
 
-		// if mv.App.ViewManager.activeWindow != nil {
-		// 	return
-		// }
-
-		// switch event.Key {
-		// case termbox.KeyArrowUp:
-		// 	mv.ScrollAmount += 1
-		// 	mv.DisplayMessagesDirty = true
-		// case termbox.KeyArrowDown:
-		// 	mv.ScrollAmount -= 1
-		// 	if mv.ScrollAmount < 0 {
-		// 		mv.ScrollAmount = 0
-		// 	}
-		// 	mv.DisplayMessagesDirty = true
-		// case termbox.KeyPgup:
-		// 	mv.ScrollAmount += 10
-		// 	mv.DisplayMessagesDirty = true
-		// case termbox.KeyPgdn:
-		// 	mv.ScrollAmount -= 10
-		// 	if mv.ScrollAmount < 0 {
-		// 		mv.ScrollAmount = 0
-		// 	}
-		// 	mv.DisplayMessagesDirty = true
-		// case termbox.KeyHome, termbox.KeyEnd:
-		// 	mv.ScrollAmount = 0
-		// 	mv.DisplayMessagesDirty = true
 		// case termbox.KeyEnter:
 		// 	if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
 		// 		return
