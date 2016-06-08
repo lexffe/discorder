@@ -246,7 +246,7 @@ var Commands = []Command{
 			})
 
 			if !handled { // Do the default action
-				app.ViewManager.Transform.RemoveChild(window, true)
+				window.GetTransform().Parent.RemoveChild(window, true)
 			}
 		},
 	},
