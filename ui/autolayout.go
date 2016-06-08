@@ -87,7 +87,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 		transform := v.GetTransform()
 
 		if a.LayoutType == LayoutTypeVertical {
-			transform.Position = common.NewVector2F(0, counter)
+			transform.Position = common.NewVector2F(transform.Position.X, counter)
 			if v.IsLayoutDynamic() {
 				transform.Size.Y = spacePerDynamic
 				counter += spacePerDynamic
@@ -96,7 +96,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 				counter += requiredSize.Y
 			}
 		} else {
-			transform.Position = common.NewVector2F(counter, 0)
+			transform.Position = common.NewVector2F(counter, transform.Position.Y)
 			if v.IsLayoutDynamic() {
 				transform.Size.X = spacePerDynamic
 				counter += spacePerDynamic
