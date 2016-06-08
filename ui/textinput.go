@@ -78,6 +78,7 @@ func (ti *TextInput) HandleInput(event termbox.Event) {
 		} else {
 			ti.TextBuffer = "false"
 		}
+		return
 	case DataTypeFloat:
 	}
 
