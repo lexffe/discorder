@@ -167,6 +167,20 @@ func (mv *MessageView) OpenMessageSelectWindow(msg string) {
 }
 
 func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
+	switch dir {
+	case ui.DirUp:
+		mv.ScrollAmount += 1
+		mv.DisplayMessagesDirty = true
+	case ui.DirDown:
+		mv.ScrollAmount -= 1
+		if mv.ScrollAmount < 0 {
+			mv.ScrollAmount = 0
+		}
+		mv.DisplayMessagesDirty = true
+	case ui.DirEnd, ui.DirStart:
+		mv.ScrollAmount = 0
+		mv.DisplayMessagesDirty = true
+	}
 }
 
 func (mv *MessageView) HandleMessageCreate(msg *discordgo.Message) {

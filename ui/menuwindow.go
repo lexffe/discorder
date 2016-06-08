@@ -366,6 +366,7 @@ func (mw *MenuWindow) Destroy() {
 	mw.manager.RemoveWindow(mw)
 	mw.DestroyChildren()
 }
+
 func (mw *MenuWindow) Update() {
 	shouldResetHighlight := false
 	if mw.lastSearch != mw.SearchInput.TextBuffer {
