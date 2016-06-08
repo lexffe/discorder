@@ -32,8 +32,10 @@ func NewCommandWindow(app *App, layer int) *CommandWindow {
 	cw.menuWindow = menuWindow
 	cw.Transform.AddChildren(menuWindow)
 
-	cw.Transform.AnchorMin = common.NewVector2F(0.1, 0)
-	cw.Transform.AnchorMax = common.NewVector2F(0.9, 1)
+	cw.Transform.AnchorMin = common.NewVector2F(0, 0)
+	cw.Transform.AnchorMax = common.NewVector2F(1, 1)
+	cw.Transform.Right = 2
+	cw.Transform.Left = 1
 
 	app.ViewManager.UIManager.AddWindow(cw)
 
