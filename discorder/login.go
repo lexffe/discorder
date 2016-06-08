@@ -98,7 +98,8 @@ func (lw *LoginWindow) Trylogin(email, pw, token string) {
 	} else {
 		log.Println("Logged in!")
 		lw.App.config.Save(lw.App.configPath)
-		lw.App.Transform.RemoveChild(lw, true)
+
+		lw.App.ViewManager.RemoveWindow(lw)
 	}
 	lw.loggingIn = false
 }

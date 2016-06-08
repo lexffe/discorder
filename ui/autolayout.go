@@ -48,19 +48,23 @@ func (a *AutoLayoutContainer) BuildLayout() {
 		}
 
 		requiredSize := cast.GetRequiredSize()
-
-		if cast.IsLayoutDynamic() {
+		dynamic := cast.IsLayoutDynamic()
+		if dynamic {
 			numDynammic++
 		}
 
 		if a.LayoutType == LayoutTypeVertical {
 			transform.AnchorMin.Y = 0
 			transform.AnchorMax.Y = 0
-			required += requiredSize.Y
+			if !dynamic {
+				required += requiredSize.Y
+			}
 		} else {
 			transform.AnchorMin.X = 0
-			transform.AnchorMin.X = 0
-			required += requiredSize.X
+			transform.AnchorMax.X = 0
+			if !dynamic {
+				required += requiredSize.X
+			}
 		}
 
 		elements = append(elements, cast)
@@ -109,6 +113,15 @@ func (a *AutoLayoutContainer) LateUpdate() {
 }
 
 func (a *AutoLayoutContainer) Destroy() { a.DestroyChildren() }
+
+func (a *AutoLayoutContainer) GetRequiredSize() common.Vector2F {
+	rect := a.Transform.GetRect()
+	return common.NewVector2F(rect.W, rect.H)
+}
+
+func (a *AutoLayoutContainer) IsLayoutDynamic() bool {
+	return true
+}
 
 type LayoutElement interface {
 	GetRequiredSize() common.Vector2F

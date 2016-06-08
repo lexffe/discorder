@@ -298,8 +298,7 @@ func (mv *MessageView) BuildTexts() {
 			}
 			isFirst = false
 		}
-
-		text.Transform.Position = common.NewVector2I(int(rect.X)+padding, y)
+		text.Transform.Position = common.NewVector2I(padding, y)
 		text.Layer = mv.Layer
 		text.Userdata = item
 		mv.MessageTexts = append(mv.MessageTexts, text)
@@ -316,7 +315,10 @@ func (mv *MessageView) BuildTexts() {
 // Builds a list of messages to display from all of the channels were listening to, pm's and the log
 func (mv *MessageView) BuildDisplayMessages(size int) {
 	// Ackquire the state, or create one if null (incase were starting)
-	state := mv.App.session.State
+	var state *discordgo.State
+	if mv.App.ViewManager.readyReceived {
+		state = mv.App.session.State
+	}
 	if state == nil {
 		state = discordgo.NewState()
 	}
@@ -327,7 +329,11 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 
 	// Holds the start indexes in the newest message search
 	listeningIndexes := make([]int, len(mv.Channels))
-	pmIndexes := make([]int, len(state.PrivateChannels))
+	var pmIndexes []int
+	if mv.App.ViewManager.readyReceived {
+		pmIndexes = make([]int, len(state.PrivateChannels))
+	}
+
 	// Init the slices with silly vals
 	for i := 0; i < len(mv.Channels); i++ {
 		listeningIndexes[i] = -10
@@ -372,17 +378,18 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		var newestPm *DisplayMessage
 		newestPmIndex := 0    // confusing, but the index of the indexes slice
 		nextPmStartIndex := 0 // And the actual next start index to use
+		if mv.App.ViewManager.readyReceived {
+			// Check for newest pm's
+			if mv.ShowAllPrivate {
+				for k, privateChannel := range state.PrivateChannels {
 
-		// Check for newest pm's
-		if mv.ShowAllPrivate {
-			for k, privateChannel := range state.PrivateChannels {
+					newest, nextIndex := mv.GetNewestMessageBefore(privateChannel, beforeTime, pmIndexes[k])
 
-				newest, nextIndex := mv.GetNewestMessageBefore(privateChannel, beforeTime, pmIndexes[k])
-
-				if newest != nil && (newestPm == nil || !newest.Timestamp.Before(newestPm.Timestamp)) {
-					newestPm = newest
-					newestPmIndex = k
-					nextPmStartIndex = nextIndex
+					if newest != nil && (newestPm == nil || !newest.Timestamp.Before(newestPm.Timestamp)) {
+						newestPm = newest
+						newestPmIndex = k
+						nextPmStartIndex = nextIndex
+					}
 				}
 			}
 		}

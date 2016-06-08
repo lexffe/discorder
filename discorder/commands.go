@@ -13,7 +13,7 @@ var Commands = []Command{
 		Category:    []string{"Hidden"},
 		RunFunc: func(app *App, args Arguments) {
 			cw := NewCommandWindow(app, 5)
-			app.ViewManager.Transform.AddChildren(cw)
+			app.ViewManager.AddWindow(cw)
 		},
 	},
 	&SimpleCommand{
@@ -64,7 +64,7 @@ var Commands = []Command{
 		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
-				app.ViewManager.Transform.AddChildren(ssw)
+				app.ViewManager.AddWindow(ssw)
 			}
 		},
 	},
@@ -85,7 +85,7 @@ var Commands = []Command{
 		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
-				app.ViewManager.Transform.AddChildren(hw)
+				app.ViewManager.AddWindow(hw)
 			}
 		},
 	},
@@ -252,7 +252,12 @@ var Commands = []Command{
 			})
 
 			if !handled { // Do the default action
-				window.GetTransform().Parent.RemoveChild(window, true)
+				parent := window.GetTransform().Parent
+				if parent == app.ViewManager.menuContainer.GetTransform() {
+					app.ViewManager.RemoveWindow(window)
+				} else {
+					parent.RemoveChild(window, true)
+				}
 			}
 		},
 	},

@@ -31,6 +31,10 @@ func NewNotificationsManager(app *App) *NotificationsManager {
 func (nm *NotificationsManager) Update() {
 	str := ""
 
+	if nm.App.session == nil {
+		return
+	}
+
 	nm.App.session.State.RLock()
 	defer nm.App.session.State.RUnlock()
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
-	"github.com/nsf/termbox-go"
 	"log"
 	"time"
 	"unicode/utf8"
@@ -14,7 +13,11 @@ type ViewManager struct {
 	*ui.BaseEntity
 	App *App
 
-	mainContainer *ui.AutoLayoutContainer
+	rootContainer *ui.AutoLayoutContainer
+
+	middleContainer       *ui.Container
+	middleLayoutContainer *ui.AutoLayoutContainer
+	menuContainer         *ui.Container
 
 	mv                  *MessageView // Will be changed when multiple message views
 	SelectedMessageView *MessageView
@@ -46,13 +49,13 @@ func NewViewManager(app *App) *ViewManager {
 }
 
 func (v *ViewManager) OnInit() {
-	mainContainer := ui.NewAutoLayoutContainer()
-	mainContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
-	mainContainer.LayoutType = ui.LayoutTypeVertical
-	mainContainer.ForceExpandWidth = true
+	rootContainer := ui.NewAutoLayoutContainer()
+	rootContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
+	rootContainer.LayoutType = ui.LayoutTypeVertical
+	rootContainer.ForceExpandWidth = true
 
-	v.Transform.AddChildren(mainContainer)
-	v.mainContainer = mainContainer
+	v.Transform.AddChildren(rootContainer)
+	v.rootContainer = rootContainer
 
 	// Add the header
 	header := ui.NewText()
@@ -61,7 +64,7 @@ func (v *ViewManager) OnInit() {
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
 	header.Transform.Position.X = float32(-utf8.RuneCountInString(header.Text))
 
-	mainContainer.Transform.AddChildren(header)
+	rootContainer.Transform.AddChildren(header)
 	v.header = header
 
 	if v.App.debug {
@@ -69,14 +72,35 @@ func (v *ViewManager) OnInit() {
 		debugBar.Text = "debug"
 		debugBar.Layer = 9
 
-		mainContainer.Transform.AddChildren(debugBar)
+		rootContainer.Transform.AddChildren(debugBar)
 		v.debugText = debugBar
 	}
 
+	v.notificationsManager = NewNotificationsManager(v.App)
+	v.rootContainer.Transform.AddChildren(v.notificationsManager)
+
+	v.middleLayoutContainer = ui.NewAutoLayoutContainer()
+	v.middleLayoutContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
+	v.middleLayoutContainer.LayoutType = ui.LayoutTypeHorizontal
+	v.middleLayoutContainer.ForceExpandHeight = true
+
+	v.rootContainer.Transform.AddChildren(v.middleLayoutContainer)
+
+	// Menu container
+	v.menuContainer = ui.NewContainer()
+	v.menuContainer.AllowZeroSize = true
+	v.menuContainer.Dynamic = false
+	v.middleLayoutContainer.Transform.AddChildren(v.menuContainer)
+
+	// Initialize all the ui entities
+	mv := NewMessageView(v.App)
+	v.middleLayoutContainer.Transform.AddChildren(mv)
+	v.mv = mv
+	v.SelectedMessageView = mv
+
 	// Launch the login
 	login := NewLoginWindow(v.App)
-
-	v.App.Transform.AddChildren(login)
+	v.AddWindow(login)
 	login.CheckAutoLogin()
 }
 
@@ -84,24 +108,18 @@ func (v *ViewManager) OnReady() {
 	// go into the main view
 	v.readyReceived = true
 
-	v.notificationsManager = NewNotificationsManager(v.App)
-	v.mainContainer.Transform.AddChildren(v.notificationsManager)
-
-	// Initialize all the ui entities
-	mv := NewMessageView(v.App)
-	v.mainContainer.Transform.AddChildren(mv)
-	v.mv = mv
-	v.SelectedMessageView = mv
-
+	// Typing display
 	typingDisplay := NewTypingDisplay(v.App)
 	typingDisplay.text.Layer = 9
-	v.mainContainer.Transform.AddChildren(typingDisplay)
+	v.rootContainer.Transform.AddChildren(typingDisplay)
 	v.typingDisplay = typingDisplay
 
+	// Footer
 	footerContainer := ui.NewContainer()
 	footerContainer.AllowZeroSize = false
-	v.mainContainer.Transform.AddChildren(footerContainer)
+	v.rootContainer.Transform.AddChildren(footerContainer)
 
+	// Main input
 	MainInput := ui.NewTextInput(v.UIManager, 5)
 	MainInput.Transform.AnchorMax = common.NewVector2F(1, 1)
 	MainInput.SetActive(true)
@@ -110,6 +128,7 @@ func (v *ViewManager) OnReady() {
 	v.MainInput = MainInput
 	footerContainer.ProxySize = MainInput
 
+	// Prompt
 	inputHelper := ui.NewText()
 	inputHelper.Transform.AnchorMax = common.NewVector2I(1, 1)
 	inputHelper.Layer = 5
@@ -120,8 +139,9 @@ func (v *ViewManager) OnReady() {
 	length := utf8.RuneCountInString(inputHelper.Text)
 	v.MainInput.Transform.Left = length + 1
 
+	// Mention autocompleter
 	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, MainInput)
-	v.mainContainer.Transform.AddChildren(v.mentionAutocompleter)
+	v.rootContainer.Transform.AddChildren(v.mentionAutocompleter)
 
 	v.ApplyConfig()
 	v.ApplyTheme()
@@ -180,36 +200,6 @@ func (v *ViewManager) Update() {
 	}
 }
 
-func (v *ViewManager) HandleInput(event termbox.Event) {
-	if !v.readyReceived {
-		return
-	}
-
-	if event.Type == termbox.EventKey {
-		switch event.Key {
-		// case termbox.KeyCtrlG: // Select channel
-		// 	if v.activeWindow != nil {
-		// 		break
-		// 	}
-		// case termbox.KeyCtrlO: // Options
-		// 	if v.activeWindow != nil {
-		// 		break
-		// 	}
-		// 	hw := NewHelpWindow(v.App)
-		// 	v.AddChild(hw)
-		// 	v.activeWindow = hw
-		// 	v.MainInput.Active = false
-		// case termbox.KeyCtrlS: // Select server
-		// 	if v.activeWindow != nil {
-		// 		break
-		// 	}
-		// 	ssw := NewSelectServerWindow(v.App, v.mv)
-		// 	v.SetActiveWindow(ssw)
-
-		}
-	}
-}
-
 func (v *ViewManager) SendFromTextBuffer() {
 	if v.talkingChannel == "" {
 		log.Println("you're trying to send a message to nobody buddy D:")
@@ -262,4 +252,21 @@ func (v *ViewManager) ApplyTheme() {
 		}
 		return true
 	})
+}
+
+func (v *ViewManager) AddWindow(e ui.Entity) {
+	v.menuContainer.Transform.AddChildren(e)
+	v.menuContainer.Dynamic = true
+}
+
+func (v *ViewManager) RemoveWindow(e ui.Entity) {
+	v.menuContainer.Transform.RemoveChild(e, true)
+
+	if len(v.menuContainer.Children(false)) > 0 {
+		v.menuContainer.Dynamic = true
+	} else {
+		v.menuContainer.Dynamic = false
+		v.menuContainer.Transform.Size = common.NewVector2I(0, 0)
+	}
+
 }
