@@ -161,7 +161,7 @@ func (ssw *ServerSelectWindow) Select() {
 		return
 	}
 
-	if element.IsCategory && ssw.Mode != ServerSelectModeChannelOnly {
+	if element.IsCategory && ssw.Mode != ServerSelectModeServerOnly {
 		ssw.menuWindow.Select()
 		return
 	}

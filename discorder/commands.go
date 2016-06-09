@@ -235,6 +235,11 @@ var Commands = []Command{
 		Name:        "set_nick",
 		Description: "Sets your nickname on a server (if possible)",
 		Category:    []string{"Discord"},
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "name", Description: "The nickname you will set (empty to reset)", Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeInt, HelperDataType: HelperDataTypeServer},
+			&ArgumentDef{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeInt},
+		},
 		RunFunc: func(app *App, args Arguments) {
 		},
 	},

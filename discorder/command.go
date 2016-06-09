@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+// Helpers for executing commands through the ui, say picking a server instead of entering a server id
+type HelperDataType int
+
+const (
+	HelperDataTypeNone HelperDataType = iota
+	HelperDataTypeServer
+)
+
 type SimpleCommand struct {
 	Name        string
 	Description string
@@ -69,11 +77,12 @@ func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
 }
 
 type ArgumentDef struct {
-	Name        string
-	Description string
-	Optional    bool
-	Datatype    ui.DataType
-	CurVal      func(app *App) string
+	Name           string
+	Description    string
+	Optional       bool
+	Datatype       ui.DataType
+	HelperDataType HelperDataType
+	CurVal         func(app *App) string
 }
 
 type Arguments map[string]interface{}

@@ -242,7 +242,8 @@ func (app *App) Draw() {
 	})
 
 	// Build the layers
-	layers := make([][]ui.DrawHandler, 10)
+	// TODO Make it autodetect the highest
+	layers := make([][]ui.DrawHandler, 20)
 
 	entities := app.Children(true)
 	for _, entity := range entities {

@@ -3,6 +3,8 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"github.com/jonas747/discordgo"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -10,9 +12,16 @@ import (
 type CommandExecWindow struct {
 	*ui.BaseEntity
 	app        *App
+	layer      int
 	menuWindow *ui.MenuWindow
 	command    Command
 }
+
+type CustomMenuType int
+
+const (
+	CustomMenuExecute CustomMenuType = iota
+)
 
 func NewCommandExecWindow(layer int, app *App, command Command) *CommandExecWindow {
 	execWindow := &CommandExecWindow{
@@ -20,6 +29,7 @@ func NewCommandExecWindow(layer int, app *App, command Command) *CommandExecWind
 		app:        app,
 		menuWindow: ui.NewMenuWindow(layer, app.ViewManager.UIManager, false),
 		command:    command,
+		layer:      layer,
 	}
 
 	execWindow.menuWindow.Transform.AnchorMax = common.NewVector2F(1, 1)
@@ -65,7 +75,6 @@ func (cew *CommandExecWindow) GenMenu() {
 			InputType: arg.Datatype,
 			UserData:  arg,
 		}
-
 		if arg.CurVal != nil {
 			input.InputDefaultText = arg.CurVal(cew.app)
 		}
@@ -74,8 +83,9 @@ func (cew *CommandExecWindow) GenMenu() {
 	}
 
 	exec := &ui.MenuItem{
-		Name: "Execute",
-		Info: "Execute the commadn with specified args",
+		Name:     "Execute",
+		Info:     "Execute the commadn with specified args",
+		UserData: CustomMenuExecute,
 	}
 	items = append(items, exec)
 	cew.menuWindow.SetOptions(items)
@@ -92,8 +102,37 @@ func (cew *CommandExecWindow) Select() {
 		return
 	}
 
-	if element.Name == "Execute" {
-		cew.Execute()
+	if element.UserData == nil {
+		return
+	}
+
+	switch t := element.UserData.(type) {
+	case CustomMenuType:
+		switch t {
+		case CustomMenuExecute:
+			cew.Execute()
+		}
+	case *ArgumentDef:
+		switch t.HelperDataType {
+		case HelperDataTypeNone:
+			break
+		case HelperDataTypeServer:
+			ssw := NewSelectServerWindow(cew.app, nil, cew.layer+2)
+			cew.app.ViewManager.AddWindow(ssw)
+			ssw.Mode = ServerSelectModeServerOnly
+			ssw.OnSelect = func(sel interface{}) {
+				cast, ok := sel.(*discordgo.Guild)
+				if !ok {
+					return
+				}
+
+				log.Println("Selected ", cast.Name)
+				if element.Input != nil {
+					element.Input.TextBuffer = cast.ID
+				}
+				cew.app.ViewManager.RemoveWindow(ssw)
+			}
+		}
 	}
 }
 
