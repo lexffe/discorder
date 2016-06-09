@@ -237,10 +237,23 @@ var Commands = []Command{
 		Category:    []string{"Discord"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "name", Description: "The nickname you will set (empty to reset)", Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeInt, HelperDataType: HelperDataTypeServer},
-			&ArgumentDef{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeInt},
+			&ArgumentDef{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeString, HelperDataType: HelperDataTypeServer},
+			&ArgumentDef{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeString},
 		},
 		RunFunc: func(app *App, args Arguments) {
+			serverId, _ := args.String("server")
+			name, _ := args.String("name")
+			user, _ := args.String("user")
+
+			userId := "@me/nick"
+			if user != "" {
+				userId = user
+			}
+
+			err := app.session.GuildMemberNickname(serverId, userId, name)
+			if err != nil {
+				log.Println("Error setting nickname", err)
+			}
 		},
 	},
 	&SimpleCommand{
