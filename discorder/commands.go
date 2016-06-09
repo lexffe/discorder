@@ -2,6 +2,7 @@ package discorder
 
 import (
 	"github.com/jonas747/discorder/ui"
+	"github.com/jonas747/discordgo"
 	"log"
 	"path/filepath"
 	"strconv"
@@ -66,6 +67,15 @@ var Commands = []Command{
 			if app.ViewManager.CanOpenWindow() {
 				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
 				app.ViewManager.AddWindow(ssw)
+				ssw.OnSelect = func(element interface{}) {
+					cast, ok := element.(*discordgo.Channel)
+					if !ok {
+						return
+					}
+
+					log.Println("Selected ", GetChannelNameOrRecipient(cast))
+					app.ViewManager.talkingChannel = cast.ID
+				}
 			}
 		},
 	},

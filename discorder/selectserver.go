@@ -14,9 +14,20 @@ const (
 	ServerSelectFooter = "(Space) Toggle whole server, (enter) select"
 )
 
+type ServerSelectMode int
+
+const (
+	ServerSelectModeMessageView ServerSelectMode = iota
+	ServerSelectModeServerOnly
+	ServerSelectModeChannelOnly
+)
+
 type ServerSelectWindow struct {
 	*ui.BaseEntity
-	App         *App
+	App      *App
+	Mode     ServerSelectMode
+	OnSelect func(data interface{})
+
 	menuWindow  *ui.MenuWindow
 	messageView *MessageView
 	viewManager *ViewManager
@@ -81,10 +92,12 @@ func (ssw *ServerSelectWindow) GenMenu() {
 		// Generate chanel options
 		for i, channel := range guild.Channels {
 			marked := false
-			for _, listening := range ssw.messageView.Channels {
-				if listening == channel.ID {
-					marked = true
-					break
+			if ssw.messageView != nil {
+				for _, listening := range ssw.messageView.Channels {
+					if listening == channel.ID {
+						marked = true
+						break
+					}
 				}
 			}
 			channelOption := &ui.MenuItem{
@@ -109,13 +122,15 @@ func (ssw *ServerSelectWindow) GenMenu() {
 
 	for i, channel := range state.PrivateChannels {
 		marked := false
-		if ssw.messageView.ShowAllPrivate {
-			marked = true
-		} else {
-			for _, listening := range ssw.messageView.Channels {
-				if listening == channel.ID {
-					marked = true
-					break
+		if ssw.messageView != nil {
+			if ssw.messageView.ShowAllPrivate {
+				marked = true
+			} else {
+				for _, listening := range ssw.messageView.Channels {
+					if listening == channel.ID {
+						marked = true
+						break
+					}
 				}
 			}
 		}
@@ -146,7 +161,7 @@ func (ssw *ServerSelectWindow) Select() {
 		return
 	}
 
-	if element.IsCategory {
+	if element.IsCategory && ssw.Mode != ServerSelectModeChannelOnly {
 		ssw.menuWindow.Select()
 		return
 	}
@@ -155,13 +170,9 @@ func (ssw *ServerSelectWindow) Select() {
 		return
 	}
 
-	cast, ok := element.UserData.(*discordgo.Channel)
-	if !ok {
-		return
+	if ssw.OnSelect != nil {
+		ssw.OnSelect(element.UserData)
 	}
-
-	log.Println("Selected ", GetChannelNameOrRecipient(cast))
-	ssw.App.ViewManager.talkingChannel = cast.ID
 }
 
 func (ssw *ServerSelectWindow) Toggle() {
@@ -173,14 +184,15 @@ func (ssw *ServerSelectWindow) Toggle() {
 	if element.UserData == nil {
 		return
 	}
-
-	switch t := element.UserData.(type) {
-	case *discordgo.Channel:
-		ssw.ToggleChannel(t, element)
-	case *discordgo.Guild:
-		ssw.ToggleGuild(t, element)
-	case string:
-		ssw.ToggleDirectMessages()
+	if ssw.messageView != nil {
+		switch t := element.UserData.(type) {
+		case *discordgo.Channel:
+			ssw.ToggleChannel(t, element)
+		case *discordgo.Guild:
+			ssw.ToggleGuild(t, element)
+		case string:
+			ssw.ToggleDirectMessages()
+		}
 	}
 }
 
