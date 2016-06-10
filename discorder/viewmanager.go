@@ -106,6 +106,9 @@ func (v *ViewManager) OnInit() {
 
 func (v *ViewManager) OnReady() {
 	// go into the main view
+	if v.readyReceived {
+		return // Only run once, not on reconnects
+	}
 	v.readyReceived = true
 
 	// Typing display
