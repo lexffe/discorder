@@ -256,7 +256,12 @@ func (mv *MessageView) BuildTexts() {
 				channelName = "Direct Message"
 			}
 
-			fullMsg := ts + "[" + channelName + "]" + author + ": " + msg.ContentWithMentionsReplaced()
+			body := msg.ContentWithMentionsReplaced()
+			for _, v := range msg.Attachments {
+				body += "Attachment: " + v.ProxyURL + " (original: " + v.URL + ") "
+			}
+
+			fullMsg := ts + "[" + channelName + "]" + author + ": " + body
 			channelLen := utf8.RuneCountInString(channelName) + 2
 			points := map[int]ui.AttribPair{
 				0:                              mv.App.GetThemeAttribPair("message_timestamp").AttribPair(),
