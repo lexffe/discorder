@@ -144,10 +144,10 @@ func (mv *MessageView) OpenMessageSelectWindow(msg string) {
 func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
 	switch dir {
 	case ui.DirUp:
-		mv.ScrollAmount += 1
+		mv.ScrollAmount += amount
 		mv.DisplayMessagesDirty = true
 	case ui.DirDown:
-		mv.ScrollAmount -= 1
+		mv.ScrollAmount -= amount
 		if mv.ScrollAmount < 0 {
 			mv.ScrollAmount = 0
 		}

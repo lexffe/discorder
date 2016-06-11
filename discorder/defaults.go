@@ -12,6 +12,8 @@ var DefaultKeybinds = []byte(`[
 	{"key": "ArrowRight", "command": "move_cursor", "args": {"amount": 1, "direction": "right"}},
 	{"key": "ArrowUp", "command": "scroll", "args": {"amount": 1, "direction": "up"}},
 	{"key": "ArrowDown", "command": "scroll", "args": {"amount": 1, "direction": "down"}},
+	{"key": "Pgup", "command": "scroll", "args": {"amount": 10, "direction": "up"}},
+	{"key": "Pgdn", "command": "scroll", "args": {"amount": 10, "direction": "down"}},
 	
 	{"key": "Enter", "command": "select"},
 	{"key": "CtrlSpace", "command": "toggle"},
