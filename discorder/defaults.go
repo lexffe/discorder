@@ -32,6 +32,14 @@ var DefaultKeybinds = []byte(`[
 	{"key": "F2", "command": "change_tab", "args": {"tab": 2}},
 	{"key": "F3", "command": "change_tab", "args": {"tab": 3}},
 	{"key": "F4", "command": "change_tab", "args": {"tab": 4}}
+	{"key": "F5", "command": "change_tab", "args": {"tab": 5}}
+	{"key": "F6", "command": "change_tab", "args": {"tab": 6}}
+	{"key": "F7", "command": "change_tab", "args": {"tab": 7}}
+	{"key": "F8", "command": "change_tab", "args": {"tab": 8}}
+	{"key": "F9", "command": "change_tab", "args": {"tab": 9}}
+	{"key": "F10", "command": "change_tab", "args": {"tab": 10}}
+	{"key": "F11", "command": "change_tab", "args": {"tab": 11}}
+	{"key": "F12", "command": "change_tab", "args": {"tab": 12}}
 ]`)
 
 var DefaultTheme = []byte(`{
