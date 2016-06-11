@@ -290,13 +290,6 @@ var Commands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "quit",
-		Description: "Quit discorder",
-		RunFunc: func(app *App, args Arguments) {
-			go app.Stop()
-		},
-	},
-	&SimpleCommand{
 		Name:        "short_guilds",
 		Description: "Displays a mini version of guilds in message view",
 		Args: []*ArgumentDef{
@@ -308,6 +301,41 @@ var Commands = []Command{
 			shortguilds, _ := args.Bool("on")
 			app.config.ShortGuilds = shortguilds
 			log.Println("Set short_guilds to", shortguilds)
+		},
+	},
+	&SimpleCommand{
+		Name:        "split_view",
+		Description: "Splits a view",
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "horizontal", Description: "Split horizontally", Datatype: ui.DataTypeBool},
+			&ArgumentDef{Name: "vertical", Description: "Split vertically", Datatype: ui.DataTypeBool},
+		},
+		RunFunc: func(app *App, args Arguments) {
+		},
+	},
+	&SimpleCommand{
+		Name:        "focus_view",
+		Description: "Changes focus to another view",
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "dir", Description: "Direction", Datatype: ui.DataTypeString},
+		},
+		RunFunc: func(app *App, args Arguments) {
+		},
+	},
+	&SimpleCommand{
+		Name:        "change_view",
+		Description: "Changes whats inside the view",
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "horizontal", Description: "Split horizontally", Datatype: ui.DataTypeBool},
+		},
+		RunFunc: func(app *App, args Arguments) {
+		},
+	},
+	&SimpleCommand{
+		Name:        "quit",
+		Description: "Quit discorder",
+		RunFunc: func(app *App, args Arguments) {
+			go app.Stop()
 		},
 	},
 }

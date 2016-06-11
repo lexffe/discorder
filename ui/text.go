@@ -22,7 +22,7 @@ type Text struct {
 	Mode int
 
 	// If attribs is empty, uses style instead
-	Attribs map[int]AttribPair
+	attribs []*AttribPair
 	Style   AttribPair
 
 	Layer    int
@@ -40,6 +40,21 @@ func (t *Text) GetDrawLayer() int {
 	return t.Layer
 }
 
+func (t *Text) SetAttribs(attribs map[int]AttribPair) {
+	highest := 0
+	for key, _ := range attribs {
+		if key > highest {
+			highest = key
+		}
+	}
+
+	t.attribs = make([]*AttribPair, highest+1)
+	for key, pair := range attribs {
+		c := pair
+		t.attribs[key] = &c
+	}
+}
+
 func (t *Text) Draw() {
 	if t.Disabled {
 		return
@@ -47,13 +62,11 @@ func (t *Text) Draw() {
 
 	rect := t.Transform.GetRect()
 
-	var attribs map[int]AttribPair
-	if t.Attribs != nil && len(t.Attribs) > 0 {
-		attribs = t.Attribs
+	var attribs []*AttribPair
+	if t.attribs != nil && len(t.attribs) > 0 {
+		attribs = t.attribs
 	} else {
-		attribs = map[int]AttribPair{
-			0: t.Style,
-		}
+		attribs = []*AttribPair{&t.Style}
 	}
 
 	// The actual drawing happens here
@@ -64,10 +77,13 @@ func (t *Text) Draw() {
 	height := int(rect.H)
 	width := int(rect.W)
 	var curAttribs AttribPair
+
 	for _, char := range t.Text {
-		newAttribs, ok := attribs[i]
-		if ok {
-			curAttribs = newAttribs
+		if i < len(attribs) {
+			newAttribs := attribs[i]
+			if newAttribs != nil {
+				curAttribs = *newAttribs
+			}
 		}
 
 		if char != '\n' {

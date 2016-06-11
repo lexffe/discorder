@@ -208,6 +208,8 @@ func (mv *MessageView) BuildTexts() {
 		text := ui.NewText()
 		text.Transform.Size = common.NewVector2F(rect.W, 0)
 
+		attribs := make(map[int]ui.AttribPair)
+
 		if item.IsLogMessage {
 			text.Text = "Log: " + item.LogMessage.Content
 			mv.App.ApplyThemeToText(text, "message_log")
@@ -258,22 +260,21 @@ func (mv *MessageView) BuildTexts() {
 
 			body := msg.ContentWithMentionsReplaced()
 			for _, v := range msg.Attachments {
-				body += "Attachment: " + v.ProxyURL + " (original: " + v.URL + ") "
+				body += " Attachment: " + v.ProxyURL + " (original: " + v.URL + ") "
 			}
 
 			fullMsg := ts + "[" + channelName + "]" + author + ": " + body
 			channelLen := utf8.RuneCountInString(channelName) + 2
-			points := map[int]ui.AttribPair{
+			attribs = map[int]ui.AttribPair{
 				0:                              mv.App.GetThemeAttribPair("message_timestamp").AttribPair(),
 				tsLen:                          mv.App.GetThemeAttribPair("message_server_channel").AttribPair(),
 				channelLen + tsLen:             mv.App.GetThemeAttribPair("message_author").AttribPair(),
 				channelLen + authorLen + tsLen: mv.App.GetThemeAttribPair("message_content").AttribPair(),
 			}
 			if isPrivate {
-				points[tsLen] = mv.App.GetThemeAttribPair("message_direct_channel").AttribPair()
+				attribs[tsLen] = mv.App.GetThemeAttribPair("message_direct_channel").AttribPair()
 			}
 			text.Text = fullMsg
-			text.Attribs = points
 		}
 
 		lines := text.HeightRequired()
@@ -302,12 +303,14 @@ func (mv *MessageView) BuildTexts() {
 			if item.IsLogMessage {
 				mv.App.ApplyThemeToText(text, "element_selected")
 			} else {
-				for k, v := range text.Attribs {
-					text.Attribs[k] = ui.AttribPair{v.FG, termbox.ColorBlue | termbox.AttrBold}
+				for k, v := range attribs {
+					attribs[k] = ui.AttribPair{v.FG, termbox.ColorBlue | termbox.AttrBold}
 				}
 			}
 			isFirst = false
 		}
+
+		text.SetAttribs(attribs)
 		text.Transform.Position = common.NewVector2I(padding, y)
 		text.Layer = mv.Layer
 		text.Userdata = item
