@@ -299,5 +299,4 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 	v.middleLayoutContainer.Transform.AddChildren(t)
 	t.SetActive(true)
 	v.ActiveTab = t
-	log.Println("Set active tab to ", t.Name)
 }
