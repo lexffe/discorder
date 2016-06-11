@@ -108,7 +108,7 @@ func (ma *MentionAutoCompletion) FindMatchingMentions(subIndex int) {
 
 	matches := make([]*discordgo.Member, 0)
 
-	talkingChannel, err := ma.App.session.State.Channel(ma.App.ViewManager.talkingChannel)
+	talkingChannel, err := ma.App.session.State.Channel(ma.App.ViewManager.ActiveTab.SendChannel)
 	if err != nil {
 		return // Invalid channel or channels not loaded
 	}

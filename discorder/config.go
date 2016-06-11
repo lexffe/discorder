@@ -15,15 +15,22 @@ import (
 )
 
 type Config struct {
-	Email             string   `json:"email"`
-	AuthToken         string   `json:"auth_token"` // Not used currently, but planned
-	Theme             string   `json:"theme"`
-	AllPrivateMode    bool     `json:"all_privateMode"`
-	LastChannel       string   `json:"last_channel"`
-	ListeningChannels []string `json:"listening_cannels"`
+	Email     string `json:"email"`
+	AuthToken string `json:"auth_token"` // Not used currently, but planned
+	Theme     string `json:"theme"`
+
+	Tabs []*TabConfig `json:"tabs"`
 
 	// General settings
 	ShortGuilds bool `json:"short_guilds"`
+}
+
+type TabConfig struct {
+	Name              string   `json:"name"`
+	AllPrivateMode    bool     `json:"all_private_mode"`
+	SendChannel       string   `json:"send_channel"`
+	ListeningChannels []string `json:"listening_cannels"`
+	Index             int      `json:"index"`
 }
 
 func LoadOrCreateConfig(path string) (*Config, error) {

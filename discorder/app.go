@@ -287,10 +287,15 @@ func (app *App) shutdown() {
 	app.running = false
 	// app.config.LastServer = app.selectedServerId
 	// app.config.LastChannel = app.selectedChannelId
-	if app.ViewManager != nil && app.ViewManager.SelectedMessageView != nil {
-		app.config.ListeningChannels = app.ViewManager.SelectedMessageView.Channels
-		app.config.LastChannel = app.ViewManager.talkingChannel
-		app.config.AllPrivateMode = app.ViewManager.SelectedMessageView.ShowAllPrivate
+	app.config.Tabs = make([]*TabConfig, 0)
+	for _, tab := range app.ViewManager.Tabs {
+		app.config.Tabs = append(app.config.Tabs, &TabConfig{
+			Name:              tab.Name,
+			AllPrivateMode:    tab.MessageView.ShowAllPrivate,
+			SendChannel:       tab.SendChannel,
+			ListeningChannels: tab.MessageView.Channels,
+			Index:             tab.Index,
+		})
 	}
 
 	if app.session != nil {

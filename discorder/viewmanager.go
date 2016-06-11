@@ -19,8 +19,8 @@ type ViewManager struct {
 	middleLayoutContainer *ui.AutoLayoutContainer
 	menuContainer         *ui.Container
 
-	mv                  *MessageView // Will be changed when multiple message views
-	SelectedMessageView *MessageView
+	Tabs      map[int]*Tab
+	ActiveTab *Tab
 
 	UIManager *ui.Manager
 
@@ -33,9 +33,8 @@ type ViewManager struct {
 	notificationsManager *NotificationsManager
 	typingDisplay        *TypingDisplay
 
-	readyReceived  bool
-	talkingChannel string
-	lastLog        time.Time
+	readyReceived bool
+	lastLog       time.Time
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -43,6 +42,7 @@ func NewViewManager(app *App) *ViewManager {
 		BaseEntity: &ui.BaseEntity{},
 		App:        app,
 		UIManager:  ui.NewManager(),
+		Tabs:       make(map[int]*Tab),
 	}
 	vm.Transform.AnchorMax = common.NewVector2I(1, 1)
 	return vm
@@ -92,12 +92,6 @@ func (v *ViewManager) OnInit() {
 	v.menuContainer.Dynamic = false
 	v.middleLayoutContainer.Transform.AddChildren(v.menuContainer)
 
-	// Initialize all the ui entities
-	mv := NewMessageView(v.App)
-	v.middleLayoutContainer.Transform.AddChildren(mv)
-	v.mv = mv
-	v.SelectedMessageView = mv
-
 	// Launch the login
 	login := NewLoginWindow(v.App)
 	v.AddWindow(login)
@@ -110,6 +104,9 @@ func (v *ViewManager) OnReady() {
 		return // Only run once, not on reconnects
 	}
 	v.readyReceived = true
+
+	// Initialize tabs
+	v.InitializeTabs()
 
 	// Typing display
 	typingDisplay := NewTypingDisplay(v.App)
@@ -146,34 +143,22 @@ func (v *ViewManager) OnReady() {
 	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, MainInput)
 	v.rootContainer.Transform.AddChildren(v.mentionAutocompleter)
 
-	v.ApplyConfig()
 	v.ApplyTheme()
-}
-
-func (v *ViewManager) ApplyConfig() {
-	for _, channel := range v.App.config.ListeningChannels {
-		v.SelectedMessageView.AddChannel(channel)
-	}
-	v.talkingChannel = v.App.config.LastChannel
-	v.SelectedMessageView.ShowAllPrivate = v.App.config.AllPrivateMode
 }
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }
 
 func (v *ViewManager) Update() {
-	if v.mv != nil {
-		if logRoutine.HasChangedSince(v.lastLog) {
-			v.mv.Logs = logRoutine.GetCopy()
-			v.mv.DisplayMessagesDirty = true
-		}
-	}
-
 	// Update the prompt
-	if v.talkingChannel != "" {
+	talkingChannel := ""
+	if v.ActiveTab != nil {
+		talkingChannel = v.ActiveTab.SendChannel
+	}
+	if talkingChannel != "" {
 		preStr := "Send to "
 
-		channel, err := v.App.session.State.Channel(v.talkingChannel)
-		name := v.talkingChannel
+		channel, err := v.App.session.State.Channel(talkingChannel)
+		name := talkingChannel
 
 		if channel != nil && err == nil {
 			name = GetChannelNameOrRecipient(channel)
@@ -199,12 +184,12 @@ func (v *ViewManager) Update() {
 	}
 
 	if v.MainInput != nil && v.MainInput.TextBuffer != "" {
-		v.App.typingRoutine.selfTypingIn <- v.talkingChannel
+		v.App.typingRoutine.selfTypingIn <- talkingChannel
 	}
 }
 
 func (v *ViewManager) SendFromTextBuffer() {
-	if v.talkingChannel == "" {
+	if v.ActiveTab == nil || v.ActiveTab.SendChannel == "" {
 		log.Println("you're trying to send a message to nobody buddy D:")
 		return
 	}
@@ -222,7 +207,7 @@ func (v *ViewManager) SendFromTextBuffer() {
 		v.MainInput.TextBuffer = ""
 		v.MainInput.CursorLocation = 0
 		go func() {
-			_, err := v.App.session.ChannelMessageSend(v.talkingChannel, toSend)
+			_, err := v.App.session.ChannelMessageSend(v.ActiveTab.SendChannel, toSend)
 			if err != nil {
 				log.Println("Error sending message: ", err)
 			}
@@ -271,5 +256,46 @@ func (v *ViewManager) RemoveWindow(e ui.Entity) {
 		v.menuContainer.Dynamic = false
 		v.menuContainer.Transform.Size = common.NewVector2I(0, 0)
 	}
+}
 
+func (v *ViewManager) InitializeTabs() {
+	tabConfig := v.App.config.Tabs
+	if tabConfig == nil || len(tabConfig) < 1 {
+		v.CreateTab(0)
+		return
+	}
+
+	for _, t := range v.App.config.Tabs {
+		v.CreateTab(t.Index)
+		for _, c := range t.ListeningChannels {
+			v.ActiveTab.MessageView.AddChannel(c)
+		}
+		v.ActiveTab.SendChannel = t.SendChannel
+		v.ActiveTab.MessageView.ShowAllPrivate = t.AllPrivateMode
+		v.ActiveTab.Name = t.Name
+	}
+}
+
+func (v *ViewManager) CreateTab(index int) {
+	_, existing := v.Tabs[index]
+	if existing {
+		log.Println("Trying to create an existing tab")
+	}
+
+	tab := NewTab(v.App, index)
+
+	v.Tabs[index] = tab
+	v.SetActiveTab(tab)
+}
+
+func (v *ViewManager) SetActiveTab(t *Tab) {
+	if v.ActiveTab != nil {
+		v.ActiveTab.Transform.Parent.RemoveChild(v.ActiveTab, false)
+		v.ActiveTab.SetActive(false)
+	}
+
+	v.middleLayoutContainer.Transform.AddChildren(t)
+	t.SetActive(true)
+	v.ActiveTab = t
+	log.Println("Set active tab to ", t.Name)
 }

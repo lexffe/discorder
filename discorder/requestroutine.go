@@ -50,7 +50,6 @@ func (hq *HistoryRequest) Do(finished chan error) {
 	var err error
 	defer func() {
 		hq.App.Lock()
-		hq.App.ViewManager.mv.DisplayMessagesDirty = true
 		if hq.App.debug {
 			log.Println("History processing complete")
 		}

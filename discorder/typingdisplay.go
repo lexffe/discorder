@@ -29,13 +29,20 @@ func NewTypingDisplay(app *App) *TypingDisplay {
 }
 
 func (t *TypingDisplay) Update() {
-	channels := make([]string, len(t.App.ViewManager.mv.Channels))
-	copy(channels, t.App.ViewManager.mv.Channels)
-	if t.App.ViewManager.mv.ShowAllPrivate {
+	tab := t.App.ViewManager.ActiveTab
+
+	if tab == nil {
+		return
+	}
+
+	channels := make([]string, len(tab.MessageView.Channels))
+	copy(channels, tab.MessageView.Channels)
+
+	if tab.MessageView.ShowAllPrivate {
 		t.App.session.State.RLock()
 		for _, pChan := range t.App.session.State.PrivateChannels {
 			found := false
-			for _, subChan := range t.App.ViewManager.mv.Channels {
+			for _, subChan := range tab.MessageView.Channels {
 				if subChan == pChan.ID {
 					found = true
 					break

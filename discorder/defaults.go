@@ -23,11 +23,15 @@ var DefaultKeybinds = []byte(`[
 	{"key": "Backspace", "command": "erase", "args": {"amount": 1, "direction": "left"}},
 	{"key": "Backspace2", "command": "erase", "args": {"amount": 1, "direction": "left"}},
 	{"key": "Delete", "command": "erase", "args": {"amount": 1, "direction": "right"}},
-	
+		
 
 	{"key": "Alt+Backspace", "command": "back"},
-	{"key": "Alt+Backspace2", "command": "back"}
-
+	{"key": "Alt+Backspace2", "command": "back"},
+	
+	{"key": "F1", "command": "change_tab", "args": {"tab": 1}},
+	{"key": "F2", "command": "change_tab", "args": {"tab": 2}},
+	{"key": "F3", "command": "change_tab", "args": {"tab": 3}},
+	{"key": "F4", "command": "change_tab", "args": {"tab": 4}}
 ]`)
 
 var DefaultTheme = []byte(`{

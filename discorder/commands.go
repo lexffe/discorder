@@ -65,7 +65,7 @@ var Commands = []Command{
 		Category:    []string{"Windows"},
 		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
-				ssw := NewSelectServerWindow(app, app.ViewManager.SelectedMessageView, 6)
+				ssw := NewSelectServerWindow(app, app.ViewManager.ActiveTab.MessageView, 6)
 				app.ViewManager.AddWindow(ssw)
 				ssw.OnSelect = func(element interface{}) {
 					cast, ok := element.(*discordgo.Channel)
@@ -74,7 +74,7 @@ var Commands = []Command{
 					}
 
 					log.Println("Selected ", GetChannelNameOrRecipient(cast))
-					app.ViewManager.talkingChannel = cast.ID
+					app.ViewManager.ActiveTab.SendChannel = cast.ID
 				}
 			}
 		},
@@ -108,7 +108,7 @@ var Commands = []Command{
 			&ArgumentDef{Name: "message", Optional: true, Datatype: ui.DataTypeString},
 		},
 		RunFunc: func(app *App, args Arguments) {
-			app.ViewManager.SelectedMessageView.OpenMessageSelectWindow("")
+			//app.ViewManager.SelectedMessageView.OpenMessageSelectWindow("")
 		},
 	},
 	&SimpleCommand{
@@ -133,8 +133,8 @@ var Commands = []Command{
 					}
 					return true
 				})
-			} else if app.ViewManager.SelectedMessageView != nil {
-				app.ViewManager.SelectedMessageView.Scroll(moveDir, amount)
+			} else if app.ViewManager.ActiveTab != nil {
+				app.ViewManager.ActiveTab.MessageView.Scroll(moveDir, amount)
 			}
 		},
 	},
@@ -304,31 +304,19 @@ var Commands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "split_view",
-		Description: "Splits a view",
+		Name:        "change_tab",
+		Description: "Displays a mini version of guilds in message view",
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "horizontal", Description: "Split horizontally", Datatype: ui.DataTypeBool},
-			&ArgumentDef{Name: "vertical", Description: "Split vertically", Datatype: ui.DataTypeBool},
+			&ArgumentDef{Name: "tab", Datatype: ui.DataTypeInt},
 		},
 		RunFunc: func(app *App, args Arguments) {
-		},
-	},
-	&SimpleCommand{
-		Name:        "focus_view",
-		Description: "Changes focus to another view",
-		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "dir", Description: "Direction", Datatype: ui.DataTypeString},
-		},
-		RunFunc: func(app *App, args Arguments) {
-		},
-	},
-	&SimpleCommand{
-		Name:        "change_view",
-		Description: "Changes whats inside the view",
-		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "horizontal", Description: "Split horizontally", Datatype: ui.DataTypeBool},
-		},
-		RunFunc: func(app *App, args Arguments) {
+			index, _ := args.Int("tab")
+			tab, ok := app.ViewManager.Tabs[index]
+			if ok {
+				app.ViewManager.SetActiveTab(tab)
+			} else {
+				app.ViewManager.CreateTab(index)
+			}
 		},
 	},
 	&SimpleCommand{

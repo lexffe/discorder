@@ -31,6 +31,7 @@ type MessageView struct {
 
 	DisplayMessagesDirty bool // Rebuilds displaymessages on next draw if set
 	TextsDirty           bool // Rebuilds texts on next draw if set
+	lastLogs             time.Time
 }
 
 type DisplayMessage struct {
@@ -462,6 +463,12 @@ func (mv *MessageView) Update() {
 	h := int(mv.Transform.GetRect().H)
 	if h < 0 {
 		h = 0
+	}
+
+	if logRoutine.HasChangedSince(mv.lastLogs) {
+		mv.Logs = logRoutine.GetCopy()
+		mv.DisplayMessagesDirty = true
+		mv.lastLogs = time.Now()
 	}
 
 	if mv.ScrollAmount == 0 {

@@ -111,7 +111,7 @@ func (l *LogRoutine) GetCopy() []*LogMessage {
 
 func (l *LogRoutine) HasChangedSince(since time.Time) bool {
 	l.RLock()
-	changed := !since.Equal(l.lastLogTime)
+	changed := since.Before(l.lastLogTime)
 	l.RUnlock()
 	return changed
 }
@@ -119,5 +119,6 @@ func (l *LogRoutine) HasChangedSince(since time.Time) bool {
 func (l *LogRoutine) Clear() {
 	l.Lock()
 	l.buffer = []*LogMessage{}
+	l.lastLogTime = time.Now()
 	l.Unlock()
 }

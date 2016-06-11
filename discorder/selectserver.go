@@ -258,11 +258,7 @@ func (ssw *ServerSelectWindow) ToggleChannel(channel *discordgo.Channel, element
 			return true
 		})
 
-		if all {
-			ssw.App.ViewManager.mv.ShowAllPrivate = true
-		} else {
-			ssw.App.ViewManager.mv.ShowAllPrivate = false
-		}
+		ssw.messageView.ShowAllPrivate = all
 	}
 }
 
