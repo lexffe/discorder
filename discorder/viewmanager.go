@@ -154,7 +154,7 @@ func (v *ViewManager) Update() {
 	if v.ActiveTab != nil {
 		talkingChannel = v.ActiveTab.SendChannel
 	}
-	if talkingChannel != "" {
+	if v.readyReceived {
 		preStr := "Send to "
 
 		channel, err := v.App.session.State.Channel(talkingChannel)
@@ -170,6 +170,8 @@ func (v *ViewManager) Update() {
 					preStr += channel.GuildID + "/"
 				}
 			}
+		} else {
+			name = "Select a channel! >:O"
 		}
 
 		v.inputHelper.Text = preStr + "#" + name + ":"
