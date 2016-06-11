@@ -5,7 +5,7 @@ import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
-	"github.com/nsf/termbox-go"
+	"github.com/jonas747/termbox-go"
 	"log"
 	"strings"
 	"time"

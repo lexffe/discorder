@@ -3,7 +3,7 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
-	"github.com/nsf/termbox-go"
+	"github.com/jonas747/termbox-go"
 )
 
 var HelpContent = []string{

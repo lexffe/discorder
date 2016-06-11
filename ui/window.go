@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/nsf/termbox-go"
+	"github.com/jonas747/termbox-go"
 	"unicode/utf8"
 )
 

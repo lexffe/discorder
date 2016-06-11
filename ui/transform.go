@@ -2,7 +2,7 @@ package ui
 
 import (
 	"github.com/jonas747/discorder/common"
-	"github.com/nsf/termbox-go"
+	"github.com/jonas747/termbox-go"
 )
 
 // Unity3d like UI transform (minus scale, pivot and rotation)

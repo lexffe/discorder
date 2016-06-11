@@ -3,7 +3,7 @@ package discorder
 import (
 	"encoding/json"
 	"github.com/jonas747/discorder/ui"
-	"github.com/nsf/termbox-go"
+	"github.com/jonas747/termbox-go"
 	"strings"
 )
 
