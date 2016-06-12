@@ -78,7 +78,7 @@ func (mv *MessageView) AddChannel(channel string) {
 	mv.DisplayMessagesDirty = true
 
 	if mv.App.session == nil || mv.App.session.State == nil {
-		mv.App.requestRoutine.addRequest(NewHistoryRequest(mv.App, channel, 20, "", ""))
+		mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel, 20, "", ""))
 		log.Println("Added a channel before ready", channel)
 	} else {
 

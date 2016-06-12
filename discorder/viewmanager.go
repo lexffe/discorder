@@ -149,6 +149,7 @@ func (v *ViewManager) OnInit() {
 }
 
 func (v *ViewManager) OnReady() {
+
 	// go into the main view
 	if v.readyReceived {
 		return // Only run once, not on reconnects
@@ -311,7 +312,6 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 	v.middleLayoutContainer.Transform.AddChildren(t)
 	t.SetActive(true)
 	v.ActiveTab = t
-	log.Println("Selected tab", t.Index)
 }
 func (v *ViewManager) UpdateTabIndicators() {
 	v.tabContainer.Transform.ClearChildren(false)

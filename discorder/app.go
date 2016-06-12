@@ -52,6 +52,8 @@ type App struct {
 	themePath   string
 	debug       bool
 	dGoDebugLvl int
+
+	firstReady bool
 }
 
 func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error) {

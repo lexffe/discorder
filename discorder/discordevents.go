@@ -15,6 +15,11 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	app.settings = r.Settings
 	app.guildSettings = r.UserGuildSettings
 
+	if app.firstReady {
+		return
+	}
+	app.firstReady = true
+
 	go app.requestRoutine.Run()
 
 	app.ViewManager.OnReady()
