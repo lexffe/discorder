@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"github.com/jonas747/discordgo"
 	"log"
 	"sort"
 	"unicode/utf8"
@@ -319,5 +320,48 @@ func (v *ViewManager) UpdateTabIndicators() {
 	sort.Sort(v.Tabs)
 	for _, tab := range v.Tabs {
 		v.tabContainer.Transform.AddChildren(tab.Indicator)
+	}
+}
+
+func (v *ViewManager) HandleMessageCreate(m *discordgo.Message) {
+	mentioned := false
+	isPrivate := false
+	channel, err := v.App.session.State.Channel(m.ChannelID)
+	if err == nil {
+		if channel.IsPrivate {
+			mentioned = true
+			isPrivate = true
+		}
+	}
+	if !mentioned {
+		for _, mention := range m.Mentions {
+			if mention.ID == v.App.session.State.User.ID {
+				mentioned = true
+				break
+			}
+		}
+	}
+
+	for _, tab := range v.Tabs {
+		if tab.MessageView == nil {
+			continue
+		}
+		if isPrivate && tab.MessageView.ShowAllPrivate {
+			v.App.ApplyThemeToText(tab.Indicator, "tab_mention")
+			continue
+		}
+
+		for _, c := range tab.MessageView.Channels {
+			if c == m.ChannelID {
+				if !tab.Active {
+					if mentioned {
+						v.App.ApplyThemeToText(tab.Indicator, "tab_mention")
+					} else {
+						v.App.ApplyThemeToText(tab.Indicator, "tab_activity")
+					}
+				}
+				break
+			}
+		}
 	}
 }
