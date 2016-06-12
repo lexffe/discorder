@@ -60,6 +60,7 @@ func (t *Tab) SetActive(active bool) {
 	} else {
 		t.app.ApplyThemeToText(t.Indicator, "tab_normal")
 	}
+	t.MessageView.DisplayMessagesDirty = true
 }
 
 func (t *Tab) SetName(name string) {

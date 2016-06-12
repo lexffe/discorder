@@ -314,6 +314,7 @@ var Commands = []Command{
 			for _, tab := range app.ViewManager.Tabs {
 				if tab.Index == index {
 					app.ViewManager.SetActiveTab(tab)
+					return
 				}
 			}
 			app.ViewManager.CreateTab(index)

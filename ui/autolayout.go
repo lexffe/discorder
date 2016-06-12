@@ -110,7 +110,7 @@ func (a *AutoLayoutContainer) BuildLayout() {
 	}
 }
 
-func (a *AutoLayoutContainer) LateUpdate() {
+func (a *AutoLayoutContainer) Update() {
 	a.BuildLayout()
 }
 

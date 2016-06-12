@@ -79,6 +79,7 @@ func (mv *MessageView) AddChannel(channel string) {
 
 	if mv.App.session == nil || mv.App.session.State == nil {
 		mv.App.requestRoutine.addRequest(NewHistoryRequest(mv.App, channel, 20, "", ""))
+		log.Println("Added a channel before ready", channel)
 	} else {
 
 		discordChannel, err := mv.App.session.State.Channel(channel)

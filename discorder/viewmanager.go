@@ -273,7 +273,7 @@ func (v *ViewManager) RemoveWindow(e ui.Entity) {
 func (v *ViewManager) InitializeTabs() {
 	tabConfig := v.App.config.Tabs
 	if tabConfig == nil || len(tabConfig) < 1 {
-		v.CreateTab(0)
+		v.CreateTab(1)
 		return
 	}
 
@@ -311,6 +311,7 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 	v.middleLayoutContainer.Transform.AddChildren(t)
 	t.SetActive(true)
 	v.ActiveTab = t
+	log.Println("Selected tab", t.Index)
 }
 func (v *ViewManager) UpdateTabIndicators() {
 	v.tabContainer.Transform.ClearChildren(false)

@@ -80,7 +80,7 @@ func (l *LogRoutine) handleMsg(msg *LogMessage) {
 	}
 
 	l.buffer = append(l.buffer, msg)
-	l.lastLogTime = msg.Timestamp
+	l.lastLogTime = time.Now()
 	l.Unlock()
 }
 
