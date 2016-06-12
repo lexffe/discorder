@@ -305,9 +305,26 @@ func (v *ViewManager) CreateTab(index int) {
 }
 
 func (v *ViewManager) SetActiveTab(t *Tab) {
+	if t == v.ActiveTab {
+		return
+	}
+
 	if v.ActiveTab != nil {
 		v.ActiveTab.Transform.Parent.RemoveChild(v.ActiveTab, false)
 		v.ActiveTab.SetActive(false)
+
+		if len(v.ActiveTab.MessageView.Channels) < 1 && !v.ActiveTab.MessageView.ShowAllPrivate {
+			// Remove it
+			log.Println("Removing tab")
+			for k, ct := range v.Tabs {
+				if ct == v.ActiveTab {
+					ct.Destroy()
+					v.Tabs = append(v.Tabs[:k], v.Tabs[k+1:]...)
+					v.UpdateTabIndicators()
+					break
+				}
+			}
+		}
 	}
 
 	v.middleLayoutContainer.Transform.AddChildren(t)
@@ -316,10 +333,14 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 }
 func (v *ViewManager) UpdateTabIndicators() {
 	v.tabContainer.Transform.ClearChildren(false)
-
-	sort.Sort(v.Tabs)
-	for _, tab := range v.Tabs {
-		v.tabContainer.Transform.AddChildren(tab.Indicator)
+	if len(v.Tabs) > 1 {
+		sort.Sort(v.Tabs)
+		for _, tab := range v.Tabs {
+			v.tabContainer.Transform.AddChildren(tab.Indicator)
+		}
+		v.tabContainer.Transform.Size.Y = 1
+	} else {
+		v.tabContainer.Transform.Size.Y = 0
 	}
 }
 

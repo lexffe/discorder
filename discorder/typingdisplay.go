@@ -29,6 +29,9 @@ func NewTypingDisplay(app *App) *TypingDisplay {
 }
 
 func (t *TypingDisplay) Update() {
+	if t.App.session == nil || !t.App.session.DataReady {
+		return
+	}
 	tab := t.App.ViewManager.ActiveTab
 
 	if tab == nil {
