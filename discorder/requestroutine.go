@@ -270,5 +270,7 @@ func (rr *RequestRoutine) GetQueueLenth() int {
 }
 
 func (rr *RequestRoutine) AddRequest(r Request) {
-	rr.In <- r
+	go func() {
+		rr.In <- r
+	}()
 }

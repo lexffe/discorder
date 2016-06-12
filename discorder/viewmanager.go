@@ -5,7 +5,7 @@ import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"log"
-	"time"
+	"sort"
 	"unicode/utf8"
 )
 
@@ -19,7 +19,7 @@ type ViewManager struct {
 	middleLayoutContainer *ui.AutoLayoutContainer
 	menuContainer         *ui.Container
 
-	Tabs      map[int]*Tab
+	Tabs      TabSlice
 	ActiveTab *Tab
 
 	UIManager *ui.Manager
@@ -33,8 +33,9 @@ type ViewManager struct {
 	notificationsManager *NotificationsManager
 	typingDisplay        *TypingDisplay
 
+	tabContainer *ui.AutoLayoutContainer
+
 	readyReceived bool
-	lastLog       time.Time
 }
 
 func NewViewManager(app *App) *ViewManager {
@@ -42,7 +43,7 @@ func NewViewManager(app *App) *ViewManager {
 		BaseEntity: &ui.BaseEntity{},
 		App:        app,
 		UIManager:  ui.NewManager(),
-		Tabs:       make(map[int]*Tab),
+		Tabs:       make([]*Tab, 0),
 	}
 	vm.Transform.AnchorMax = common.NewVector2I(1, 1)
 	return vm
@@ -53,6 +54,7 @@ func (v *ViewManager) OnInit() {
 	rootContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
 	rootContainer.LayoutType = ui.LayoutTypeVertical
 	rootContainer.ForceExpandWidth = true
+	rootContainer.LayoutDynamic = true
 
 	v.Transform.AddChildren(rootContainer)
 	v.rootContainer = rootContainer
@@ -83,6 +85,7 @@ func (v *ViewManager) OnInit() {
 	v.middleLayoutContainer.Transform.AnchorMax = common.NewVector2F(1, 1)
 	v.middleLayoutContainer.LayoutType = ui.LayoutTypeHorizontal
 	v.middleLayoutContainer.ForceExpandHeight = true
+	v.middleLayoutContainer.LayoutDynamic = true
 
 	v.rootContainer.Transform.AddChildren(v.middleLayoutContainer)
 
@@ -91,22 +94,6 @@ func (v *ViewManager) OnInit() {
 	v.menuContainer.AllowZeroSize = true
 	v.menuContainer.Dynamic = false
 	v.middleLayoutContainer.Transform.AddChildren(v.menuContainer)
-
-	// Launch the login
-	login := NewLoginWindow(v.App)
-	v.AddWindow(login)
-	login.CheckAutoLogin()
-}
-
-func (v *ViewManager) OnReady() {
-	// go into the main view
-	if v.readyReceived {
-		return // Only run once, not on reconnects
-	}
-	v.readyReceived = true
-
-	// Initialize tabs
-	v.InitializeTabs()
 
 	// Typing display
 	typingDisplay := NewTypingDisplay(v.App)
@@ -143,7 +130,30 @@ func (v *ViewManager) OnReady() {
 	v.mentionAutocompleter = NewMentionAutoCompletion(v.App, MainInput)
 	v.rootContainer.Transform.AddChildren(v.mentionAutocompleter)
 
+	// Tab container
+	v.tabContainer = ui.NewAutoLayoutContainer()
+	v.tabContainer.Transform.Size.Y = 1
+	v.tabContainer.LayoutType = ui.LayoutTypeHorizontal
+	v.tabContainer.ForceExpandHeight = true
+	v.rootContainer.Transform.AddChildren(v.tabContainer)
+
+	// Initialize tabs
+	v.InitializeTabs()
+	//v.UpdateTabIndicators()
 	v.ApplyTheme()
+
+	// Launch the login
+	login := NewLoginWindow(v.App)
+	v.AddWindow(login)
+	login.CheckAutoLogin()
+}
+
+func (v *ViewManager) OnReady() {
+	// go into the main view
+	if v.readyReceived {
+		return // Only run once, not on reconnects
+	}
+	v.readyReceived = true
 }
 
 func (v *ViewManager) Destroy() { v.DestroyChildren() }
@@ -274,20 +284,22 @@ func (v *ViewManager) InitializeTabs() {
 		}
 		v.ActiveTab.SendChannel = t.SendChannel
 		v.ActiveTab.MessageView.ShowAllPrivate = t.AllPrivateMode
-		v.ActiveTab.Name = t.Name
+		v.ActiveTab.SetName(t.Name)
 	}
 }
 
 func (v *ViewManager) CreateTab(index int) {
-	_, existing := v.Tabs[index]
-	if existing {
-		log.Println("Trying to create an existing tab")
+	for _, t := range v.Tabs {
+		if t.Index == index {
+			log.Println("Trying to create an existing tab")
+			return
+		}
 	}
-
 	tab := NewTab(v.App, index)
 
-	v.Tabs[index] = tab
+	v.Tabs = append(v.Tabs, tab)
 	v.SetActiveTab(tab)
+	v.UpdateTabIndicators()
 }
 
 func (v *ViewManager) SetActiveTab(t *Tab) {
@@ -299,4 +311,12 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 	v.middleLayoutContainer.Transform.AddChildren(t)
 	t.SetActive(true)
 	v.ActiveTab = t
+}
+func (v *ViewManager) UpdateTabIndicators() {
+	v.tabContainer.Transform.ClearChildren(false)
+
+	sort.Sort(v.Tabs)
+	for _, tab := range v.Tabs {
+		v.tabContainer.Transform.AddChildren(tab.Indicator)
+	}
 }

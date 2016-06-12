@@ -77,21 +77,26 @@ func (mv *MessageView) AddChannel(channel string) {
 
 	mv.DisplayMessagesDirty = true
 
-	discordChannel, err := mv.App.session.State.Channel(channel)
-	if err != nil {
-		return
-	}
-	// Grab some history
-	if len(discordChannel.Messages) < 10 {
-		firstId := ""
-		if len(discordChannel.Messages) > 0 {
-			firstId = discordChannel.Messages[0].ID
-		}
+	if mv.App.session == nil || mv.App.session.State == nil {
+		mv.App.requestRoutine.addRequest(NewHistoryRequest(mv.App, channel, 20, "", ""))
+	} else {
 
-		if !mv.App.IsFirstChannelMessage(discordChannel.ID, firstId) {
-			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel, 10, "", ""))
+		discordChannel, err := mv.App.session.State.Channel(channel)
+		if err != nil {
+			return
 		}
+		// Grab some history
+		if len(discordChannel.Messages) < 10 {
+			firstId := ""
+			if len(discordChannel.Messages) > 0 {
+				firstId = discordChannel.Messages[0].ID
+			}
 
+			if !mv.App.IsFirstChannelMessage(discordChannel.ID, firstId) {
+				mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel, 10, "", ""))
+			}
+
+		}
 	}
 }
 

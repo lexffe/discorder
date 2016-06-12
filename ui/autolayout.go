@@ -15,6 +15,8 @@ type AutoLayoutContainer struct {
 	*BaseEntity
 	ForceExpandWidth, ForceExpandHeight bool
 	LayoutType                          LayoutType
+	LayoutDynamic                       bool
+	Spacing                             int
 }
 
 func NewAutoLayoutContainer() *AutoLayoutContainer {
@@ -90,19 +92,19 @@ func (a *AutoLayoutContainer) BuildLayout() {
 			transform.Position = common.NewVector2F(transform.Position.X, counter)
 			if v.IsLayoutDynamic() {
 				transform.Size.Y = spacePerDynamic
-				counter += spacePerDynamic
+				counter += spacePerDynamic + float32(a.Spacing)
 			} else {
 				transform.Size.Y = requiredSize.Y
-				counter += requiredSize.Y
+				counter += requiredSize.Y + float32(a.Spacing)
 			}
 		} else {
 			transform.Position = common.NewVector2F(counter, transform.Position.Y)
 			if v.IsLayoutDynamic() {
 				transform.Size.X = spacePerDynamic
-				counter += spacePerDynamic
+				counter += spacePerDynamic + float32(a.Spacing)
 			} else {
 				transform.Size.X = requiredSize.X
-				counter += requiredSize.X
+				counter += requiredSize.X + float32(a.Spacing)
 			}
 		}
 	}
@@ -120,7 +122,7 @@ func (a *AutoLayoutContainer) GetRequiredSize() common.Vector2F {
 }
 
 func (a *AutoLayoutContainer) IsLayoutDynamic() bool {
-	return true
+	return a.LayoutDynamic
 }
 
 type LayoutElement interface {

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"github.com/jonas747/discorder/common"
+	"github.com/jonas747/go-runewidth"
 	"github.com/jonas747/termbox-go"
 )
 
@@ -121,8 +122,8 @@ func (t *Text) HeightRequired() int {
 
 // Implement LayoutElement
 func (t *Text) GetRequiredSize() common.Vector2F {
-	rect := t.Transform.GetRect()
-	return common.NewVector2F(rect.W, float32(t.HeightRequired()))
+	//rect := t.Transform.GetRect()
+	return common.NewVector2I(runewidth.StringWidth(t.Text), t.HeightRequired())
 }
 
 func (t *Text) IsLayoutDynamic() bool {

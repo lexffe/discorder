@@ -8,7 +8,7 @@ import (
 
 type Tab struct {
 	*ui.BaseEntity
-
+	app           *App
 	Name          string
 	Index         int
 	ViewContainer ui.Entity
@@ -16,7 +16,7 @@ type Tab struct {
 	Active        bool
 	SendChannel   string
 
-	Indicator *TabIndicator
+	Indicator *ui.Text
 }
 
 func NewTab(app *App, index int) *Tab {
@@ -28,14 +28,19 @@ func NewTab(app *App, index int) *Tab {
 	container.Transform.AddChildren(mw)
 	t := &Tab{
 		BaseEntity:    &ui.BaseEntity{},
+		app:           app,
 		Name:          strconv.FormatInt(int64(index), 10),
 		Index:         index,
 		ViewContainer: container,
 		MessageView:   mw,
+		Indicator:     ui.NewText(),
 	}
 
 	t.Transform.AddChildren(container)
 	container.Transform.AnchorMax = common.NewVector2I(1, 1)
+	t.Indicator.Text = t.Name
+
+	app.ApplyThemeToText(t.Indicator, "tab_normal")
 
 	return t
 }
@@ -50,10 +55,33 @@ func (t *Tab) IsLayoutDynamic() bool {
 
 func (t *Tab) SetActive(active bool) {
 	t.Active = active
+	if active {
+		t.app.ApplyThemeToText(t.Indicator, "tab_selected")
+	} else {
+		t.app.ApplyThemeToText(t.Indicator, "tab_normal")
+	}
+}
+
+func (t *Tab) SetName(name string) {
+	t.Name = name
+	t.Indicator.Text = name
 }
 
 func (t *Tab) Destroy() { t.DestroyChildren() }
 
-type TabIndicator struct {
-	*ui.BaseEntity
+// Implement sort for tab slices
+type TabSlice []*Tab
+
+func (t TabSlice) Len() int {
+	return len([]*Tab(t))
+}
+
+func (t TabSlice) Less(a, b int) bool {
+	return t[a].Index < t[b].Index
+}
+
+func (t TabSlice) Swap(i, j int) {
+	temp := t[i]
+	t[i] = t[j]
+	t[j] = temp
 }

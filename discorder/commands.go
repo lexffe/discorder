@@ -311,12 +311,12 @@ var Commands = []Command{
 		},
 		RunFunc: func(app *App, args Arguments) {
 			index, _ := args.Int("tab")
-			tab, ok := app.ViewManager.Tabs[index]
-			if ok {
-				app.ViewManager.SetActiveTab(tab)
-			} else {
-				app.ViewManager.CreateTab(index)
+			for _, tab := range app.ViewManager.Tabs {
+				if tab.Index == index {
+					app.ViewManager.SetActiveTab(tab)
+				}
 			}
+			app.ViewManager.CreateTab(index)
 		},
 	},
 	&SimpleCommand{

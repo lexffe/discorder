@@ -161,8 +161,8 @@ func (app *App) init() {
 	app.ackRoutine = NewAckRoutine(app)
 	go app.ackRoutine.Run()
 
+	// Run when ready is received
 	app.requestRoutine = NewRequestRoutine()
-	go app.requestRoutine.Run()
 
 	app.InputManager = NewInputManager(app)
 	go app.InputManager.Run()

@@ -15,6 +15,8 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	app.settings = r.Settings
 	app.guildSettings = r.UserGuildSettings
 
+	go app.requestRoutine.Run()
+
 	app.ViewManager.OnReady()
 	app.PrintWelcome()
 }
