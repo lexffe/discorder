@@ -343,11 +343,12 @@ func (v *ViewManager) HandleMessageCreate(m *discordgo.Message) {
 	}
 
 	for _, tab := range v.Tabs {
-		if tab.MessageView == nil {
+		if tab.MessageView == nil || tab.IndicatorMarked {
 			continue
 		}
 		if isPrivate && tab.MessageView.ShowAllPrivate {
 			v.App.ApplyThemeToText(tab.Indicator, "tab_mention")
+			tab.IndicatorMarked = true
 			continue
 		}
 
@@ -356,6 +357,7 @@ func (v *ViewManager) HandleMessageCreate(m *discordgo.Message) {
 				if !tab.Active {
 					if mentioned {
 						v.App.ApplyThemeToText(tab.Indicator, "tab_mention")
+						tab.IndicatorMarked = true
 					} else {
 						v.App.ApplyThemeToText(tab.Indicator, "tab_activity")
 					}

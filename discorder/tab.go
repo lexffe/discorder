@@ -16,7 +16,8 @@ type Tab struct {
 	Active        bool
 	SendChannel   string
 
-	Indicator *ui.Text
+	IndicatorMarked bool
+	Indicator       *ui.Text
 }
 
 func NewTab(app *App, index int) *Tab {
@@ -61,6 +62,7 @@ func (t *Tab) SetActive(active bool) {
 		t.app.ApplyThemeToText(t.Indicator, "tab_normal")
 	}
 	t.MessageView.DisplayMessagesDirty = true
+	t.IndicatorMarked = false
 }
 
 func (t *Tab) SetName(name string) {
