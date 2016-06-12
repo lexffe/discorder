@@ -64,7 +64,7 @@ var DefaultTheme = []byte(`{
 		"message_direct_channel": { "fg": {"color": "magenta", "bold": true} },
 		"message_author": { "fg": {"color": "cyan", "bold": true} },
 		"message_content": {},
-		"message_log": {},
+		"message_log": {"fg": {"color":"yellow"}},
 		
 		"title_bar": { "fg": {"color": "green", "bold": true, "underline": true} },
 		"notifications_bar": { "bg": {"color": "blue"}	},

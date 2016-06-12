@@ -79,7 +79,6 @@ func (mv *MessageView) AddChannel(channel string) {
 
 	if mv.App.session == nil || mv.App.session.State == nil {
 		mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel, 20, "", ""))
-		log.Println("Added a channel before ready", channel)
 	} else {
 
 		discordChannel, err := mv.App.session.State.Channel(channel)
@@ -219,7 +218,7 @@ func (mv *MessageView) BuildTexts() {
 
 		if item.IsLogMessage {
 			text.Text = "Log: " + item.LogMessage.Content
-			mv.App.ApplyThemeToText(text, "message_log")
+			attribs[0] = mv.App.GetThemeAttribPair("message_log").AttribPair()
 		} else {
 			msg := item.DiscordMessage
 			if msg == nil {
