@@ -79,10 +79,14 @@ func (cew *CommandExecWindow) GenMenu() {
 
 		items = append(items, helper, input)
 	}
+	execText := cew.command.GetExecText()
+	if execText == "" {
+		execText = "Run"
+	}
 
 	exec := &ui.MenuItem{
-		Name:     "Execute",
-		Info:     "Execute the commadn with specified args",
+		Name:     execText,
+		Info:     "Execute the command with specified args",
 		UserData: CustomMenuExecute,
 	}
 	items = append(items, exec)

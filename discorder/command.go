@@ -10,12 +10,13 @@ import (
 
 // Simple command struct that implements the Command interface, should cover most cases
 type SimpleCommand struct {
-	Name        string
-	Description string
-	Args        []*ArgumentDef
-	Category    []string
-	RunFunc     func(app *App, args Arguments)
-	StatusFunc  func(app *App) string
+	Name           string
+	Description    string
+	CustomExecText string
+	Args           []*ArgumentDef
+	Category       []string
+	RunFunc        func(app *App, args Arguments)
+	StatusFunc     func(app *App) string
 }
 
 func (s *SimpleCommand) GetName() string {
@@ -47,6 +48,10 @@ func (s *SimpleCommand) GetCategory() []string {
 	return s.Category
 }
 
+func (s *SimpleCommand) GetExecText() string {
+	return s.CustomExecText
+}
+
 func (s *SimpleCommand) Run(app *App, args Arguments) {
 	if s.RunFunc != nil {
 		s.RunFunc(app, args)
@@ -54,11 +59,12 @@ func (s *SimpleCommand) Run(app *App, args Arguments) {
 }
 
 type Command interface {
-	GetName() string
-	GetDescription(app *App) string
-	GetArgs() []*ArgumentDef
-	GetCategory() []string
-	Run(app *App, args Arguments)
+	GetName() string                // Name of the command
+	GetDescription(app *App) string // Decsription
+	GetArgs() []*ArgumentDef        // Argumend definitions
+	GetCategory() []string          // Category
+	GetExecText() string            // Custom exec button text
+	Run(app *App, args Arguments)   // Called when the command should be run
 }
 
 func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {

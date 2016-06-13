@@ -211,9 +211,10 @@ var Commands = []Command{
 		Category:    []string{"Discord"},
 	},
 	&SimpleCommand{
-		Name:        "status",
-		Description: "Updates your discord status",
-		Category:    []string{"Discord"},
+		Name:           "status",
+		Description:    "Updates your discord status",
+		CustomExecText: "Set",
+		Category:       []string{"Discord"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "game", Description: "What game you should appear playing as", Datatype: ui.DataTypeString},
 			&ArgumentDef{Name: "idle", Description: "How long you've been idle in seconds", Datatype: ui.DataTypeInt},
@@ -232,9 +233,10 @@ var Commands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "set_nick",
-		Description: "Sets your nickname on a server (if possible)",
-		Category:    []string{"Discord"},
+		Name:           "set_nick",
+		Description:    "Sets your nickname on a server (if possible)",
+		CustomExecText: "Set",
+		Category:       []string{"Discord"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "name", Description: "The nickname you will set (empty to reset)", Datatype: ui.DataTypeString},
 			&ArgumentDef{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{}},
@@ -290,22 +292,23 @@ var Commands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "short_guilds",
-		Description: "Displays a mini version of guilds in message view",
+		Name:           "Discorder Settings",
+		Description:    "Change settings",
+		CustomExecText: "Save",
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "on", Datatype: ui.DataTypeBool, CurVal: func(app *App) string {
+			&ArgumentDef{Name: "short_guilds", Description: "Displays a mini version of guilds in message view", Datatype: ui.DataTypeBool, CurVal: func(app *App) string {
 				return strconv.FormatBool(app.config.ShortGuilds)
 			}},
 		},
 		RunFunc: func(app *App, args Arguments) {
-			shortguilds, _ := args.Bool("on")
+			shortguilds, _ := args.Bool("short_guilds")
 			app.config.ShortGuilds = shortguilds
 			log.Println("Set short_guilds to", shortguilds)
 		},
 	},
 	&SimpleCommand{
 		Name:        "change_tab",
-		Description: "Displays a mini version of guilds in message view",
+		Description: "Change tab",
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "tab", Datatype: ui.DataTypeInt},
 		},
