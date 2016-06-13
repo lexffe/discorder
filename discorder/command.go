@@ -77,12 +77,12 @@ func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
 }
 
 type ArgumentDef struct {
-	Name           string
-	Description    string
-	Optional       bool
-	Datatype       ui.DataType
-	HelperDataType HelperDataType
-	CurVal         func(app *App) string
+	Name        string
+	Description string
+	Optional    bool
+	Datatype    ui.DataType
+	Helper      ArgumentHelper
+	CurVal      func(app *App) string
 }
 
 type Arguments map[string]interface{}

@@ -3,8 +3,6 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
-	"github.com/jonas747/discordgo"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -112,26 +110,15 @@ func (cew *CommandExecWindow) Select() {
 		case CustomMenuExecute:
 			cew.Execute()
 		}
+	// Run a argument helper if any
 	case *ArgumentDef:
-		switch t.HelperDataType {
-		case HelperDataTypeNone:
-			break
-		case HelperDataTypeServer:
-			ssw := NewSelectServerWindow(cew.app, nil, cew.layer+2)
-			cew.app.ViewManager.AddWindow(ssw)
-			ssw.Mode = ServerSelectModeServerOnly
-			ssw.OnSelect = func(sel interface{}) {
-				cast, ok := sel.(*discordgo.Guild)
-				if !ok {
-					return
-				}
-
-				log.Println("Selected ", cast.Name)
+		if t.Helper != nil {
+			t.Helper.Run(cew.app, cew.layer+2, func(result string) {
 				if element.Input != nil {
-					element.Input.TextBuffer = cast.ID
+					element.Input.TextBuffer = result
+					element.Input.CursorLocation = 0
 				}
-				cew.app.ViewManager.RemoveWindow(ssw)
-			}
+			})
 		}
 	}
 }

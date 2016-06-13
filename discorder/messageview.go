@@ -77,6 +77,7 @@ func (mv *MessageView) AddChannel(channel string) {
 
 	mv.DisplayMessagesDirty = true
 
+	// Grab some history if needed
 	if mv.App.session == nil || mv.App.session.State == nil {
 		mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel, 20, "", ""))
 	} else {
@@ -85,7 +86,6 @@ func (mv *MessageView) AddChannel(channel string) {
 		if err != nil {
 			return
 		}
-		// Grab some history
 		if len(discordChannel.Messages) < 10 {
 			firstId := ""
 			if len(discordChannel.Messages) > 0 {
@@ -522,7 +522,7 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 			if mv.App.debug {
 				log.Println("Should grab history for ", name)
 			}
-			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel.ID, 10, oldest.ID, ""))
+			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel.ID, 25, oldest.ID, ""))
 		}
 	}
 

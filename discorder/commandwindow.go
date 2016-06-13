@@ -24,7 +24,7 @@ func NewCommandWindow(app *App, layer int) *CommandWindow {
 	menuWindow.Transform.Top = 1
 	menuWindow.Transform.Bottom = 2
 
-	menuWindow.Window.Title = "Execute command"
+	menuWindow.Window.Title = "Commands"
 	menuWindow.Window.Footer = ":)"
 
 	app.ApplyThemeToMenu(menuWindow)

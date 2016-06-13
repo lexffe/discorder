@@ -63,7 +63,7 @@ func (t *TypingDisplay) Update() {
 	if len(typing) > 0 {
 		t.text.Disabled = false
 
-		typingStr := "Typing: asd"
+		typingStr := "Typing: "
 
 		for _, v := range typing {
 			channel, err := t.App.session.State.Channel(v.ChannelID)

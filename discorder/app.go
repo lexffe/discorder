@@ -256,7 +256,7 @@ func (app *App) Draw() {
 		}
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 20; i++ {
 		for _, drawable := range layers[i] {
 			drawable.Draw()
 		}
