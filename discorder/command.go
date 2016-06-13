@@ -4,17 +4,11 @@ import (
 	"encoding/json"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/termbox-go"
+	"log"
 	"strings"
 )
 
-// Helpers for executing commands through the ui, say picking a server instead of entering a server id
-type HelperDataType int
-
-const (
-	HelperDataTypeNone HelperDataType = iota
-	HelperDataTypeServer
-)
-
+// Simple command struct that implements the Command interface, should cover most cases
 type SimpleCommand struct {
 	Name        string
 	Description string
@@ -76,6 +70,7 @@ func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
 	return cmdItem
 }
 
+// Argument definition
 type ArgumentDef struct {
 	Name        string
 	Description string
@@ -146,12 +141,15 @@ func (a Arguments) Bool(key string) (val bool, ok bool) {
 }
 
 type KeyBind struct {
-	Command string         `json:"command"`
-	Args    Arguments      `json:"args"`
-	KeyComb KeyCombination `json:"key"`
-	Alt     bool           `json:"alt"`
+	Command        string         `json:"command"`
+	Args           Arguments      `json:"args"`
+	KeyComb        KeyCombination `json:"key"`              // Key combination with custom json unmarshaling
+	Helpers        []string       `json:"helpers"`          // Runs the helpers for these arguements before running the command
+	OpenExecWindow bool           `json:"open_exec_window"` // Instead of running the command opens the command exec window
 }
 
+// Fullmatch is a full match, all combinations matched
+// Partial means that atleast one of the combinations were matched (in order)
 func (k KeyBind) Check(seq []termbox.Event) (partialMatch, fullMatch bool) {
 	if len(seq) > len(k.KeyComb.Keys) {
 		return
@@ -180,12 +178,61 @@ func (k KeyBind) Check(seq []termbox.Event) (partialMatch, fullMatch bool) {
 	return
 }
 
+func (k KeyBind) Run(app *App) {
+	cmd := GetCommandByName(k.Command)
+	if cmd == nil {
+		log.Println("Unknown command", k.Command)
+		return
+	}
+
+	if len(k.Helpers) < 1 {
+		app.RunCommand(cmd, k.Args)
+	} else {
+		k.RunHelper(app, 0, cmd)
+	}
+}
+
+func (k KeyBind) RunHelper(app *App, index int, cmd Command) {
+	args := cmd.GetArgs()
+	var arg *ArgumentDef
+	for _, v := range args {
+		if v.Name == k.Helpers[index] {
+			arg = v
+			break
+		}
+	}
+
+	if arg == nil {
+		log.Println("Could not run helper for", k.Helpers[index], "; Argument not found")
+		return
+	}
+
+	if arg.Helper == nil {
+		log.Println("Could not run helper for", k.Helpers[index], "; No helper for argument")
+		return
+	}
+
+	arg.Helper.Run(app, 6, func(result string) {
+		k.Args[arg.Name] = ParseArgumentString(result, arg.Datatype)
+		if len(k.Helpers) > index+1 {
+			k.RunHelper(app, index+1, cmd) // Run the next helper
+		} else {
+			app.RunCommand(cmd, k.Args)
+		}
+	})
+}
+
 type KeyCombination struct {
 	Keys []*KeybindKey
 	raw  string
 }
 
+// Parses key combinations and sequences
+// Keys can be any normal alphanumric key and some special keys found below
+// + is additive, work for shift and alt
+// - seperates combinations, Eg for the below
 // Alt+CtrlX-A
+// You have to press alta and ctrl x at the same time followed by A after
 func (k *KeyCombination) UnmarshalJSON(data []byte) error {
 	raw := ""
 	err := json.Unmarshal(data, &raw)

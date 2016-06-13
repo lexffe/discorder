@@ -130,22 +130,26 @@ func (cew *CommandExecWindow) Execute() {
 			continue
 		}
 		buf := item.Input.TextBuffer
-		switch item.InputType {
-		case ui.DataTypeString:
-			args[item.Name] = buf
-		case ui.DataTypeBool:
-			lowerBuf := strings.ToLower(buf)
-			b, _ := strconv.ParseBool(lowerBuf)
-			args[item.Name] = b
-		case ui.DataTypeInt:
-			i, _ := strconv.ParseInt(buf, 10, 64)
-			args[item.Name] = i
-		case ui.DataTypeFloat:
-			f, _ := strconv.ParseFloat(buf, 64)
-			args[item.Name] = f
-		}
+		args[item.Name] = ParseArgumentString(buf, item.InputType)
 	}
 
 	cew.app.RunCommand(cew.command, Arguments(args))
 	cew.Transform.Parent.RemoveChild(cew, true)
+}
+
+func ParseArgumentString(arg string, dataType ui.DataType) interface{} {
+	switch dataType {
+	case ui.DataTypeBool:
+		lowerBuf := strings.ToLower(arg)
+		b, _ := strconv.ParseBool(lowerBuf)
+		return b
+	case ui.DataTypeInt:
+		i, _ := strconv.ParseInt(arg, 10, 64)
+		return i
+	case ui.DataTypeFloat:
+		f, _ := strconv.ParseFloat(arg, 64)
+		return f
+	}
+
+	return arg
 }

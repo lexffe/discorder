@@ -68,7 +68,7 @@ func (im *InputManager) CheckBinds(binds []*KeyBind) (partialMatch, fullMatch bo
 		if fullMatch {
 			if v.Command != "nop" {
 				im.app.Lock()
-				im.app.RunCommand(GetCommandByName(v.Command), v.Args)
+				v.Run(im.app)
 				im.app.Unlock()
 			}
 			im.eventBuffer = []termbox.Event{}
