@@ -7,6 +7,7 @@ var DefaultKeybinds = []byte(`[
 	{"key": "CtrlX", "command": "commands"},
 	{"key": "CtrlL", "command": "clear_log"},
 	{"key": "CtrlT", "command": "reload_theme"},
+	{"key": "CtrlN", "command": "set_nick", "open_exec_window": true},
 
 	{"key": "ArrowLeft", "command": "move_cursor", "args": {"amount": 1, "direction": "left"}},
 	{"key": "ArrowRight", "command": "move_cursor", "args": {"amount": 1, "direction": "right"}},
@@ -24,7 +25,6 @@ var DefaultKeybinds = []byte(`[
 	{"key": "Backspace2", "command": "erase", "args": {"amount": 1, "direction": "left"}},
 	{"key": "Delete", "command": "erase", "args": {"amount": 1, "direction": "right"}},
 		
-
 	{"key": "Alt+Backspace", "command": "back"},
 	{"key": "Alt+Backspace2", "command": "back"},
 	

@@ -185,10 +185,15 @@ func (k KeyBind) Run(app *App) {
 		return
 	}
 
-	if len(k.Helpers) < 1 {
-		app.RunCommand(cmd, k.Args)
+	if k.OpenExecWindow {
+		cew := NewCommandExecWindow(6, app, cmd)
+		app.ViewManager.AddWindow(cew)
 	} else {
-		k.RunHelper(app, 0, cmd)
+		if len(k.Helpers) < 1 {
+			app.RunCommand(cmd, k.Args)
+		} else {
+			k.RunHelper(app, 0, cmd)
+		}
 	}
 }
 
