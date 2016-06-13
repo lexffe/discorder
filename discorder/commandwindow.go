@@ -92,7 +92,7 @@ func (cw *CommandWindow) Select() {
 	}
 
 	execWindow := NewCommandExecWindow(7, cw.app, cmd)
-	cw.app.ViewManager.Transform.AddChildren(execWindow)
+	cw.app.ViewManager.AddWindow(execWindow)
 
 	//cw.Transform.Parent.RemoveChild(cw, true)
 }
