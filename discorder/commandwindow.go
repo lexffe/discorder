@@ -46,11 +46,11 @@ func (cw *CommandWindow) GenMenu() {
 
 	for _, category := range CommandCategories {
 		// Category
-		options = append(options, category.GenMenu(cw.app, Commands, CommandCategories))
+		options = append(options, category.GenMenu(cw.app, cw.app.Commands, CommandCategories))
 	}
 
 	// Add the top level commands
-	for _, cmd := range Commands {
+	for _, cmd := range cw.app.Commands {
 		if len(cmd.GetCategory()) < 1 {
 			options = append(options, cw.app.GenMenuItemFromCommand(cmd))
 		}

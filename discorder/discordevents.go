@@ -49,9 +49,9 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 		shouldNotify := false
 
-		if !settings.Muted && settings.Notifications == ChannelNotificationsAll {
+		if !settings.Muted && settings.Notifications == MessageNotificationsAll {
 			shouldNotify = true
-		} else if !settings.Muted && settings.Notifications == ChannelNotificationsMentions {
+		} else if !settings.Muted && settings.Notifications == MessageNotificationsMentions {
 			for _, v := range m.Mentions {
 				if v.ID == s.State.User.ID {
 					shouldNotify = true

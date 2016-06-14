@@ -3,6 +3,7 @@ package discorder
 import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -13,6 +14,8 @@ type CommandExecWindow struct {
 	layer      int
 	menuWindow *ui.MenuWindow
 	command    Command
+
+	curArgs Arguments
 }
 
 type CustomMenuType int
@@ -47,10 +50,42 @@ func NewCommandExecWindow(layer int, app *App, command Command) *CommandExecWind
 	execWindow.Transform.Left = 1
 
 	app.ViewManager.UIManager.AddWindow(execWindow)
-
-	execWindow.GenMenu()
+	preRunHelper := command.GetPreRunHelper()
+	if preRunHelper != "" {
+		execWindow.RunPreHelper(preRunHelper)
+	} else {
+		execWindow.GenMenu()
+	}
 
 	return execWindow
+}
+
+func (cew *CommandExecWindow) RunPreHelper(helperArg string) {
+	var arg *ArgumentDef
+
+	args := cew.command.GetArgs(nil)
+	for _, v := range args {
+		if v.Name == helperArg {
+			arg = v
+			break
+		}
+	}
+
+	if arg == nil {
+		log.Println("could not find arg", helperArg)
+		return
+	} else if arg.Helper == nil {
+		log.Println("Argument has no helper", helperArg)
+		return
+	}
+
+	arg.Helper.Run(cew.app, cew.layer+2, func(result string) {
+		if cew.curArgs == nil {
+			cew.curArgs = make(map[string]interface{})
+		}
+		cew.curArgs[helperArg] = ParseArgumentString(result, arg.Datatype)
+		cew.GenMenu()
+	})
 }
 
 func (cew *CommandExecWindow) Destroy() {
@@ -60,9 +95,9 @@ func (cew *CommandExecWindow) Destroy() {
 
 func (cew *CommandExecWindow) GenMenu() {
 	items := make([]*ui.MenuItem, 0)
-	for _, arg := range cew.command.GetArgs() {
+	for _, arg := range cew.command.GetArgs(cew.curArgs) {
 		helper := &ui.MenuItem{
-			Name:       arg.Name,
+			Name:       arg.GetName(),
 			Info:       arg.Description,
 			Decorative: true,
 		}
@@ -73,8 +108,9 @@ func (cew *CommandExecWindow) GenMenu() {
 			InputType: arg.Datatype,
 			UserData:  arg,
 		}
-		if arg.CurVal != nil {
-			input.InputDefaultText = arg.CurVal(cew.app)
+		curVal := arg.GetCurrentVal(cew.app)
+		if curVal != "" {
+			input.InputDefaultText = curVal
 		}
 
 		items = append(items, helper, input)
@@ -121,13 +157,28 @@ func (cew *CommandExecWindow) Select() {
 				if element.Input != nil {
 					element.Input.TextBuffer = result
 					element.Input.CursorLocation = 0
+					if t.RebuildOnChanged {
+						cew.Rebuild()
+					}
 				}
 			})
 		}
 	}
 }
 
+func (cew *CommandExecWindow) Rebuild() {
+	cew.curArgs = cew.ParseArgs()
+	log.Println(cew.curArgs)
+	cew.GenMenu()
+}
+
 func (cew *CommandExecWindow) Execute() {
+	args := cew.ParseArgs()
+	cew.app.RunCommand(cew.command, Arguments(args))
+	cew.Transform.Parent.RemoveChild(cew, true)
+}
+
+func (cew *CommandExecWindow) ParseArgs() Arguments {
 	args := make(map[string]interface{})
 	for _, item := range cew.menuWindow.Options {
 		if !item.IsInput {
@@ -136,9 +187,7 @@ func (cew *CommandExecWindow) Execute() {
 		buf := item.Input.TextBuffer
 		args[item.Name] = ParseArgumentString(buf, item.InputType)
 	}
-
-	cew.app.RunCommand(cew.command, Arguments(args))
-	cew.Transform.Parent.RemoveChild(cew, true)
+	return args
 }
 
 func ParseArgumentString(arg string, dataType ui.DataType) interface{} {

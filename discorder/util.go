@@ -3,6 +3,7 @@ package discorder
 import (
 	"github.com/jonas747/discordgo"
 	"log"
+	"strconv"
 )
 
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
@@ -13,7 +14,7 @@ func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNoti
 	}
 
 	if channel.IsPrivate {
-		return &ChannelNotificationSettings{Notifications: ChannelNotificationsAll}
+		return &ChannelNotificationSettings{Notifications: MessageNotificationsAll}
 	}
 
 	for _, gs := range app.guildSettings {
@@ -59,10 +60,26 @@ func (app *App) GetStartNotifications() {
 }
 
 const (
-	ChannelNotificationsAll      = 0
-	ChannelNotificationsMentions = 1
-	ChannelNotificationsNothing  = 2
+	MessageNotificationsAll      = 0
+	MessageNotificationsMentions = 1
+	MessageNotificationsNothing  = 2
+	MessageNotificationsServer   = 3
 )
+
+func StringNotificationsSettings(notifications int) string {
+	switch notifications {
+	case MessageNotificationsAll:
+		return "all"
+	case MessageNotificationsMentions:
+		return "mentions"
+	case MessageNotificationsNothing:
+		return "nothing"
+	case MessageNotificationsServer:
+		return "server"
+
+	}
+	return "??? (discorder outdated, please bug me about this, " + strconv.FormatInt(int64(notifications), 10) + ")"
+}
 
 type ChannelNotificationSettings struct {
 	Notifications    int // 0 all, 1 mentions, 2 nothing

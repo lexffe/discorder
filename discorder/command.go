@@ -15,6 +15,7 @@ type SimpleCommand struct {
 	CustomExecText string
 	Args           []*ArgumentDef
 	Category       []string
+	PreRunHelper   string
 	RunFunc        func(app *App, args Arguments)
 	StatusFunc     func(app *App) string
 }
@@ -31,8 +32,9 @@ func (s *SimpleCommand) GetDescription(app *App) string {
 
 	if len(s.Args) > 0 {
 		for _, v := range s.Args {
-			if v.CurVal != nil {
-				desc += "\nCurrent " + v.Name + ":" + v.CurVal(app)
+			curVal := v.GetCurrentVal(app)
+			if curVal != "" {
+				desc += "\nCurrent " + v.Name + ":" + curVal
 			}
 		}
 	}
@@ -40,7 +42,7 @@ func (s *SimpleCommand) GetDescription(app *App) string {
 	return desc
 }
 
-func (s *SimpleCommand) GetArgs() []*ArgumentDef {
+func (s *SimpleCommand) GetArgs(curArgs Arguments) []*ArgumentDef {
 	return s.Args
 }
 
@@ -58,13 +60,18 @@ func (s *SimpleCommand) Run(app *App, args Arguments) {
 	}
 }
 
+func (s *SimpleCommand) GetPreRunHelper() string {
+	return s.PreRunHelper
+}
+
 type Command interface {
-	GetName() string                // Name of the command
-	GetDescription(app *App) string // Decsription
-	GetArgs() []*ArgumentDef        // Argumend definitions
-	GetCategory() []string          // Category
-	GetExecText() string            // Custom exec button text
-	Run(app *App, args Arguments)   // Called when the command should be run
+	GetName() string                          // Name of the command
+	GetDescription(app *App) string           // Decsription
+	GetArgs(curArgs Arguments) []*ArgumentDef // Argumend definitions
+	GetPreRunHelper() string                  // Helper to be ran before main exec window
+	GetCategory() []string                    // Category
+	GetExecText() string                      // Custom exec button text
+	Run(app *App, args Arguments)             // Called when the command should be run
 }
 
 func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
@@ -78,12 +85,30 @@ func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
 
 // Argument definition
 type ArgumentDef struct {
-	Name        string
-	Description string
-	Optional    bool
-	Datatype    ui.DataType
-	Helper      ArgumentHelper
-	CurVal      func(app *App) string
+	Name                   string                // Unique Name for this argument
+	DisplayName            string                // Display name that will be shown, if empty name will be shown in exec window
+	Description            string                // Simple description
+	Optional               bool                  // Wether optional or not- currently unused
+	Datatype               ui.DataType           // Datatype for this arg
+	Helper                 ArgumentHelper        // Helper to help pick a value from a predefined list
+	CurVal                 string                // The current/default value
+	CurValFunc             func(app *App) string // Same as above but a function that is ran instead
+	RebuildOnChanged       bool                  // Rebuilds the command exec menu if changed
+	PreserveValueOnRebuild bool                  // Wether to preserve the value after a rebuild occured
+}
+
+func (a *ArgumentDef) GetName() string {
+	if a.DisplayName != "" {
+		return a.DisplayName
+	}
+	return a.Name
+}
+
+func (a *ArgumentDef) GetCurrentVal(app *App) string {
+	if a.CurValFunc != nil {
+		return a.CurValFunc(app)
+	}
+	return a.CurVal
 }
 
 type Arguments map[string]interface{}
@@ -185,7 +210,7 @@ func (k KeyBind) Check(seq []termbox.Event) (partialMatch, fullMatch bool) {
 }
 
 func (k KeyBind) Run(app *App) {
-	cmd := GetCommandByName(k.Command)
+	cmd := app.GetCommandByName(k.Command)
 	if cmd == nil {
 		log.Println("Unknown command", k.Command)
 		return
@@ -204,7 +229,7 @@ func (k KeyBind) Run(app *App) {
 }
 
 func (k KeyBind) RunHelper(app *App, index int, cmd Command) {
-	args := cmd.GetArgs()
+	args := cmd.GetArgs(nil)
 	var arg *ArgumentDef
 	for _, v := range args {
 		if v.Name == k.Helpers[index] {

@@ -55,6 +55,7 @@ var DefaultTheme = []byte(`{
 		"window_fill": { "bg": {"color": "black"} },
 		
 		"element_normal": { "bg": {"color": "black"} },
+		"element_input_normal": { "fg": {"color": "yellow"}, "bg": {"color": "black"} },
 		"element_marked": { "bg": {"color": "yellow"} },
 		"element_selected": { "bg": {"color": "cyan"} },
 		"element_selected_marked": { "bg": {"color": "blue"} },

@@ -25,6 +25,8 @@ type App struct {
 	sync.RWMutex
 	*ui.BaseEntity
 
+	Commands []Command
+
 	running  bool
 	stopping bool             // true if in the process of stopping
 	stopChan chan interface{} // Sending on this channel will instantly stop (not gracefull)
@@ -169,6 +171,7 @@ func (app *App) init() {
 	app.InputManager = NewInputManager(app)
 	go app.InputManager.Run()
 
+	app.AddCommands()
 	// out, err := DefaultTheme.Read()
 	// if err == nil {
 	// 	log.Println(string(out))

@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-var Commands = []Command{
+var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "commands",
 		Description: "Opens up the command window with all commands available",
@@ -296,7 +296,7 @@ var Commands = []Command{
 		Description:    "Change settings",
 		CustomExecText: "Save",
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "short_guilds", Description: "Displays a mini version of guilds in message view", Datatype: ui.DataTypeBool, CurVal: func(app *App) string {
+			&ArgumentDef{Name: "short_guilds", Description: "Displays a mini version of guilds in message view", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.ShortGuilds)
 			}},
 		},
@@ -332,6 +332,14 @@ var Commands = []Command{
 	},
 }
 
+func (app *App) AddCommands() {
+	app.Commands = []Command{
+		&ServerNotificationSettingsCommand{app: app},
+	}
+
+	app.Commands = append(app.Commands, SimpleCommands...)
+}
+
 func StringToDir(dir string) ui.Direction {
 	switch dir {
 	case "left":
@@ -350,8 +358,8 @@ func StringToDir(dir string) ui.Direction {
 	return ui.DirLeft
 }
 
-func GetCommandByName(name string) Command {
-	for _, cmd := range Commands {
+func (app *App) GetCommandByName(name string) Command {
+	for _, cmd := range app.Commands {
 		if cmd.GetName() == name {
 			return cmd
 		}

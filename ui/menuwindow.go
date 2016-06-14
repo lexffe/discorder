@@ -87,6 +87,7 @@ type MenuWindow struct {
 	StyleMarked         AttribPair
 	StyleSelected       AttribPair
 	StyleMarkedSelected AttribPair
+	StyleInputNormal    AttribPair
 
 	Options         []*MenuItem
 	FilteredOptions []*MenuItem
@@ -235,7 +236,11 @@ func (mw *MenuWindow) ApplyStyleToItem(item *MenuItem) {
 	case item.Marked:
 		item.Text.Style = mw.StyleMarked
 	default:
-		item.Text.Style = mw.StyleNormal
+		if item.IsInput {
+			item.Text.Style = mw.StyleInputNormal
+		} else {
+			item.Text.Style = mw.StyleNormal
+		}
 	}
 }
 
@@ -313,7 +318,11 @@ func (mw *MenuWindow) Rebuild() {
 		case option.Marked:
 			t.Style = mw.StyleMarked
 		default:
-			t.Style = mw.StyleNormal
+			if option.IsInput {
+				t.Style = mw.StyleInputNormal
+			} else {
+				t.Style = mw.StyleNormal
+			}
 		}
 	}
 }
