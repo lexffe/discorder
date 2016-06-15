@@ -14,6 +14,7 @@ type SimpleCommand struct {
 	Description    string
 	CustomExecText string
 	Args           []*ArgumentDef
+	ArgPairs       [][]string
 	Category       []string
 	PreRunHelper   string
 	RunFunc        func(app *App, args Arguments)
@@ -64,10 +65,15 @@ func (s *SimpleCommand) GetPreRunHelper() string {
 	return s.PreRunHelper
 }
 
+func (s *SimpleCommand) GetArgPairs() [][]string {
+	return s.ArgPairs
+}
+
 type Command interface {
 	GetName() string                          // Name of the command
 	GetDescription(app *App) string           // Decsription
 	GetArgs(curArgs Arguments) []*ArgumentDef // Argumend definitions
+	GetArgPairs() [][]string                  // Returns possible argument pairs
 	GetPreRunHelper() string                  // Helper to be ran before main exec window
 	GetCategory() []string                    // Category
 	GetExecText() string                      // Custom exec button text

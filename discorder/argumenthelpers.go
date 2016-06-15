@@ -8,6 +8,7 @@ type ArgumentCallback func(result string)
 
 type ArgumentHelper interface {
 	Run(app *App, uiLayer int, callback ArgumentCallback)
+	GetName() string // Returns the name of the helper, to be used with preprovided info
 }
 
 type ServerChannelArgumentHelper struct {
@@ -16,6 +17,13 @@ type ServerChannelArgumentHelper struct {
 	app   *App
 	layer int
 	cb    ArgumentCallback
+}
+
+func (s *ServerChannelArgumentHelper) GetName() string {
+	if s.Channel {
+		return "channel"
+	}
+	return "server"
 }
 
 func (s *ServerChannelArgumentHelper) Run(app *App, uiLayer int, callback ArgumentCallback) {

@@ -206,9 +206,73 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "delete",
+		Name:        "delete_message",
 		Description: "Deletes a message",
 		Category:    []string{"Discord"},
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "last_yours", Description: "If true deletes last message you sent", Datatype: ui.DataTypeBool},
+			&ArgumentDef{Name: "last_any", Description: "If true deletes last message anyone sent", Datatype: ui.DataTypeBool},
+			&ArgumentDef{Name: "message", Description: "Specify a message id", Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "channel", Description: "Specify a channel id", Datatype: ui.DataTypeString},
+		},
+		ArgPairs: [][]string{[]string{"last_yours"}, []string{"last_any"}, []string{"message"}},
+		RunFunc: func(app *App, args Arguments) {
+			// We need to be logged in
+			if app.session == nil {
+				return
+			}
+
+			lastOwn, _ := args.Bool("last_yours")
+			lastAny, _ := args.Bool("last_any")
+			messageId, _ := args.String("message")
+			channelId, _ := args.String("channel")
+
+			if messageId != "" && channelId != "" {
+
+				err := app.session.ChannelMessageDelete(channelId, messageId)
+				if err != nil {
+					log.Println("Failed to delete message: ", err)
+				} else {
+					log.Println("Deleted message ID:", messageId, "Sucessfully")
+				}
+				return
+			}
+
+			// Below stuff requires an active tab
+			if app.ViewManager.ActiveTab == nil {
+				return
+			}
+
+			tab := app.ViewManager.ActiveTab
+
+			if (lastAny || lastOwn) && app.session.State != nil && app.session.State.User != nil {
+				for _, text := range tab.MessageView.MessageTexts {
+					if text.Userdata == nil {
+						continue
+					}
+
+					displayMsg, ok := text.Userdata.(*DisplayMessage)
+					if !ok {
+						continue
+					}
+
+					if !displayMsg.IsLogMessage &&
+						((lastOwn && displayMsg.DiscordMessage.Author.ID == app.session.State.User.ID) || lastAny) {
+
+						err := app.session.ChannelMessageDelete(displayMsg.DiscordMessage.ChannelID, displayMsg.DiscordMessage.ID)
+						if err != nil {
+							if err != nil {
+								log.Println("Failed to delete message: ", err)
+							} else {
+								log.Println("Deleted message ID:", messageId, "Sucessfully")
+							}
+						}
+						return
+					}
+				}
+				return
+			}
+		},
 	},
 	&SimpleCommand{
 		Name:           "status",
