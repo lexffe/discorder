@@ -86,11 +86,14 @@ func (ssw *ServerSelectWindow) GenMenu() {
 			IsCategory: true,
 			UserData:   guild,
 			Info:       fmt.Sprintf("Members: %d\nID:%s", len(guild.Members), guild.ID),
-			Children:   make([]*ui.MenuItem, len(guild.Channels)),
+			Children:   make([]*ui.MenuItem, 0),
 		}
 
 		// Generate chanel options
-		for i, channel := range guild.Channels {
+		for _, channel := range guild.Channels {
+			if channel.Type != "text" {
+				continue
+			}
 			marked := false
 			if ssw.messageView != nil {
 				for _, listening := range ssw.messageView.Channels {
@@ -103,10 +106,10 @@ func (ssw *ServerSelectWindow) GenMenu() {
 			channelOption := &ui.MenuItem{
 				Name:     "#" + channel.Name,
 				UserData: channel,
-				Info:     fmt.Sprintf("Topic %s", channel.Topic),
+				Info:     fmt.Sprintf("Topic %s\nID:%s", channel.Topic, channel.ID),
 				Marked:   marked,
 			}
-			guildOption.Children[i] = channelOption
+			guildOption.Children = append(guildOption.Children, channelOption)
 			if marked {
 				guildOption.Marked = true
 			}
