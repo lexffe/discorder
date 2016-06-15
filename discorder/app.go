@@ -31,10 +31,11 @@ type App struct {
 	stopping bool             // true if in the process of stopping
 	stopChan chan interface{} // Sending on this channel will instantly stop (not gracefull)
 
-	session        *discordgo.Session
-	typingRoutine  *TypingRoutine
-	ackRoutine     *AckRoutine
-	requestRoutine *RequestRoutine
+	session               *discordgo.Session
+	typingRoutine         *TypingRoutine
+	ackRoutine            *AckRoutine
+	requestRoutine        *RequestRoutine
+	requestRoutineRunning bool
 
 	ViewManager  *ViewManager
 	InputManager *InputManager
@@ -324,7 +325,7 @@ func (app *App) shutdown() {
 	app.Unlock()
 
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add(3)
 
 	// Stop the event polling
 	go delayedInterrupt(10 * time.Millisecond)
@@ -332,7 +333,10 @@ func (app *App) shutdown() {
 	app.InputManager.stop <- &wg
 	app.ackRoutine.stop <- &wg
 	app.typingRoutine.stop <- &wg
-	app.requestRoutine.stop <- &wg
+	if app.requestRoutineRunning {
+		wg.Add(1)
+		app.requestRoutine.stop <- &wg
+	}
 
 	wg.Wait()
 	app.stopChan <- true

@@ -4,6 +4,7 @@ import (
 	"github.com/jonas747/discordgo"
 	"log"
 	"strconv"
+	"strings"
 )
 
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
@@ -79,6 +80,21 @@ func StringNotificationsSettings(notifications int) string {
 
 	}
 	return "??? (discorder outdated, please bug me about this, " + strconv.FormatInt(int64(notifications), 10) + ")"
+}
+
+func MessageNotificationsFromString(str string) int {
+	switch strings.ToLower(str) {
+	case "all":
+		return MessageNotificationsAll
+	case "mentions", "mention":
+		return MessageNotificationsMentions
+	case "none", "nothing":
+		return MessageNotificationsNothing
+	case "server", "default":
+		return MessageNotificationsServer
+	}
+	log.Println("Encountered unknown message notification string", str, "Defaulting to mentions")
+	return MessageNotificationsMentions
 }
 
 type ChannelNotificationSettings struct {

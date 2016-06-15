@@ -20,6 +20,7 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	}
 	app.firstReady = true
 
+	app.requestRoutineRunning = true
 	go app.requestRoutine.Run()
 
 	app.ViewManager.OnReady()

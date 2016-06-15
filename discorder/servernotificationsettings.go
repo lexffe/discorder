@@ -130,4 +130,52 @@ func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*Argume
 }
 
 func (s *ServerNotificationSettingsCommand) Run(app *App, args Arguments) {
+	settings := new(discordgo.UserGuildSettingsEdit)
+	settings.Muted, _ = args.Bool("mute_server")
+	settings.SupressEveryone, _ = args.Bool("surpress_everyone")
+
+	messageNotificationsStr, _ := args.String("server_notifications")
+	settings.MessageNotifications = MessageNotificationsFromString(messageNotificationsStr)
+
+	server, _ := args.String("server")
+	guild, err := app.session.State.Guild(server)
+	if err != nil {
+		log.Println("Error getting guild", err)
+	}
+
+	for _, channel := range guild.Channels {
+		chanMuted, ok := args.Bool(channel.ID + "_muted")
+		if !ok {
+			continue
+		}
+
+		chanNotifications, _ := args.String(channel.ID + "_notifications")
+
+		if settings.ChannelOverrides == nil {
+			settings.ChannelOverrides = make(map[string]*discordgo.UserGuildSettingsChannelOverride)
+		}
+
+		settings.ChannelOverrides[channel.ID] = &discordgo.UserGuildSettingsChannelOverride{
+			ChannelID:            channel.ID,
+			MessageNotifications: MessageNotificationsFromString(chanNotifications),
+			Muted:                chanMuted,
+		}
+	}
+
+	newSettings, err := app.session.UserGuildSettingsEdit(guild.ID, settings)
+	if err != nil {
+		log.Println("Failed updating userguildsettings", err)
+		return
+	}
+	found := false
+	for i := 0; i < len(app.guildSettings); i++ {
+		if app.guildSettings[i].GuildID == guild.ID {
+			app.guildSettings[i] = newSettings
+			found = true
+		}
+	}
+
+	if !found {
+		app.guildSettings = append(app.guildSettings, newSettings)
+	}
 }
