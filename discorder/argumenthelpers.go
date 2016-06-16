@@ -59,3 +59,13 @@ func (s *ServerChannelArgumentHelper) Run(app *App, uiLayer int, callback Argume
 		s.app.ViewManager.RemoveWindow(ssw)
 	}
 }
+
+type MessageArgumentHelper struct{}
+
+func (m *MessageArgumentHelper) Run(app *App, layer int, cb ArgumentCallback) {
+
+}
+
+func (m *MessageArgumentHelper) GetName() string {
+	return "message"
+}

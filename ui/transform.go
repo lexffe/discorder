@@ -66,6 +66,15 @@ func (t *Transform) AddChildren(children ...Entity) {
 	}
 }
 
+func (t *Transform) AddFirst(child Entity) {
+	child.GetTransform().Parent = t
+	if t.Children == nil {
+		t.Children = []Entity{child}
+	} else {
+		t.Children = append([]Entity{child}, t.Children...)
+	}
+}
+
 func (t *Transform) RemoveChild(child Entity, destroy bool) {
 	if t.Children == nil || len(t.Children) < 1 {
 		return

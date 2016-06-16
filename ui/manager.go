@@ -18,6 +18,10 @@ func (u *Manager) AddWindow(e Entity) {
 	u.Windows = append(u.Windows, e)
 }
 
+func (u *Manager) AddWindowFront(e Entity) {
+	u.Windows = append([]Entity{e}, u.Windows...)
+}
+
 func (u *Manager) CurrentWindow() Entity {
 	if len(u.Windows) > 0 {
 		return u.Windows[len(u.Windows)-1]

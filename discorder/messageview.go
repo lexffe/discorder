@@ -134,6 +134,49 @@ func (mv *MessageView) HandleInput(event termbox.Event) {
 	}
 }
 
+func (mv *MessageView) Select() {
+	if mv.ScrollAmount <= 0 {
+		mv.App.ViewManager.SendFromTextBuffer()
+		return
+	}
+
+	if len(mv.MessageTexts) < 0 {
+		return
+	}
+
+	text := mv.MessageTexts[0]
+	selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
+	if !ok || selectedDisplayMsg.IsLogMessage {
+		return
+	}
+
+	msg := selectedDisplayMsg.DiscordMessage
+	presetArgs := map[string]interface{}{"channel": msg.ChannelID, "message": msg.ID, "user": msg.Author.ID}
+
+	info := fmt.Sprintf("%s\nMessage ID: %s\nAuthor: %s (ID: %s)", msg.ContentWithMentionsReplaced(), msg.ID, msg.Author.Username, msg.Author.ID)
+
+	channel, err := mv.App.session.State.Channel(msg.ChannelID)
+	if err != nil {
+		log.Printf("Failed getting channel from state", err)
+		return
+	}
+
+	if !channel.IsPrivate {
+		presetArgs["server"] = channel.GuildID
+	}
+
+	info += fmt.Sprintf("\nChannel: #%s (ID: %s)", channel.Name, channel.ID)
+
+	guild, _ := mv.App.session.State.Guild(channel.GuildID)
+
+	if guild != nil {
+		info += fmt.Sprintf("\nServer: %s (ID: %s)", guild.Name, guild.ID)
+	}
+
+	cw := NewCommandWindow(mv.App, 5, presetArgs, info)
+	mv.App.ViewManager.AddWindow(cw)
+}
+
 func (mv *MessageView) OpenMessageSelectWindow(msg string) {
 	// if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
 	// 	return

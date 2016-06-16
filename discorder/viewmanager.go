@@ -312,10 +312,9 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 	if v.ActiveTab != nil {
 		v.ActiveTab.Transform.Parent.RemoveChild(v.ActiveTab, false)
 		v.ActiveTab.SetActive(false)
-
+		v.UIManager.RemoveWindow(v.ActiveTab.MessageView)
 		if len(v.ActiveTab.MessageView.Channels) < 1 && !v.ActiveTab.MessageView.ShowAllPrivate {
 			// Remove it
-			log.Println("Removing tab")
 			for k, ct := range v.Tabs {
 				if ct == v.ActiveTab {
 					ct.Destroy()
@@ -328,9 +327,11 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 	}
 
 	v.middleLayoutContainer.Transform.AddChildren(t)
+	v.UIManager.AddWindowFront(t.MessageView)
 	t.SetActive(true)
 	v.ActiveTab = t
 }
+
 func (v *ViewManager) UpdateTabIndicators() {
 	v.tabContainer.Transform.ClearChildren(false)
 	if len(v.Tabs) > 1 {

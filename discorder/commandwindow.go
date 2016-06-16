@@ -7,12 +7,14 @@ import (
 
 type CommandWindow struct {
 	*ui.BaseEntity
-	app        *App
-	menuWindow *ui.MenuWindow
-	generated  bool
+	app          *App
+	menuWindow   *ui.MenuWindow
+	generated    bool
+	providedArgs map[string]interface{}
+	header       string
 }
 
-func NewCommandWindow(app *App, layer int) *CommandWindow {
+func NewCommandWindow(app *App, layer int, providedArgs map[string]interface{}, header string) *CommandWindow {
 	cw := &CommandWindow{
 		BaseEntity: &ui.BaseEntity{},
 		app:        app,
@@ -37,6 +39,9 @@ func NewCommandWindow(app *App, layer int) *CommandWindow {
 	cw.Transform.Right = 2
 	cw.Transform.Left = 1
 
+	cw.providedArgs = providedArgs
+	cw.header = header
+
 	app.ViewManager.UIManager.AddWindow(cw)
 
 	return cw
@@ -44,19 +49,59 @@ func NewCommandWindow(app *App, layer int) *CommandWindow {
 func (cw *CommandWindow) GenMenu() {
 	options := make([]*ui.MenuItem, 0)
 
+	if cw.header != "" {
+		options = append(options, &ui.MenuItem{
+			Name:       cw.header,
+			Info:       "What do you call an ak47 that fires blanks? jk47",
+			Decorative: true,
+		})
+	}
+
+	commands := cw.app.Commands
+
+	// Filter out only the commands related to the provided args
+	if cw.providedArgs != nil && len(cw.providedArgs) > 0 {
+		commands = make([]Command, 0)
+		for _, v := range cw.app.Commands {
+			matches := cw.GetArgMatchesForCommand(v)
+			if len(matches) > 0 {
+				commands = append(commands, v)
+			}
+		}
+	}
+
 	for _, category := range CommandCategories {
 		// Category
-		options = append(options, category.GenMenu(cw.app, cw.app.Commands, CommandCategories))
+		options = append(options, category.GenMenu(cw.app, commands, CommandCategories))
 	}
 
 	// Add the top level commands
-	for _, cmd := range cw.app.Commands {
+	for _, cmd := range commands {
 		if len(cmd.GetCategory()) < 1 {
 			options = append(options, cw.app.GenMenuItemFromCommand(cmd))
 		}
 	}
 
 	cw.menuWindow.SetOptions(options)
+}
+
+func (cw *CommandWindow) GetArgMatchesForCommand(cmd Command) []string {
+	matches := []string{}
+	args := cmd.GetArgs(nil)
+	for _, arg := range args {
+		if arg.Helper == nil {
+			continue
+		}
+
+		name := arg.Helper.GetName()
+		for key, _ := range cw.providedArgs {
+			if name == key {
+				matches = append(matches, key)
+				break
+			}
+		}
+	}
+	return matches
 }
 
 func (cw *CommandWindow) Destroy() {
@@ -91,7 +136,31 @@ func (cw *CommandWindow) Select() {
 		return // We must be doing something very wrong somewhere
 	}
 
-	execWindow := NewCommandExecWindow(7, cw.app, cmd)
+	var presetArgs Arguments
+	if len(cw.providedArgs) > 0 {
+		presetArgs = make(map[string]interface{})
+
+		matches := cw.GetArgMatchesForCommand(cmd)
+		cmdArgs := cmd.GetArgs(nil)
+
+		if len(matches) > 0 {
+		OUTER:
+			for _, match := range matches {
+				for _, arg := range cmdArgs {
+					if arg.Helper == nil {
+						continue
+					}
+
+					if match == arg.Helper.GetName() {
+						presetArgs[arg.Name] = cw.providedArgs[match]
+						continue OUTER
+					}
+				}
+			}
+		}
+	}
+
+	execWindow := NewCommandExecWindow(7, cw.app, cmd, presetArgs)
 	cw.app.ViewManager.AddWindow(execWindow)
 
 	//cw.Transform.Parent.RemoveChild(cw, true)

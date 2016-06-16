@@ -223,7 +223,7 @@ func (k KeyBind) Run(app *App) {
 	}
 
 	if k.OpenExecWindow {
-		cew := NewCommandExecWindow(6, app, cmd)
+		cew := NewCommandExecWindow(6, app, cmd, nil)
 		app.ViewManager.AddWindow(cew)
 	} else {
 		if len(k.Helpers) < 1 {

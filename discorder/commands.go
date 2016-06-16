@@ -14,7 +14,7 @@ var SimpleCommands = []Command{
 		Description: "Opens up the command window with all commands available",
 		Category:    []string{"Hidden"},
 		RunFunc: func(app *App, args Arguments) {
-			cw := NewCommandWindow(app, 5)
+			cw := NewCommandWindow(app, 5, nil, "")
 			app.ViewManager.AddWindow(cw)
 		},
 	},
@@ -145,7 +145,6 @@ var SimpleCommands = []Command{
 		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
-				app.ViewManager.SendFromTextBuffer()
 				return
 			}
 
@@ -212,10 +211,10 @@ var SimpleCommands = []Command{
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "last_yours", Description: "If true deletes last message you sent", Datatype: ui.DataTypeBool},
 			&ArgumentDef{Name: "last_any", Description: "If true deletes last message anyone sent", Datatype: ui.DataTypeBool},
-			&ArgumentDef{Name: "message", Description: "Specify a message id", Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "channel", Description: "Specify a channel id", Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "message", Description: "Specify a message id", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
+			&ArgumentDef{Name: "channel", Description: "Specify a channel id", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
 		},
-		ArgPairs: [][]string{[]string{"last_yours"}, []string{"last_any"}, []string{"message"}},
+		ArgPairs: [][]string{[]string{"last_yours"}, []string{"last_any"}, []string{"message", "channel"}},
 		RunFunc: func(app *App, args Arguments) {
 			// We need to be logged in
 			if app.session == nil {
@@ -356,7 +355,7 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:           "Discorder Settings",
+		Name:           "discorder_settings",
 		Description:    "Change settings",
 		CustomExecText: "Save",
 		Args: []*ArgumentDef{
@@ -373,6 +372,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "change_tab",
 		Description: "Change tab",
+		Category:    []string{"Misc"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "tab", Datatype: ui.DataTypeInt},
 		},

@@ -1,6 +1,7 @@
 package discorder
 
 import (
+	"fmt"
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"log"
@@ -24,7 +25,7 @@ const (
 	CustomMenuExecute CustomMenuType = iota
 )
 
-func NewCommandExecWindow(layer int, app *App, command Command) *CommandExecWindow {
+func NewCommandExecWindow(layer int, app *App, command Command, presetArgs Arguments) *CommandExecWindow {
 	execWindow := &CommandExecWindow{
 		BaseEntity: &ui.BaseEntity{},
 		app:        app,
@@ -48,6 +49,7 @@ func NewCommandExecWindow(layer int, app *App, command Command) *CommandExecWind
 
 	execWindow.Transform.Right = 2
 	execWindow.Transform.Left = 1
+	execWindow.curArgs = presetArgs
 
 	app.ViewManager.UIManager.AddWindow(execWindow)
 	preRunHelper := command.GetPreRunHelper()
@@ -108,9 +110,21 @@ func (cew *CommandExecWindow) GenMenu() {
 			InputType: arg.Datatype,
 			UserData:  arg,
 		}
-		curVal := arg.GetCurrentVal(cew.app)
-		if curVal != "" {
-			input.InputDefaultText = curVal
+		// Set the preset arg if any
+		set := false
+		for key, presetArg := range cew.curArgs {
+			if key == arg.Name {
+				input.InputDefaultText = fmt.Sprintf("%v", presetArg)
+				set = true
+				break
+			}
+		}
+		// Set to default value
+		if !set {
+			curVal := arg.GetCurrentVal(cew.app)
+			if curVal != "" {
+				input.InputDefaultText = curVal
+			}
 		}
 
 		items = append(items, helper, input)
