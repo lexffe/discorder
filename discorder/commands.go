@@ -296,6 +296,48 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:        "initiate_conversation",
+		Description: "Initiate a conversation",
+		Category:    []string{"Discord"},
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "user", Description: "User to intiate a conversation with", Datatype: ui.DataTypeString, Helper: &UserArgumentHelper{}},
+		},
+		RunFunc: func(app *App, args Arguments) {
+			userId, _ := args.String("user")
+
+			if userId == "" {
+				log.Println("User empty, doing nothing..")
+				return
+			}
+
+			tab := app.ViewManager.ActiveTab
+
+			// Check private channels first
+			state := app.session.State
+			state.RLock()
+			for _, v := range state.PrivateChannels {
+				if v.Recipient.ID == userId {
+					tab.MessageView.AddChannel(v.ID)
+					tab.SendChannel = v.ID
+					state.RUnlock()
+					return
+				}
+			}
+			state.RUnlock()
+
+			// Create one then
+			channel, err := app.session.UserChannelCreate(userId)
+			if err != nil {
+				log.Println("Error creating userchannel", err)
+				return
+			}
+			state.ChannelAdd(channel)
+
+			tab.MessageView.AddChannel(channel.ID)
+			tab.SendChannel = channel.ID
+		},
+	},
+	&SimpleCommand{
 		Name:           "set_nick",
 		Description:    "Sets your nickname on a server (if possible)",
 		CustomExecText: "Set",

@@ -62,10 +62,16 @@ func (s *ServerChannelArgumentHelper) Run(app *App, uiLayer int, callback Argume
 
 type MessageArgumentHelper struct{}
 
-func (m *MessageArgumentHelper) Run(app *App, layer int, cb ArgumentCallback) {
-
-}
+func (m *MessageArgumentHelper) Run(app *App, layer int, cb ArgumentCallback) {}
 
 func (m *MessageArgumentHelper) GetName() string {
 	return "message"
+}
+
+type UserArgumentHelper struct{}
+
+func (m *UserArgumentHelper) Run(app *App, layer int, cb ArgumentCallback) {}
+
+func (m *UserArgumentHelper) GetName() string {
+	return "user"
 }
