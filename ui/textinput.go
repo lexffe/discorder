@@ -11,6 +11,7 @@ type DataType int
 
 const (
 	DataTypeString DataType = iota
+	DataTypePassword
 	DataTypeInt
 	DataTypeFloat
 	DataTypeBool
@@ -174,7 +175,7 @@ func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
 }
 
 func (ti *TextInput) Update() {
-	if ti.MaskInput {
+	if ti.MaskInput || ti.DataType == DataTypePassword {
 		ti.Text.Text = ""
 		for _, _ = range ti.TextBuffer {
 			ti.Text.Text += "*"
