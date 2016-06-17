@@ -50,7 +50,7 @@ func (hq *HistoryRequest) Do(finished chan error) {
 	var err error
 	defer func() {
 		hq.App.Lock()
-		if hq.App.debug {
+		if hq.App.options.DebugEnabled {
 			log.Println("History processing complete")
 		}
 		hq.App.Unlock()

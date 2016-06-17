@@ -115,7 +115,7 @@ func (app *App) messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) 
 }
 
 func (app *App) messageAck(s *discordgo.Session, a *discordgo.MessageAck) {
-	if app.debug {
+	if app.options.DebugEnabled {
 		log.Println("Received ack!")
 	}
 	app.ViewManager.notificationsManager.HandleAck(a)

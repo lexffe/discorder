@@ -191,7 +191,7 @@ var SimpleCommands = []Command{
 		Name:        "reload_theme",
 		Description: "Reloads the current theme",
 		RunFunc: func(app *App, args Arguments) {
-			userTheme := app.themePath
+			userTheme := app.options.CustomThemePath
 			if userTheme == "" {
 				userTheme = filepath.Join(app.configDir, "themes", app.config.Theme)
 			}

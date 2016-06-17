@@ -574,13 +574,9 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before
 	}
 
 	if len(msgs) > 0 && !mv.App.stopping {
-		name := GetChannelNameOrRecipient(channel)
 		oldest := msgs[0]
 		if !mv.App.IsFirstChannelMessage(channel.ID, oldest.ID) {
 			// Grab history
-			if mv.App.debug {
-				log.Println("Should grab history for ", name)
-			}
 			mv.App.requestRoutine.AddRequest(NewHistoryRequest(mv.App, channel.ID, 25, oldest.ID, ""))
 		}
 	}

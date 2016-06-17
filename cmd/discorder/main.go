@@ -10,11 +10,12 @@ import (
 )
 
 var (
-	flagDGoDebugLvl  = flag.Int("dgo", 0, "discordgo logging level (0 - Errors, 1 - Warnings, 2 - Info, 3 - Debug")
-	flagConfigPath   = flag.String("config", "", "Path to the config file")
-	flagThemePath    = flag.String("theme", "", "For use a theme, as opposed to the one in the config file")
-	flagLogPath      = flag.String("log", "discorder.log", "Path to output logs, only used with debug enabled")
-	flagDebugEnabled = flag.Bool("debug", false, "Set to enable debuging mode")
+	flagDGoDebugLvl  = flag.Int("-dgo", 0, "discordgo logging level (0 - Errors, 1 - Warnings, 2 - Info, 3 - Debug")
+	flagConfigPath   = flag.String("c", "", "Custom path to the config file")
+	flagThemePath    = flag.String("t", "", "Path to a theme file, as opposed to the one in the config file")
+	flagLogPath      = flag.String("l", "discorder.log", "Path to output logs, only used with debug enabled")
+	flagDebugEnabled = flag.Bool("d", false, "Set to enable debuging mode")
+	flagClearToken   = flag.Bool("--clear-token", false, "Set to enable debuging mode")
 )
 
 func main() {
@@ -36,7 +37,15 @@ func main() {
 	}
 	log.Println("Config path is", path)
 
-	app, err := discorder.NewApp(*flagConfigPath, *flagThemePath, *flagDebugEnabled, *flagDGoDebugLvl)
+	options := &discorder.AppOptions{
+		CustomConfigPath:    *flagConfigPath,
+		CustomThemePath:     *flagThemePath,
+		DebugEnabled:        *flagDebugEnabled,
+		DiscordgoDebugLevel: *flagDGoDebugLvl,
+		ClearToken:          *flagClearToken,
+	}
+
+	app, err := discorder.NewApp(options)
 	if err != nil {
 		log.Println("Error setting up discorder :(", err)
 		return

@@ -51,18 +51,27 @@ type App struct {
 
 	configDir string
 
-	configPath  string
-	themePath   string
-	debug       bool
-	dGoDebugLvl int
+	options *AppOptions
 
 	firstReady bool
 }
 
-func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error) {
+type AppOptions struct {
+	CustomConfigPath    string
+	CustomThemePath     string
+	DebugEnabled        bool
+	DiscordgoDebugLevel int
+	ClearToken          bool
+}
+
+func NewApp(options *AppOptions) (*App, error) {
 	notify := notificator.New(notificator.Options{
 		AppName: "Discorder",
 	})
+
+	if options == nil {
+		options = new(AppOptions)
+	}
 
 	configDir, err := GetCreateConfigDir()
 	if err != nil {
@@ -74,10 +83,7 @@ func NewApp(configPath, themePath string, debug bool, dgoDebug int) (*App, error
 		BaseEntity:    &ui.BaseEntity{},
 		notifications: notify,
 		firstMessages: make(map[string]string),
-		debug:         debug,
-		dGoDebugLvl:   dgoDebug,
-		configPath:    configPath,
-		themePath:     themePath,
+		options:       options,
 		configDir:     configDir,
 	}
 	app.Transform.AnchorMax = common.NewVector2I(1, 1)
@@ -100,8 +106,8 @@ func (app *App) Login(user, password, token string) error {
 		}
 	}
 
-	session.LogLevel = app.dGoDebugLvl
-	if app.dGoDebugLvl >= discordgo.LogDebug {
+	session.LogLevel = app.options.DiscordgoDebugLevel
+	if app.options.DiscordgoDebugLevel >= discordgo.LogDebug {
 		session.Debug = true
 	}
 
@@ -322,8 +328,8 @@ func (app *App) shutdown() {
 		app.config.AuthToken = app.session.Token
 	}
 
-	savePath := app.configPath
-	if app.configPath == "" {
+	savePath := app.options.CustomConfigPath
+	if savePath == "" {
 		savePath = filepath.Join(app.configDir, "discorder.json")
 	}
 
@@ -361,8 +367,8 @@ func (app *App) Destroy() { app.DestroyChildren() }
 func (app *App) InitializeConfigFiles() error {
 	// Load general config
 	configPath := ""
-	if app.configPath != "" {
-		configPath = app.configPath
+	if app.options.CustomConfigPath != "" {
+		configPath = app.options.CustomConfigPath
 	} else {
 		configPath = filepath.Join(app.configDir, "discorder.json")
 	}
@@ -408,8 +414,9 @@ func (app *App) InitializeConfigFiles() error {
 	}
 
 	// Load user theme
-	if app.themePath != "" {
-		app.userTheme = LoadTheme(app.themePath)
+	if app.options.CustomThemePath != "" {
+		app.userTheme = LoadTheme(app.options.CustomThemePath)
+		log.Println("Loading theme ", app.options.CustomThemePath)
 	} else if app.config.Theme != "" {
 		log.Println("Loading theme ", filepath.Join(themesDir, app.config.Theme))
 		app.userTheme = LoadTheme(filepath.Join(themesDir, app.config.Theme))

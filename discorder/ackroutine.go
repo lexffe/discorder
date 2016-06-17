@@ -123,7 +123,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 		log.Println("Error sending ack: ", err)
 	}
 
-	if a.App.debug {
+	if a.App.options.DebugEnabled {
 		log.Println("Send ack!", msgStr, msg.ID)
 	}
 

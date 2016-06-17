@@ -70,7 +70,7 @@ func (v *ViewManager) OnInit() {
 	rootContainer.Transform.AddChildren(header)
 	v.header = header
 
-	if v.App.debug {
+	if v.App.options.DebugEnabled {
 		debugBar := ui.NewText()
 		debugBar.Text = "debug"
 		debugBar.Layer = 9
@@ -192,7 +192,7 @@ func (v *ViewManager) Update() {
 		v.MainInput.Transform.Left = length
 	}
 
-	if v.App.debug {
+	if v.App.options.DebugEnabled {
 		children := v.App.Children(true)
 		v.debugText.Text = fmt.Sprintf("Number of entities %d, Req queue length: %d", len(children), v.App.requestRoutine.GetQueueLenth())
 	}
