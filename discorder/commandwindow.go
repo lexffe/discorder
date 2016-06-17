@@ -12,6 +12,9 @@ type CommandWindow struct {
 	generated    bool
 	providedArgs map[string]interface{}
 	header       string
+
+	commands   []Command
+	categories []*CommandCategory
 }
 
 func NewCommandWindow(app *App, layer int, providedArgs map[string]interface{}, header string) *CommandWindow {
@@ -46,6 +49,7 @@ func NewCommandWindow(app *App, layer int, providedArgs map[string]interface{}, 
 
 	return cw
 }
+
 func (cw *CommandWindow) GenMenu() {
 	options := make([]*ui.MenuItem, 0)
 
@@ -57,7 +61,15 @@ func (cw *CommandWindow) GenMenu() {
 		})
 	}
 
-	commands := cw.app.Commands
+	if cw.commands == nil {
+		cw.commands = cw.app.Commands
+	}
+
+	if cw.categories == nil {
+		cw.categories = CommandCategories
+	}
+
+	commands := cw.commands
 
 	// Filter out only the commands related to the provided args
 	if cw.providedArgs != nil && len(cw.providedArgs) > 0 {
@@ -70,9 +82,9 @@ func (cw *CommandWindow) GenMenu() {
 		}
 	}
 
-	for _, category := range CommandCategories {
+	for _, category := range cw.categories {
 		// Category
-		options = append(options, category.GenMenu(cw.app, commands, CommandCategories))
+		options = append(options, category.GenMenu(cw.app, commands, cw.categories))
 	}
 
 	// Add the top level commands

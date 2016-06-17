@@ -144,9 +144,9 @@ func (v *ViewManager) OnInit() {
 	v.ApplyTheme()
 
 	// Launch the login
-	login := NewLoginWindow(v.App)
+	login := OpenLoginWindow(v.App)
 	v.AddWindow(login)
-	login.CheckAutoLogin()
+	v.App.CheckAutoLogin()
 }
 
 func (v *ViewManager) OnReady() {

@@ -129,6 +129,15 @@ func (app *App) Login(user, password, token string) error {
 	return err
 }
 
+func (app *App) CheckAutoLogin() {
+	if app.config.AuthToken != "" {
+		err := app.Login("", "", app.config.AuthToken)
+		if err != nil {
+			log.Println("Failed auto login: ", err)
+		}
+	}
+}
+
 func (app *App) Stop() {
 	app.Lock()
 
