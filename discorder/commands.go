@@ -403,12 +403,16 @@ var SimpleCommands = []Command{
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "short_guilds", Description: "Displays a mini version of guilds in message view", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.ShortGuilds)
+			}}, &ArgumentDef{Name: "hide_nicknames", Description: "Shows usernames instead of nicknames if true", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+				return strconv.FormatBool(app.config.HideNicknames)
 			}},
 		},
 		RunFunc: func(app *App, args Arguments) {
-			shortguilds, _ := args.Bool("short_guilds")
-			app.config.ShortGuilds = shortguilds
-			log.Println("Set short_guilds to", shortguilds)
+			shortGuilds, _ := args.Bool("short_guilds")
+			hideNicks, _ := args.Bool("hide_nicknames")
+			app.config.ShortGuilds = shortGuilds
+			app.config.HideNicknames = hideNicks
+			log.Printf("Set short_guilds: %v; hide_nicknames: %v", shortGuilds, hideNicks)
 		},
 	},
 	&SimpleCommand{

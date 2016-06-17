@@ -22,7 +22,8 @@ type Config struct {
 	Tabs []*TabConfig `json:"tabs"`
 
 	// General settings
-	ShortGuilds bool `json:"short_guilds"`
+	ShortGuilds   bool `json:"short_guilds"`
+	HideNicknames bool `json:"hide_nicknames"`
 }
 
 type TabConfig struct {

@@ -268,10 +268,6 @@ func (mv *MessageView) BuildTexts() {
 			if msg == nil {
 				continue
 			}
-			author := "Unknown?"
-			if msg.Author != nil {
-				author = msg.Author.Username
-			}
 
 			ts := ""
 			thenYear, thenMonth, thenDay := item.Timestamp.Date()
@@ -283,17 +279,15 @@ func (mv *MessageView) BuildTexts() {
 			ts += " "
 			tsLen := utf8.RuneCountInString(ts)
 
-			authorLen := utf8.RuneCountInString(author)
-			channel, err := mv.App.session.State.Channel(msg.ChannelID)
-			channelName := "???"
 			isPrivate := false
-			if err != nil {
-				log.Println("Error getting channel", err)
-			} else {
+			channelName := "???"
+			channel, err := mv.App.session.State.Channel(msg.ChannelID)
+			var guild *discordgo.Guild
+			if err == nil {
 				channelName = channel.Name
 				isPrivate = channel.IsPrivate
 				if !isPrivate {
-					guild, err := mv.App.session.State.Guild(channel.GuildID)
+					guild, err = mv.App.session.State.Guild(channel.GuildID)
 					if err == nil {
 						guildName := guild.Name
 						if mv.App.config.ShortGuilds {
@@ -303,6 +297,22 @@ func (mv *MessageView) BuildTexts() {
 					}
 				}
 			}
+
+			author := "Unknown?"
+			if msg.Author != nil {
+				if mv.App.config.HideNicknames || guild == nil {
+					author = msg.Author.Username
+				} else {
+					member, err := mv.App.session.State.Member(guild.ID, msg.Author.ID)
+					if (err == nil && member.Nick == "") || err != nil {
+						author = msg.Author.Username // Fallback
+					} else {
+						author = member.Nick
+					}
+				}
+			}
+
+			authorLen := utf8.RuneCountInString(author)
 
 			if isPrivate {
 				channelName = "Direct Message"
