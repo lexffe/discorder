@@ -49,6 +49,9 @@ func (v Vector2F) MutliplyScalar(num float32) Vector2F {
 func (v Vector2F) Int() (int, int) {
 	return int(v.X), int(v.Y)
 }
+func (v Vector2F) Equals(other Vector2F) bool {
+	return v.X == other.X && v.Y == other.Y
+}
 
 type Rect struct {
 	X, Y, W, H float32
@@ -56,4 +59,8 @@ type Rect struct {
 
 func (r *Rect) IsZero() bool {
 	return r.X == 0 && r.Y == 0 && r.W == 0 && r.H == 0
+}
+
+func (r Rect) Equals(other Rect) bool {
+	return r.X == other.X && r.Y == other.Y && r.H == other.H && r.W == other.W
 }

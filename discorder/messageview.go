@@ -32,6 +32,7 @@ type MessageView struct {
 	DisplayMessagesDirty bool // Rebuilds displaymessages on next draw if set
 	TextsDirty           bool // Rebuilds texts on next draw if set
 	lastLogs             time.Time
+	lastRect             common.Rect
 }
 
 type DisplayMessage struct {
@@ -508,9 +509,10 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 func (mv *MessageView) Destroy() { mv.DestroyChildren() }
 
 func (mv *MessageView) Update() {
-	h := int(mv.Transform.GetRect().H)
-	if h < 0 {
-		h = 0
+	curRect := mv.Transform.GetRect()
+	if !curRect.Equals(mv.lastRect) {
+		mv.lastRect = curRect
+		mv.DisplayMessagesDirty = true
 	}
 
 	if logRoutine.HasChangedSince(mv.lastLogs) {
@@ -526,6 +528,10 @@ func (mv *MessageView) Update() {
 		mv.ScrollText.Text = fmt.Sprintf("Scroll: %d", mv.ScrollAmount)
 	}
 	if mv.DisplayMessagesDirty {
+		h := int(curRect.H)
+		if h < 0 {
+			h = 0
+		}
 		mv.BuildDisplayMessages(h + mv.ScrollAmount)
 		mv.BuildTexts()
 		mv.DisplayMessagesDirty = false

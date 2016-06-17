@@ -87,26 +87,57 @@ func (a *AutoLayoutContainer) BuildLayout() {
 	for _, v := range elements {
 		requiredSize := v.GetRequiredSize()
 		transform := v.GetTransform()
-
+		changed := false
 		if a.LayoutType == LayoutTypeVertical {
-			transform.Position = common.NewVector2F(transform.Position.X, counter)
+			newPos := common.NewVector2F(transform.Position.X, counter)
+			changed = !newPos.Equals(transform.Position)
+			transform.Position = newPos
+
 			if v.IsLayoutDynamic() {
+				if !changed && transform.Size.Y != spacePerDynamic {
+					changed = true
+				}
+
 				transform.Size.Y = spacePerDynamic
 				counter += spacePerDynamic + float32(a.Spacing)
 			} else {
+				if !changed && transform.Size.Y != requiredSize.Y {
+					changed = true
+				}
+
 				transform.Size.Y = requiredSize.Y
 				counter += requiredSize.Y + float32(a.Spacing)
 			}
 		} else {
-			transform.Position = common.NewVector2F(counter, transform.Position.Y)
+			newPos := common.NewVector2F(counter, transform.Position.Y)
+			changed = !newPos.Equals(transform.Position)
+			transform.Position = newPos
 			if v.IsLayoutDynamic() {
+				if !changed && transform.Size.X != spacePerDynamic {
+					changed = true
+				}
+
 				transform.Size.X = spacePerDynamic
 				counter += spacePerDynamic + float32(a.Spacing)
 			} else {
+				if !changed && transform.Size.X != requiredSize.X {
+					changed = true
+				}
+
 				transform.Size.X = requiredSize.X
 				counter += requiredSize.X + float32(a.Spacing)
 			}
 		}
+		if changed {
+			a.EmitChangedEvent(v)
+		}
+	}
+}
+
+func (a AutoLayoutContainer) EmitChangedEvent(e LayoutElement) {
+	cast, ok := e.(LayoutChangeHandler)
+	if ok {
+		cast.OnLayoutChanged()
 	}
 }
 
