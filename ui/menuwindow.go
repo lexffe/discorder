@@ -24,15 +24,22 @@ type MenuItem struct {
 
 	Children []*MenuItem
 
+	Text  *Text
+	Input *TextInput
+
 	matches int
-	Text    *Text
-	Input   *TextInput
+	path    string
 }
 
-func (mi *MenuItem) GetDisplayName() string {
+func (mi *MenuItem) GetDisplayName(searching bool) string {
+	if searching {
+		return mi.path + mi.Name
+	}
+
 	if mi.IsCategory {
 		return "[Dir] " + mi.Name
 	}
+
 	return mi.Name
 }
 
@@ -277,7 +284,7 @@ func (mw *MenuWindow) OptionsHeight() int {
 		if v.IsInput {
 			h++
 		} else {
-			h += HeightRequired(v.GetDisplayName(), int(rect.W))
+			h += HeightRequired(v.GetDisplayName(mw.lastSearch != ""), int(rect.W))
 		}
 	}
 	return h
@@ -303,7 +310,7 @@ func (mw *MenuWindow) Rebuild() {
 			input.TextBuffer = option.InputDefaultText
 		} else {
 			t = NewText()
-			t.Text = option.GetDisplayName()
+			t.Text = option.GetDisplayName(mw.lastSearch != "")
 			t.Layer = mw.Layer
 			mw.MenuItemContainer.Transform.AddChildren(t)
 		}
@@ -329,17 +336,21 @@ func (mw *MenuWindow) Rebuild() {
 
 func (mw *MenuWindow) FilterOptions() {
 	// Get the options in the current dir
-	inDir := FilterOptionsByPath(mw.CurDir, mw.Options)
-	searchApplied := SearchFilter(mw.lastSearch, inDir)
+	var options []*MenuItem
+	if mw.lastSearch != "" {
+		options = SearchFilter(mw.lastSearch, mw.Options, "")
+	} else {
+		options = FilterOptionsByPath(mw.CurDir, mw.Options)
+	}
 
 	mw.Selectables = make([]int, 0)
-	for k, option := range searchApplied {
+	for k, option := range options {
 		if !option.Decorative {
 			mw.Selectables = append(mw.Selectables, k)
 		}
 	}
 
-	mw.FilteredOptions = searchApplied
+	mw.FilteredOptions = options
 }
 
 func FilterOptionsByPath(path []string, options []*MenuItem) []*MenuItem {
@@ -355,31 +366,48 @@ func FilterOptionsByPath(path []string, options []*MenuItem) []*MenuItem {
 	return nil
 }
 
-func SearchFilter(searchBy string, in []*MenuItem) []*MenuItem {
+func SearchFilter(searchBy string, in []*MenuItem, path string) []*MenuItem {
 	if searchBy == "" {
 		return in
 	}
 
-	searchFields := strings.FieldsFunc(searchBy, fieldsFunc)
 	filtered := make([]*MenuItem, 0)
 	for _, option := range in {
-		split := strings.FieldsFunc(option.Name, fieldsFunc)
-
-		matches := 0
-		for _, searchField := range searchFields {
-			for _, optionField := range split {
-				if strings.Contains(strings.ToLower(optionField), strings.ToLower(searchField)) {
-					matches++
-				}
-			}
+		if option.IsCategory && len(option.Children) > 0 {
+			filtered = append(filtered, SearchFilter(searchBy, option.Children, path+option.Name+"/")...)
+			continue
+		} else if option.IsCategory {
+			continue
 		}
-		option.matches = matches
-		if matches > 0 {
+		option.path = path
+		fullName := path + option.Name
+		option.matches = StringSearch(searchBy, fullName)
+		if option.matches > 0 {
 			filtered = append(filtered, option)
 		}
 	}
 	sort.Sort(MenuItemSlice(filtered))
 	return filtered
+}
+
+func StringSearch(search, content string) int {
+	matches := 0
+	curSecondaryIndex := 0
+
+	// Case insensitive
+	content = strings.ToLower(content)
+	search = strings.ToLower(search)
+
+	for _, v := range search {
+		foundIndex := strings.IndexRune(content[curSecondaryIndex:], v)
+		if foundIndex != -1 {
+			matches++
+			curSecondaryIndex += foundIndex + 1
+		} else {
+			return 0
+		}
+	}
+	return matches
 }
 
 func fieldsFunc(r rune) bool {
