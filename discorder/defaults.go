@@ -72,6 +72,8 @@ var DefaultTheme = []byte(`{
 		"typing_bar": { "fg": {"color": "cyan"}	},
 		"text_other": {},
 		"text_special": { "fg": {"color": "cyan"} },
+		"text_window_normal": { "bg": {"color": "black"} },
+		"text_window_special": { "fg": {"color": "cyan"}, "bg": {"color": "black"} },
 		"input_chat": {},
 		"input_other": {},
 		"send_prompt": { "fg": {"color": "green", "bold": true}	},

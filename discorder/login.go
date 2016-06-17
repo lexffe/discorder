@@ -1,6 +1,7 @@
 package discorder
 
 import (
+	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"log"
 )
@@ -65,4 +66,50 @@ var LoginCommands = []Command{
 			}
 		},
 	},
+}
+
+type WaitingForLogin struct {
+	*ui.BaseEntity
+
+	app    *App
+	window *ui.Window
+}
+
+func NewWaitingForLogin(app *App, layer int) *WaitingForLogin {
+	window := ui.NewWindow(app.ViewManager.UIManager)
+
+	loginWindow := &WaitingForLogin{
+		BaseEntity: &ui.BaseEntity{},
+		window:     window,
+		app:        app,
+	}
+
+	loginWindow.Transform.AddChildren(window)
+	window.Transform.AnchorMax = common.NewVector2I(1, 1)
+
+	text := ui.NewText()
+
+	text.Text = "Logging in...\n\nIf you logged in by token and this is taking a long time either discord is having api problems or the token is invalid, reset the token using --reset-token"
+	app.ApplyThemeToText(text, "text_window_normal")
+	window.Transform.AddChildren(text)
+	text.Transform.AnchorMax = common.NewVector2I(1, 1)
+
+	app.ViewManager.UIManager.AddWindow(loginWindow)
+
+	loginWindow.Transform.AnchorMax = common.NewVector2I(1, 1)
+	loginWindow.Transform.Right = 2
+	loginWindow.Transform.Left = 1
+
+	return loginWindow
+}
+
+func (w *WaitingForLogin) Update() {
+	if w.app.firstReady {
+		w.app.ViewManager.RemoveWindow(w)
+	}
+}
+
+func (w *WaitingForLogin) Destroy() {
+	w.app.ViewManager.UIManager.RemoveWindow(w)
+	w.DestroyChildren()
 }

@@ -272,6 +272,18 @@ func (v *ViewManager) RemoveWindow(e ui.Entity) {
 	}
 }
 
+func (v *ViewManager) RemoveAllWindows() {
+	windows := v.UIManager.Windows
+	for _, window := range windows {
+		_, ok := window.(*MessageView)
+		if ok {
+			continue
+		}
+
+		v.RemoveWindow(window)
+	}
+}
+
 func (v *ViewManager) InitializeTabs() {
 	tabConfig := v.App.config.Tabs
 	if tabConfig == nil || len(tabConfig) < 1 {
@@ -344,7 +356,6 @@ func (v *ViewManager) UpdateTabIndicators() {
 		v.tabContainer.Transform.Size.Y = 0
 	}
 }
-
 func (v *ViewManager) HandleMessageCreate(m *discordgo.Message) {
 	mentioned := false
 	isPrivate := false

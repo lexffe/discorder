@@ -126,6 +126,11 @@ func (app *App) Login(user, password, token string) error {
 	app.session.AddHandler(app.guildCreated)
 
 	err = session.Open()
+	if err == nil {
+		app.ViewManager.RemoveAllWindows()
+		waiting := NewWaitingForLogin(app, 5)
+		app.ViewManager.AddWindow(waiting)
+	}
 	return err
 }
 
