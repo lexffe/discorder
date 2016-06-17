@@ -50,8 +50,6 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 		shouldNotify := false
 
-		log.Println(settings)
-
 		if !settings.Muted && settings.Notifications == MessageNotificationsAll {
 			shouldNotify = true
 		} else if !settings.Muted && settings.Notifications == MessageNotificationsMentions {
