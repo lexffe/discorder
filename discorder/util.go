@@ -11,7 +11,7 @@ func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNoti
 	channel, err := app.session.State.Channel(channelId)
 	if err != nil {
 		log.Println("Error getting channel from state", err)
-		return nil
+		return &ChannelNotificationSettings{}
 	}
 
 	if channel.IsPrivate {
@@ -44,7 +44,7 @@ func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNoti
 	guild, err := app.session.Guild(channel.GuildID)
 	if err != nil {
 		log.Println("Error getting guild from state", err)
-		return nil
+		return &ChannelNotificationSettings{}
 	}
 	return &ChannelNotificationSettings{
 		Notifications: guild.DefaultMessageNotifications,
