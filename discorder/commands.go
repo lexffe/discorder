@@ -334,7 +334,7 @@ var SimpleCommands = []Command{
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "name", Description: "The nickname you will set (empty to reset)", Datatype: ui.DataTypeString},
 			&ArgumentDef{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{}},
-			&ArgumentDef{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeString},
+			&ArgumentDef{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeString, Helper: &UserArgumentHelper{}},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			serverId, _ := args.String("server")
