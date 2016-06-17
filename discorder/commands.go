@@ -388,6 +388,10 @@ var SimpleCommands = []Command{
 			})
 
 			if !handled { // Do the default action
+				if _, ok := window.(*MessageView); ok {
+					return
+				}
+
 				parent := window.GetTransform().Parent
 				if parent == app.ViewManager.menuContainer.GetTransform() {
 					app.ViewManager.RemoveWindow(window)
