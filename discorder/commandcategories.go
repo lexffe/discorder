@@ -18,8 +18,8 @@ var CommandCategories = []*CommandCategory{
 		Name:        "Windows",
 		Description: "Server browser, help etc...",
 	}, &CommandCategory{
-		Name:        "Misc",
-		Description: "Misc commands",
+		Name:        "Utils",
+		Description: "Discorder utilities",
 	},
 }
 

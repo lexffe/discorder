@@ -80,19 +80,9 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "channels",
-		Description: "Opens up the channel window",
-		Category:    []string{"Windows"},
-		RunFunc: func(app *App, args Arguments) {
-			if app.ViewManager.CanOpenWindow() {
-				// ssw := NewChannelSelectWindow(app, app.ViewManager.SelectedMessageView, guild)
-				// app.ViewManager.SetActiveWindow(ssw)
-			}
-		},
-	},
-	&SimpleCommand{
 		Name:        "help",
 		Description: "Opens up the help window",
+		Category: []string{"Windows"}
 		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
@@ -279,7 +269,7 @@ var SimpleCommands = []Command{
 	},
 	&SimpleCommand{
 		Name:        "send_message",
-		Description: "Sends a message",
+		Description: "Sends a message, (This is a stub, not implemented :()",
 		Category:    []string{"Discord"},
 		RunFunc: func(app *App, args Arguments) {
 		},
@@ -354,7 +344,7 @@ var SimpleCommands = []Command{
 	},
 	&SimpleCommand{
 		Name:           "pin_message",
-		Description:    "Pins a message",
+		Description:    "Pins a message, (This is a stub, not implemented :()",
 		CustomExecText: "Pin!",
 		Category:       []string{"Discord"},
 		Args: []*ArgumentDef{
