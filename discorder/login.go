@@ -89,7 +89,7 @@ func NewWaitingForLogin(app *App, layer int) *WaitingForLogin {
 
 	text := ui.NewText()
 
-	text.Text = "Logging in...\n\nIf you logged in by token and this is taking a long time either discord is having api problems or the token is invalid, reset the token using --reset-token"
+	text.Text = "Logging in...\n\nIf you logged in by token and this is taking a long time either discord is having api problems or the token is invalid, reset the token using the -r switch"
 	app.ApplyThemeToText(text, "text_window_normal")
 	window.Transform.AddChildren(text)
 	text.Transform.AnchorMax = common.NewVector2I(1, 1)

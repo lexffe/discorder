@@ -379,6 +379,10 @@ func (app *App) InitializeConfigFiles() error {
 	}
 	app.config = config
 
+	if app.options.ClearToken {
+		app.config.AuthToken = ""
+	}
+
 	// Load default theme
 	var defaultTheme Theme
 	err = json.Unmarshal(DefaultTheme, &defaultTheme)
