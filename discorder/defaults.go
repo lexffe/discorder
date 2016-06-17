@@ -3,7 +3,7 @@ package discorder
 var DefaultKeybinds = []byte(`[
 	{"key": "CtrlQ", "command": "quit"},
 	{"key": "CtrlS", "command": "servers"},
-	{"key": "CtrlO", "command": "settings"},
+	{"key": "CtrlO", "command": "help"},
 	{"key": "CtrlX", "command": "commands"},
 	{"key": "CtrlL", "command": "clear_log"},
 	{"key": "CtrlT", "command": "reload_theme"},

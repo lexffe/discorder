@@ -28,36 +28,42 @@ func NewHelpWindow(app *App) *HelpWindow {
 		App:        app,
 	}
 
-	wWidth := 70
-	wHeight := 21
-
-	curY := 1
-
 	window := ui.NewWindow(app.ViewManager.UIManager)
 	window.Title = "Help"
 	window.Footer = "Hmmm - Mr Smilery"
-	window.Transform.AnchorMax = common.NewVector2F(0.5, 0.5)
-	window.Transform.AnchorMin = common.NewVector2F(0.5, 0.5)
-	window.Transform.Position = common.NewVector2I(-(wWidth / 2), -(wHeight / 2))
-	window.Transform.Size = common.NewVector2I(wWidth, wHeight)
+	window.Transform.AnchorMax = common.NewVector2F(1, 1)
+	window.Layer = 10
 
-	for _, v := range HelpContent {
-		text := ui.NewText()
-		text.Transform.AnchorMin = common.NewVector2I(0, 0)
-		text.Transform.AnchorMax = common.NewVector2I(1, 0)
-		text.Transform.Position = common.NewVector2I(0, curY)
-		app.ApplyThemeToText(text, "text_window_normal")
-		text.Text = v
-		curY += text.HeightRequired()
-		window.Transform.AddChildren(text)
+	text := ui.NewText()
+	text.Transform.AnchorMin = common.NewVector2I(0, 0)
+	text.Transform.AnchorMax = common.NewVector2I(1, 1)
+	app.ApplyThemeToText(text, "text_window_normal")
+	window.Transform.AddChildren(text)
+	text.Layer = 10
+
+	for k, v := range HelpContent {
+		if k != 0 {
+			text.Text += "\n"
+		}
+		text.Text += v
 	}
+
 	hw.Transform.AddChildren(window)
 	hw.Window = window
+
+	hw.Transform.AnchorMax = common.NewVector2I(1, 1)
+	hw.Transform.Right = 2
+	hw.Transform.Left = 1
+
+	app.ViewManager.UIManager.AddWindow(hw)
 	return hw
 }
 
-func (s *HelpWindow) Enter()   {}
-func (s *HelpWindow) Destroy() { s.DestroyChildren() }
+func (s *HelpWindow) Enter() {}
+func (s *HelpWindow) Destroy() {
+	s.App.ViewManager.UIManager.RemoveWindow(s)
+	s.DestroyChildren()
+}
 
 func (s *HelpWindow) HandleInput(event termbox.Event) {
 	// if event.Type == termbox.EventKey {
