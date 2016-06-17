@@ -21,7 +21,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "move_cursor",
 		Description: "Moves cursor in specified direction",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
@@ -41,7 +41,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "erase",
 		Description: "Erase text",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
@@ -101,20 +101,9 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
-		Name:        "message_window",
-		Description: "Opens message window",
-		Category:    []string{"Misc"},
-		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "message", Optional: true, Datatype: ui.DataTypeString},
-		},
-		RunFunc: func(app *App, args Arguments) {
-			//app.ViewManager.SelectedMessageView.OpenMessageSelectWindow("")
-		},
-	},
-	&SimpleCommand{
 		Name:        "scroll",
 		Description: "Scrolls currently active view",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
 			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
@@ -141,7 +130,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "select",
 		Description: "Select the currently highlighted element",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
@@ -162,7 +151,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "toggle",
 		Description: "Toggles the currently highlited element",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
@@ -366,7 +355,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "back",
 		Description: "Closes the active window",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		RunFunc: func(app *App, args Arguments) {
 			window := app.ViewManager.UIManager.CurrentWindow()
 			if window == nil {
@@ -418,7 +407,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "change_tab",
 		Description: "Change tab",
-		Category:    []string{"Misc"},
+		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "tab", Datatype: ui.DataTypeInt},
 		},

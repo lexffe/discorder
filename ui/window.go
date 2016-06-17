@@ -6,9 +6,7 @@ import (
 )
 
 const (
-	DefaultWindowBorderBG = termbox.ColorBlack
-	DefaultWindowBorderFG = termbox.ColorWhite
-	DefaultWindowFillBG   = termbox.ColorBlack
+	DefaultWindowFillBG = termbox.ColorBlack
 )
 
 type Window struct {
@@ -19,8 +17,8 @@ type Window struct {
 
 	Layer int
 
-	BorderBG, BorderFG termbox.Attribute
-	FillBG             termbox.Attribute
+	Border AttribPair
+	FillBG termbox.Attribute
 
 	Manager *Manager
 }
@@ -28,8 +26,6 @@ type Window struct {
 func NewWindow(manager *Manager) *Window {
 	w := &Window{
 		BaseEntity: &BaseEntity{},
-		BorderBG:   DefaultWindowBorderBG,
-		BorderFG:   DefaultWindowBorderFG,
 		FillBG:     DefaultWindowFillBG,
 		Manager:    manager,
 	}
@@ -92,8 +88,8 @@ func (w *Window) Draw() {
 			}
 
 			if atBorder || atTop || atBottom {
-				fg = w.BorderFG
-				bg = w.BorderBG
+				fg = w.Border.FG
+				bg = w.Border.BG
 			} else {
 				bg = w.FillBG
 			}

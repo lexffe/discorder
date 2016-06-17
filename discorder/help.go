@@ -46,7 +46,7 @@ func NewHelpWindow(app *App) *HelpWindow {
 		text.Transform.AnchorMin = common.NewVector2I(0, 0)
 		text.Transform.AnchorMax = common.NewVector2I(1, 0)
 		text.Transform.Position = common.NewVector2I(0, curY)
-		app.ApplyThemeToText(text, "text_other")
+		app.ApplyThemeToText(text, "text_window_normal")
 		text.Text = v
 		curY += text.HeightRequired()
 		window.Transform.AddChildren(text)

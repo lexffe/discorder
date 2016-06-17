@@ -61,15 +61,17 @@ func (app *App) ApplyThemeToMenu(menu *ui.MenuWindow) {
 	menu.StyleMarkedSelected = app.GetThemeAttribPair("element_selected_marked").AttribPair()
 	menu.StyleInputNormal = app.GetThemeAttribPair("element_input_normal").AttribPair()
 
-	app.ApplyThemeToText(menu.SearchInput.Text, "text_special")
-	app.ApplyThemeToText(menu.InfoText, "text_other")
+	app.ApplyThemeToText(menu.SearchInput.Text, "menu_search")
+	app.ApplyThemeToText(menu.InfoText, "menu_info_text")
+
+	menu.LowerWindow.Border = app.GetThemeAttribPair("menu_info_border").AttribPair()
+	menu.LowerWindow.FillBG = app.GetThemeAttribute("menu_info_fill", false)
 
 	app.ApplyThemeToWindow(menu.Window)
 }
 
 func (app *App) ApplyThemeToWindow(window *ui.Window) {
-	window.BorderFG = app.GetThemeAttribute("window_border", true)
-	window.BorderBG = app.GetThemeAttribute("window_border", false)
+	window.Border = app.GetThemeAttribPair("window_border").AttribPair()
 	window.FillBG = app.GetThemeAttribute("window_fill", false)
 }
 

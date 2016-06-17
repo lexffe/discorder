@@ -54,12 +54,16 @@ var DefaultTheme = []byte(`{
 		},
 		"window_fill": { "bg": {"color": "black"} },
 		
+		"menu_info_border": {"bg": {"color": "black"}},
+		"menu_info_fill": {"bg": {"color": "black"}},
+		"menu_info_text": {"bg": {"color": "black"}},
+		"menu_search": {"fg": {"color": "cyan"}, "bg": {"color": "black"}},
 		"element_normal": { "bg": {"color": "black"} },
 		"element_input_normal": { "fg": {"color": "yellow"}, "bg": {"color": "black"} },
 		"element_marked": { "bg": {"color": "yellow"} },
 		"element_selected": { "bg": {"color": "cyan"} },
 		"element_selected_marked": { "bg": {"color": "blue"} },
-		
+
 		"message_timestamp": { "fg": {"color": "blue"} },
 		"message_server_channel": { "fg": {"color": "green"} },
 		"message_direct_channel": { "fg": {"color": "magenta", "bold": true} },
@@ -70,12 +74,12 @@ var DefaultTheme = []byte(`{
 		"title_bar": { "fg": {"color": "green", "bold": true, "underline": true} },
 		"notifications_bar": { "bg": {"color": "blue"}	},
 		"typing_bar": { "fg": {"color": "cyan"}	},
-		"text_other": {},
-		"text_special": { "fg": {"color": "cyan"} },
+		
 		"text_window_normal": { "bg": {"color": "black"} },
 		"text_window_special": { "fg": {"color": "cyan"}, "bg": {"color": "black"} },
+		
+		
 		"input_chat": {},
-		"input_other": {},
 		"send_prompt": { "fg": {"color": "green", "bold": true}	},
 		"search": { "fg": {"color": "yellow", "bold": true}	},
 		
