@@ -353,6 +353,18 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:           "pin_message",
+		Description:    "Pins a message",
+		CustomExecText: "Pin!",
+		Category:       []string{"Discord"},
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "message", Description: "The message that will be pinned", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
+			&ArgumentDef{Name: "channel", Description: "The message that will be pinned", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
+		},
+		RunFunc: func(app *App, args Arguments) {
+		},
+	},
+	&SimpleCommand{
 		Name:        "back",
 		Description: "Closes the active window",
 		Category:    []string{"hidden"},
@@ -410,16 +422,46 @@ var SimpleCommands = []Command{
 		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "tab", Datatype: ui.DataTypeInt},
+			&ArgumentDef{Name: "change", Datatype: ui.DataTypeInt},
 		},
 		RunFunc: func(app *App, args Arguments) {
-			index, _ := args.Int("tab")
-			for _, tab := range app.ViewManager.Tabs {
-				if tab.Index == index {
-					app.ViewManager.SetActiveTab(tab)
-					return
+			index, ok := args.Int("tab")
+			if ok {
+				for _, tab := range app.ViewManager.Tabs {
+					if tab.Index == index {
+						app.ViewManager.SetActiveTab(tab)
+						return
+					}
+				}
+				app.ViewManager.CreateTab(index)
+				return
+			}
+
+			change, _ := args.Int("change")
+			if change == 0 || app.ViewManager.ActiveTab == nil {
+				return
+			}
+
+			curIndex := -1
+			for k, tab := range app.ViewManager.Tabs {
+				if tab == app.ViewManager.ActiveTab {
+					curIndex = k
+					break
 				}
 			}
-			app.ViewManager.CreateTab(index)
+
+			if curIndex == -1 {
+				return
+			}
+
+			curIndex += change
+			if curIndex < 0 {
+				curIndex = 0
+			} else if curIndex >= len(app.ViewManager.Tabs) {
+				curIndex = len(app.ViewManager.Tabs) - 1
+			}
+			tab := app.ViewManager.Tabs[curIndex]
+			app.ViewManager.SetActiveTab(tab)
 		},
 	},
 	&SimpleCommand{
