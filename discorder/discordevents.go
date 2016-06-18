@@ -122,7 +122,21 @@ func (app *App) messageAck(s *discordgo.Session, a *discordgo.MessageAck) {
 }
 
 func (app *App) guildSettingsUpdated(s *discordgo.Session, a *discordgo.UserGuildSettingsUpdate) {
+	app.Lock()
+	defer app.Unlock()
 
+	set := false
+	for k, settings := range app.guildSettings {
+		if settings.GuildID == a.GuildID {
+			app.guildSettings[k] = a.UserGuildSettings
+			set = true
+			break
+		}
+	}
+
+	if !set {
+		app.guildSettings = append(app.guildSettings, a.UserGuildSettings)
+	}
 }
 
 func (app *App) userSettingsUpdated(s *discordgo.Session, u *discordgo.UserSettingsUpdate) {
