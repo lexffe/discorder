@@ -17,6 +17,7 @@ type TypingRoutine struct {
 	app          *App
 	typingEvtIn  chan *discordgo.TypingStart
 	selfTypingIn chan string
+	msgEvtIn     chan string
 	typing       []*TypingWrapper
 	stop         chan *sync.WaitGroup
 }
@@ -24,8 +25,9 @@ type TypingRoutine struct {
 func NewTypingRoutine(app *App) *TypingRoutine {
 	return &TypingRoutine{
 		app:          app,
-		typingEvtIn:  make(chan *discordgo.TypingStart),
+		typingEvtIn:  make(chan *discordgo.TypingStart, 5), // Add buffers to make it smooth
 		selfTypingIn: make(chan string, 5),
+		msgEvtIn:     make(chan string, 5),
 		typing:       make([]*TypingWrapper, 0),
 		stop:         make(chan *sync.WaitGroup),
 	}
@@ -70,6 +72,13 @@ func (t *TypingRoutine) Run() {
 				t.typing = append(t.typing, &TypingWrapper{t: typingEvt, last: time.Now()})
 			}
 			t.Unlock()
+		case user := <-t.msgEvtIn:
+			for k, v := range t.typing {
+				if v.t.UserID == user {
+					t.typing = append(t.typing[:k], t.typing[k+1:]...)
+					break
+				}
+			}
 		case wg := <-t.stop:
 			ticker.Stop()
 			wg.Done()

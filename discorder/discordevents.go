@@ -39,6 +39,10 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 		authorId = m.Author.ID
 	}
 
+	if app.typingRoutine != nil {
+		app.typingRoutine.msgEvtIn <- authorId
+	}
+
 	// Happens when we haven't received ready yet
 	// TODO Put them in queue instead
 	if app.session.State.User == nil {
