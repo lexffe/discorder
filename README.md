@@ -1,6 +1,6 @@
 # Discorder
 
-An interactive command line discord client, currently in it's alpha state, so bugs will be found.
+Discorder is an interactive command line alternative discord client.
 
 Discord server: https://discord.gg/0vYlUK2XBKlmxGrX
 
@@ -18,9 +18,9 @@ Try the latest alpha version here: https://github.com/jonas747/discorder/release
 
 ####compiling from repo
 
-You need go and git installed
+You need go and git installed, and your gopath set up
 
-run this command: `go get -u github.com/jonas747/discorder`
+run this command: `go get -u github.com/jonas747/discorder/cmd/discorder`
 
 (-u: to force an update if you have a older version)
 
@@ -28,35 +28,48 @@ After that there should be a built executable in your $GOPATH/bin folder
 
 ##Features
 
-Yup, very much in development.
+Note: Discorder still lacks a lot of features, so i wouldn't consider using it as a full replacement just yet
 
- - Should be light on resource usage
-     + Maybe not so much in this early development stage where everything is still getting set up
- - Voice support will be added laaaaaater
+ - Light on resource usage
+     + This depends on how many tabs you have open and how many channels you're listening in on offcourse
+     + Maybe not so much in this early development stage where everything is still getting set up and organised, but will be a focus later on
+ - Customizeble
+     + Discorder is very customizable, you can change the looks of it with your own themes and change the keybinds (See doc for more info) 
 
-Current alpha release has the following implemented:
+Feature list:
 
- - Sending/receiving messages
-     + You also received the changes when they get edited and removed
- - Sending/receiving direct messages EXCEPT for initiating new conversations
- - State will be saved when you leave and restored when you open again
- - Listen in on multiple channels at once!
- - History is fetched of each channel you're listening on
- - @mention autocompletion
- - Typing status, both receiving and sending 
+- [x] Sending receiving messages and dm's
+- [x] Multiple channels in one view 
+- [x] Initiating new dm conversations
+- [x] Delete messages
+- [ ] Edit messages
+- [x] Custom keybinds
+- [x] Custom themes
+- [x] Notifications
+- [x] Change server notifications settings
+- [x] Mention auto completion
+- [x] Tabs
+- [x] Typing events
+- [x] History
+- [x] Persistent state, tabs will be saved to config when exiting
+- [x] Nicknames with optional hiding of nicknames
+- [ ] Change user settings
+- [ ] Discord status (idle status, game playing), you can set it using the command currently but not view it
+- [ ] Member list  
+- [ ] Message pinning
+- [ ] Server management
+- [ ] Voice
+- [ ] Friends and other relationship stuff (block etc)
 
 ## Usage
 
 Run the executable and follow the instructions on screen
 
-Controlls:
+Keybinds:
 
- - ctrl-o: Opens help 
- - ctrl-s: Select server/channel/private channel
- - ctrl-l: Clears the log, will later be changed to toggle hiding the log, and you can view the log in a seperate window, but thats for later...!
- - ctrl-q: Quit
- - backspace: closes the active window if any
- - arrow up/down go up/down in history and also select messages
+After you run it once, a keybind file will be generated in the config dir either at ~/.config/discorder for unix or %appdata%/discorder for windows
+
+Look there for keybinds
 
 ##Screenshots
 
