@@ -57,6 +57,12 @@ func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*Argume
 
 	serverId, _ := curArgs.String("server")
 
+	guild, err := s.app.session.State.Guild(serverId)
+	if err != nil {
+		log.Println("Failed to find guild in state", err)
+		return args
+	}
+
 	var settings *discordgo.UserGuildSettings
 	for _, v := range s.app.guildSettings {
 		if v.GuildID == serverId {
@@ -65,14 +71,21 @@ func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*Argume
 	}
 
 	if settings == nil {
-		log.Println("Failed to find guild :(")
-		return args
-	}
+		settings = &discordgo.UserGuildSettings{
+			MessageNotifications: guild.DefaultMessageNotifications,
+			MobilePush:           true,
+			ChannelOverrides:     make([]*discordgo.UserGuildSettingsChannelOverride, 0),
+		}
 
-	guild, err := s.app.session.State.Guild(serverId)
-	if err != nil {
-		log.Println("Failed to find guild in state", err)
-		return args
+		for _, channel := range guild.Channels {
+			if channel.Type != "text" {
+				override := &discordgo.UserGuildSettingsChannelOverride{
+					MessageNotifications: MessageNotificationsServer,
+					ChannelID:            channel.ID,
+				}
+				settings.ChannelOverrides = append(settings.ChannelOverrides, override)
+			}
+		}
 	}
 
 	args[0].CurVal = serverId
