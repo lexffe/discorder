@@ -39,6 +39,10 @@ func (s *ServerNotificationSettingsCommand) GetCustomWindow() CustomCommandWindo
 	return nil
 }
 
+func (s *ServerNotificationSettingsCommand) GetIgnoreFilter() bool {
+	return false
+}
+
 func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*ArgumentDef {
 	args := []*ArgumentDef{
 		&ArgumentDef{

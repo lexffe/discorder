@@ -110,31 +110,6 @@ func (mv *MessageView) RemoveChannel(channel string) {
 	}
 }
 
-func (mv *MessageView) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventResize || event.Type == termbox.EventKey {
-		mv.TextsDirty = true // ;)
-
-		// case termbox.KeyEnter:
-		// 	if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
-		// 		return
-		// 	}
-
-		// 	text := mv.MessageTexts[0]
-		// 	selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
-		// 	if !ok || selectedDisplayMsg.IsLogMessage {
-		// 		return
-		// 	}
-		// 	msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
-		// 	mv.App.ViewManager.SetActiveWindow(msw)
-		// }
-		// if mv.ScrollAmount != 0 {
-		// 	mv.App.ViewManager.input.Active = false
-		// } else {
-		// 	mv.App.ViewManager.input.Active = true
-		// }
-	}
-}
-
 func (mv *MessageView) Select() {
 	if mv.ScrollAmount <= 0 {
 		mv.App.ViewManager.SendFromTextBuffer()
@@ -175,6 +150,10 @@ func (mv *MessageView) Select() {
 	}
 
 	cw := NewCommandWindow(mv.App, 5, presetArgs, info)
+	extraCommands := mv.App.GenMessageCommands(msg)
+	commands := append(mv.App.Commands, extraCommands...)
+	cw.commands = commands
+
 	mv.App.ViewManager.AddWindow(cw)
 }
 

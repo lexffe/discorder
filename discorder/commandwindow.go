@@ -60,7 +60,6 @@ func (cw *CommandWindow) GenMenu() {
 			Decorative: true,
 		})
 	}
-
 	if cw.commands == nil {
 		cw.commands = cw.app.Commands
 	}
@@ -72,14 +71,16 @@ func (cw *CommandWindow) GenMenu() {
 	commands := cw.commands
 
 	// Filter out only the commands related to the provided args
-	if cw.providedArgs != nil && len(cw.providedArgs) > 0 {
-		commands = make([]Command, 0)
-		for _, v := range cw.app.Commands {
+	if len(cw.providedArgs) > 0 {
+
+		filtered := make([]Command, 0)
+		for _, v := range commands {
 			matches := cw.GetArgMatchesForCommand(v)
-			if len(matches) > 0 {
-				commands = append(commands, v)
+			if len(matches) > 0 || v.GetIgnoreFilter() {
+				filtered = append(filtered, v)
 			}
 		}
+		commands = filtered
 	}
 
 	for _, category := range cw.categories {

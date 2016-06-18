@@ -3,9 +3,13 @@ package discorder
 import (
 	"github.com/jonas747/discordgo"
 	"log"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+var linkRegex = regexp.MustCompile("[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)")
 
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
 	channel, err := app.session.State.Channel(channelId)
@@ -131,4 +135,49 @@ func (app *App) IsFirstChannelMessage(channelId, msgId string) bool {
 		return true
 	}
 	return false
+}
+
+func (app *App) GenMessageCommands(msg *discordgo.Message) []Command {
+	content := msg.ContentWithMentionsReplaced()
+
+	matches := linkRegex.FindAllString(content, -1)
+	if len(matches) < 1 && len(msg.Attachments) < 1 {
+		return nil
+	}
+
+	out := make([]Command, 0)
+	for _, v := range matches {
+		linkCopy := v
+		out = append(out, &SimpleCommand{
+			Name:         "Open " + v,
+			Description:  "Open the link using xdg-open or join the server",
+			IgnoreFilter: true,
+			RunFunc: func(app *App, args Arguments) {
+				go app.OpenLink(linkCopy)
+			},
+		})
+	}
+
+	for _, v := range msg.Attachments {
+		linkCopy := v.URL
+		out = append(out, &SimpleCommand{
+			Name:         "Open " + linkCopy,
+			Description:  "Open the link using xdg-open or join the server",
+			IgnoreFilter: true,
+			RunFunc: func(app *App, args Arguments) {
+				go app.OpenLink(linkCopy)
+			},
+		})
+		log.Println("assbutt")
+	}
+
+	return out
+}
+
+func (app *App) OpenLink(link string) {
+	cmd := exec.Command("xdg-open", link)
+	err := cmd.Run()
+	if err != nil {
+		log.Println("Failed to run opening link with xdg-open", err)
+	}
 }

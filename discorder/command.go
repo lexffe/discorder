@@ -20,6 +20,7 @@ type SimpleCommand struct {
 	RunFunc         func(app *App, args Arguments)
 	StatusFunc      func(app *App) string
 	CustomWindow    CustomCommandWindow
+	IgnoreFilter    bool
 }
 
 func (s *SimpleCommand) GetName() string {
@@ -74,6 +75,10 @@ func (s *SimpleCommand) GetCustomWindow() CustomCommandWindow {
 	return s.CustomWindow
 }
 
+func (s *SimpleCommand) GetIgnoreFilter() bool {
+	return s.IgnoreFilter
+}
+
 type Command interface {
 	GetName() string                          // Name of the command
 	GetDescription(app *App) string           // Decsription
@@ -83,7 +88,8 @@ type Command interface {
 	GetPreRunHelper() string                  // Helper to be ran before main exec window
 	GetCategory() []string                    // Category
 	GetExecText() string                      // Custom exec button text
-	Run(app *App, args Arguments)             // Called when the command should be run
+	GetIgnoreFilter() bool
+	Run(app *App, args Arguments) // Called when the command should be run
 }
 
 func (app *App) GenMenuItemFromCommand(cmd Command) *ui.MenuItem {
