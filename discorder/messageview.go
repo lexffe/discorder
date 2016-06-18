@@ -55,7 +55,7 @@ func NewMessageView(app *App) *MessageView {
 	t.Transform.Position.Y = -1
 	t.Layer = 6
 
-	app.ApplyThemeToText(t, "text_special")
+	app.ApplyThemeToText(t, "scroll_text")
 
 	mv.Transform.AddChildren(t)
 	mv.ScrollText = t

@@ -75,6 +75,8 @@ var DefaultTheme = []byte(`{
 		"message_content": {},
 		"message_log": {"fg": {"color":"yellow"}},
 		
+		"scroll_text": {"fg": {"color": "cyan"}},
+
 		"title_bar": { "fg": {"color": "green", "bold": true, "underline": true} },
 		"notifications_bar": { "bg": {"color": "blue"}	},
 		"typing_bar": { "fg": {"color": "cyan"}	},
