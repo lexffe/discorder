@@ -11,7 +11,7 @@ const (
 	VERSION_MAJOR = 0
 	VERSION_MINOR = 4
 	VERSION_PATCH = 0
-	VERSION_NOTE  = "Salty-Git"
+	VERSION_NOTE  = "Amusing-RC1"
 )
 
 var (
