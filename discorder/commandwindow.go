@@ -153,7 +153,6 @@ func (cw *CommandWindow) Select() {
 		customWindow.Run(cw.app, 7)
 		return
 	}
-
 	var presetArgs Arguments
 	if len(cw.providedArgs) > 0 {
 		presetArgs = make(map[string]interface{})
@@ -179,7 +178,9 @@ func (cw *CommandWindow) Select() {
 	}
 
 	execWindow := NewCommandExecWindow(7, cw.app, cmd, presetArgs)
-	cw.app.ViewManager.AddWindow(execWindow)
+	if execWindow != nil {
+		cw.app.ViewManager.AddWindow(execWindow)
+	}
 
 	//cw.Transform.Parent.RemoveChild(cw, true)
 }

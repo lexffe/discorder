@@ -31,7 +31,7 @@ func (s *ServerNotificationSettingsCommand) GetPreRunHelper() string {
 	return "server"
 }
 
-func (s *ServerNotificationSettingsCommand) GetArgPairs() [][]string {
+func (s *ServerNotificationSettingsCommand) GetArgCombinations() [][]string {
 	return nil
 }
 

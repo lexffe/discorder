@@ -56,7 +56,11 @@ func NewCommandExecWindow(layer int, app *App, command Command, presetArgs Argum
 	if preRunHelper != "" {
 		execWindow.RunPreHelper(preRunHelper)
 	} else {
-		execWindow.GenMenu()
+		if !execWindow.CheckAutoExec() {
+			execWindow.GenMenu()
+		} else {
+			return nil
+		}
 	}
 
 	return execWindow
@@ -86,7 +90,9 @@ func (cew *CommandExecWindow) RunPreHelper(helperArg string) {
 			cew.curArgs = make(map[string]interface{})
 		}
 		cew.curArgs[helperArg] = ParseArgumentString(result, arg.Datatype)
-		cew.GenMenu()
+		if !cew.CheckAutoExec() {
+			cew.GenMenu()
+		}
 	})
 }
 
@@ -162,7 +168,7 @@ func (cew *CommandExecWindow) Select() {
 	case CustomMenuType:
 		switch t {
 		case CustomMenuExecute:
-			cew.Execute()
+			cew.Execute(true)
 		}
 	// Run a argument helper if any
 	case *ArgumentDef:
@@ -186,10 +192,19 @@ func (cew *CommandExecWindow) Rebuild() {
 	cew.GenMenu()
 }
 
-func (cew *CommandExecWindow) Execute() {
-	args := cew.ParseArgs()
+func (cew *CommandExecWindow) Execute(parseArgs bool) {
+	args := cew.curArgs
+	if parseArgs {
+		args = cew.ParseArgs()
+	}
 	cew.app.RunCommand(cew.command, Arguments(args))
-	cew.Transform.Parent.RemoveChild(cew, true)
+	parent := cew.Transform.Parent
+	if parent != nil {
+		cew.Transform.Parent.RemoveChild(cew, true)
+	} else {
+		// Manually destroy
+		cew.Destroy()
+	}
 }
 
 func (cew *CommandExecWindow) ParseArgs() Arguments {
@@ -199,9 +214,52 @@ func (cew *CommandExecWindow) ParseArgs() Arguments {
 			continue
 		}
 		buf := item.Input.TextBuffer
+		if buf == "" {
+			continue
+		}
 		args[item.Name] = ParseArgumentString(buf, item.InputType)
 	}
 	return args
+}
+
+func (cew *CommandExecWindow) CheckAutoExec() bool {
+	args := cew.curArgs
+	argDefs := cew.command.GetArgs(cew.curArgs)
+
+	if len(args) < 1 && len(argDefs) < 1 {
+		cew.Execute(false)
+		return true
+	} else if len(args) < 1 {
+		return false
+	}
+
+	combinations := cew.command.GetArgCombinations()
+
+	if len(combinations) > 0 {
+	OUTER:
+		for _, combination := range combinations {
+			for _, step := range combination {
+				found := false
+				for key, _ := range args {
+					if key == step {
+						found = true
+						break
+					}
+				}
+				if !found {
+					continue OUTER
+				}
+			}
+			// all steps of the combination matched
+			cew.Execute(false)
+			return true
+		}
+	} else if len(args) == len(argDefs) {
+		cew.Execute(false)
+		return true
+	}
+
+	return false
 }
 
 func ParseArgumentString(arg string, dataType ui.DataType) interface{} {

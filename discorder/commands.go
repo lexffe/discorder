@@ -198,7 +198,7 @@ var SimpleCommands = []Command{
 			&ArgumentDef{Name: "message", Description: "Specify a message id", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
 			&ArgumentDef{Name: "channel", Description: "Specify a channel id", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
 		},
-		ArgPairs: [][]string{[]string{"last_yours"}, []string{"last_any"}, []string{"message", "channel"}},
+		ArgCombinations: [][]string{[]string{"last_yours"}, []string{"last_any"}, []string{"message", "channel"}},
 		RunFunc: func(app *App, args Arguments) {
 			// We need to be logged in
 			if app.session == nil {
