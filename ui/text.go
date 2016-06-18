@@ -86,12 +86,15 @@ func (t *Text) Draw() {
 				curAttribs = *newAttribs
 			}
 		}
-
+		charWidth := runewidth.RuneWidth(char)
+		if charWidth == 0 {
+			continue
+		}
 		if char != '\n' {
 			if skip <= 0 {
 				termbox.SetCell(x+int(rect.X), y+int(rect.Y), char, curAttribs.FG, curAttribs.BG)
 			}
-			x++
+			x += charWidth
 		} else {
 			x = width
 		}

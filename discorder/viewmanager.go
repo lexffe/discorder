@@ -5,9 +5,9 @@ import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
+	"github.com/jonas747/go-runewidth"
 	"log"
 	"sort"
-	"unicode/utf8"
 )
 
 type ViewManager struct {
@@ -65,7 +65,7 @@ func (v *ViewManager) OnInit() {
 	header.Text = "Discorder v" + VERSION + "(´ ▽ ` )ﾉ"
 	header.Transform.AnchorMin = common.NewVector2F(0.5, 0)
 	header.Transform.AnchorMax = common.NewVector2F(0.5, 0)
-	header.Transform.Position.X = float32(-utf8.RuneCountInString(header.Text) / 2)
+	header.Transform.Position.X = float32(-runewidth.StringWidth(header.Text) / 2)
 
 	rootContainer.Transform.AddChildren(header)
 	v.header = header
@@ -124,7 +124,7 @@ func (v *ViewManager) OnInit() {
 	footerContainer.Transform.AddChildren(inputHelper)
 
 	inputHelper.Text = "Select a channel to send to"
-	length := utf8.RuneCountInString(inputHelper.Text)
+	length := runewidth.StringWidth(inputHelper.Text)
 	v.MainInput.Transform.Left = length + 1
 
 	// Mention autocompleter
@@ -187,7 +187,7 @@ func (v *ViewManager) Update() {
 		}
 
 		v.inputHelper.Text = preStr + "#" + name + ":"
-		length := utf8.RuneCountInString(v.inputHelper.Text)
+		length := runewidth.StringWidth(v.inputHelper.Text)
 		v.inputHelper.Transform.Size.X = float32(length)
 		v.MainInput.Transform.Left = length
 	}
