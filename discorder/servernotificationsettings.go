@@ -35,6 +35,10 @@ func (s *ServerNotificationSettingsCommand) GetArgPairs() [][]string {
 	return nil
 }
 
+func (s *ServerNotificationSettingsCommand) GetCustomWindow() CustomCommandWindow {
+	return nil
+}
+
 func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*ArgumentDef {
 	args := []*ArgumentDef{
 		&ArgumentDef{

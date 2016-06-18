@@ -50,7 +50,7 @@ var DefaultTheme = []byte(`{
     "name": "Default theme",
     "author": "jonas747",
     "comment": "The default discorder theme",
-    "color_mode": 0,
+    "color_mode": 1,
     "theme":{
 		"window_border": {
 			"fg": {"color": "white", "bold": true},

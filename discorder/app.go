@@ -419,11 +419,9 @@ func (app *App) InitializeConfigFiles() error {
 
 	// Load user theme
 	if app.options.CustomThemePath != "" {
-		app.userTheme = LoadTheme(app.options.CustomThemePath)
-		log.Println("Loading theme ", app.options.CustomThemePath)
+		app.SetUserTheme(LoadTheme(app.options.CustomThemePath))
 	} else if app.config.Theme != "" {
-		log.Println("Loading theme ", filepath.Join(themesDir, app.config.Theme))
-		app.userTheme = LoadTheme(filepath.Join(themesDir, app.config.Theme))
+		app.SetUserTheme(LoadTheme(filepath.Join(themesDir, app.config.Theme)))
 	}
 	return nil
 }

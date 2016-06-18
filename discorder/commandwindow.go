@@ -148,6 +148,12 @@ func (cw *CommandWindow) Select() {
 		return // We must be doing something very wrong somewhere
 	}
 
+	customWindow := cmd.GetCustomWindow()
+	if customWindow != nil {
+		customWindow.Run(cw.app, 7)
+		return
+	}
+
 	var presetArgs Arguments
 	if len(cw.providedArgs) > 0 {
 		presetArgs = make(map[string]interface{})

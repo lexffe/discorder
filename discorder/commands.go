@@ -82,7 +82,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "help",
 		Description: "Opens up the help window",
-		Category: []string{"Windows"}
+		Category:    []string{"Windows"},
 		RunFunc: func(app *App, args Arguments) {
 			if app.ViewManager.CanOpenWindow() {
 				hw := NewHelpWindow(app)
@@ -182,6 +182,11 @@ var SimpleCommands = []Command{
 			app.userTheme = LoadTheme(userTheme)
 			app.ViewManager.ApplyTheme()
 		},
+	},
+	&SimpleCommand{
+		Name:         "theme_window",
+		Description:  "Select a theme",
+		CustomWindow: &ThemeCommandWindow{},
 	},
 	&SimpleCommand{
 		Name:        "delete_message",

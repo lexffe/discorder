@@ -511,6 +511,8 @@ func (mw *MenuWindow) Select() {
 		mw.CurDir = append(mw.CurDir, highlighted.Name)
 		mw.Dirty = true
 		mw.shouldResetHighlight = true
+	} else if mw.OnSelect != nil {
+		mw.OnSelect(highlighted)
 	}
 }
 

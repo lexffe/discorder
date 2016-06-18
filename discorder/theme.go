@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/termbox-go"
+	"io/ioutil"
 	"log"
+	"path/filepath"
 )
 
 type Theme struct {
@@ -162,4 +164,28 @@ var Colors = map[string]uint8{
 	"magenta": 6,
 	"cyan":    7,
 	"white":   8,
+}
+
+func (app *App) GetAvailableThemes() ([]string, error) {
+	files, err := ioutil.ReadDir(filepath.Join(app.configDir, "themes"))
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]string, 0)
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		out = append(out, file.Name())
+	}
+	return out, nil
+}
+
+func (app *App) SetUserTheme(theme *Theme) {
+	app.userTheme = theme
+	termbox.SetOutputMode(termbox.OutputMode(theme.ColorMode))
+	log.Println("Set theme to ", theme.Name)
+
 }

@@ -19,6 +19,7 @@ type SimpleCommand struct {
 	PreRunHelper   string
 	RunFunc        func(app *App, args Arguments)
 	StatusFunc     func(app *App) string
+	CustomWindow   CustomCommandWindow
 }
 
 func (s *SimpleCommand) GetName() string {
@@ -69,11 +70,16 @@ func (s *SimpleCommand) GetArgPairs() [][]string {
 	return s.ArgPairs
 }
 
+func (s *SimpleCommand) GetCustomWindow() CustomCommandWindow {
+	return s.CustomWindow
+}
+
 type Command interface {
 	GetName() string                          // Name of the command
 	GetDescription(app *App) string           // Decsription
 	GetArgs(curArgs Arguments) []*ArgumentDef // Argumend definitions
 	GetArgPairs() [][]string                  // Returns possible argument pairs
+	GetCustomWindow() CustomCommandWindow     // An optional custom command window
 	GetPreRunHelper() string                  // Helper to be ran before main exec window
 	GetCategory() []string                    // Category
 	GetExecText() string                      // Custom exec button text
