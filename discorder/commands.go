@@ -464,6 +464,13 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:        "remove_tab",
+		Description: "Removes the active tab",
+		RunFunc: func(app *App, args Arguments) {
+			app.ViewManager.RemoveTab(app.ViewManager.ActiveTab)
+		},
+	},
+	&SimpleCommand{
 		Name:        "quit",
 		Description: "Quit discorder",
 		RunFunc: func(app *App, args Arguments) {

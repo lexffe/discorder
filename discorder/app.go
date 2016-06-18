@@ -129,7 +129,6 @@ func (app *App) Login(user, password, token string) error {
 	app.session.AddHandler(app.messageAck)
 	app.session.AddHandler(app.guildSettingsUpdated)
 	app.session.AddHandler(app.userSettingsUpdated)
-	app.session.AddHandler(app.guildCreated)
 
 	err = session.Open()
 	if err == nil {

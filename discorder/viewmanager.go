@@ -316,6 +316,17 @@ func (v *ViewManager) CreateTab(index int) {
 	v.UpdateTabIndicators()
 }
 
+func (v *ViewManager) RemoveTab(t *Tab) {
+	for k, ct := range v.Tabs {
+		if ct == t {
+			ct.Destroy()
+			v.Tabs = append(v.Tabs[:k], v.Tabs[k+1:]...)
+			v.UpdateTabIndicators()
+			break
+		}
+	}
+}
+
 func (v *ViewManager) SetActiveTab(t *Tab) {
 	if t == v.ActiveTab {
 		return
@@ -327,14 +338,7 @@ func (v *ViewManager) SetActiveTab(t *Tab) {
 		v.UIManager.RemoveWindow(v.ActiveTab.MessageView)
 		if len(v.ActiveTab.MessageView.Channels) < 1 && !v.ActiveTab.MessageView.ShowAllPrivate {
 			// Remove it
-			for k, ct := range v.Tabs {
-				if ct == v.ActiveTab {
-					ct.Destroy()
-					v.Tabs = append(v.Tabs[:k], v.Tabs[k+1:]...)
-					v.UpdateTabIndicators()
-					break
-				}
-			}
+			v.RemoveTab(v.ActiveTab)
 		}
 	}
 

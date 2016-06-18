@@ -140,25 +140,8 @@ func (app *App) guildSettingsUpdated(s *discordgo.Session, a *discordgo.UserGuil
 }
 
 func (app *App) userSettingsUpdated(s *discordgo.Session, u *discordgo.UserSettingsUpdate) {
-	// for k, v := range map[string]interface{}(*u) {
-	// 	switch k {
-	// 	case "theme":
-	// 		str, _ := v.(string)
-	// 		app.settings.Theme = str
-	// 	case "friend_source_flags":
-	// 		flags, ok := v.(map[string]interface{})
-	// 		log.Println(ok, flags)
-	// 	case "restricted_guilds":
-	// 		slice, ok := v.([]interface{})
-	// 		log.Println(ok, slice)
-	// 	}
-	// }
 }
 
 func (app *App) typingStart(s *discordgo.Session, t *discordgo.TypingStart) {
 	app.typingRoutine.typingEvtIn <- t
-}
-
-func (app *App) guildCreated(s *discordgo.Session, g *discordgo.GuildCreate) {
-	//log.Println("Guild created!", g.Guild)
 }
