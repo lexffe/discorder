@@ -52,7 +52,8 @@ func NewMessageView(app *App) *MessageView {
 	t := ui.NewText()
 	t.Transform.AnchorMin.Y = 1
 	t.Transform.AnchorMax = common.NewVector2I(1, 1)
-	t.Layer = 5
+	t.Transform.Position.Y = -1
+	t.Layer = 6
 
 	app.ApplyThemeToText(t, "text_special")
 
@@ -157,19 +158,6 @@ func (mv *MessageView) Select() {
 	mv.App.ViewManager.AddWindow(cw)
 }
 
-func (mv *MessageView) OpenMessageSelectWindow(msg string) {
-	// if mv.ScrollAmount < 1 || len(mv.MessageTexts) < 1 {
-	// 	return
-	// }
-
-	// text := mv.MessageTexts[0]
-	// selectedDisplayMsg, ok := text.Userdata.(*DisplayMessage)
-	// if !ok || selectedDisplayMsg.IsLogMessage {
-	// 	return
-	// }
-	// msw := NewMessageSelectedWindow(mv.App, selectedDisplayMsg.DiscordMessage)
-}
-
 func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
 	switch dir {
 	case ui.DirUp:
@@ -184,6 +172,13 @@ func (mv *MessageView) Scroll(dir ui.Direction, amount int) {
 	case ui.DirEnd, ui.DirStart:
 		mv.ScrollAmount = 0
 		mv.DisplayMessagesDirty = true
+	}
+
+	if mv.ScrollAmount > 0 {
+		mv.ScrollText.Text = fmt.Sprintf("Scroll: %d", mv.ScrollAmount)
+		mv.ScrollText.Disabled = false
+	} else {
+		mv.ScrollText.Disabled = true
 	}
 }
 
@@ -219,7 +214,10 @@ func (mv *MessageView) BuildTexts() {
 
 	rect := mv.Transform.GetRect()
 
-	realScroll := mv.ScrollAmount
+	realScroll := mv.ScrollAmount - 1
+	if realScroll == -1 {
+		realScroll = 0
+	}
 	y := int(rect.H) + realScroll
 	padding := 0
 
@@ -326,7 +324,7 @@ func (mv *MessageView) BuildTexts() {
 			} else {
 				break
 			}
-		} else if y > int(rect.H) {
+		} else if y >= int(rect.H) {
 			continue
 		}
 
