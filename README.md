@@ -1,14 +1,10 @@
 # Discorder
 
-Discorder is an interactive command line alternative discord client.
+Discorder is an interactive command line discord client.
 
 Discord server: https://discord.gg/0vYlUK2XBKlmxGrX
 
 Join for updates, to suggest stuff, complain about stuff, or just talk about stuff
-
-## Dev branch
-
-You are currently on the dev branch, things here may be breaking left and right so be carefull
 
 ##Installing/Running
 
@@ -60,6 +56,7 @@ Feature list:
 - [ ] Server management
 - [ ] Voice
 - [ ] Friends and other relationship stuff (block etc)
+- [ ] Invite (you can open them but not create)
 
 ## Usage
 
@@ -70,6 +67,15 @@ Keybinds:
 After you run it once, a keybind file will be generated in the config dir either at ~/.config/discorder for unix or %appdata%/discorder for windows
 
 Look there for keybinds
+
+## Dependencies
+
+Discorder depends on termbox, discordgo, and go-runewidth which should be staticly compiled in automaticly
+
+#### Optional dependencies
+
+ - xdg-open: Used for opening links
+ - notify-send: Used for notifications
 
 ##Screenshots
 
