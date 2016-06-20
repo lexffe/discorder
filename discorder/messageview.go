@@ -249,9 +249,9 @@ func (mv *MessageView) BuildTexts() {
 			ts := ""
 			thenYear, thenMonth, thenDay := item.Timestamp.Date()
 			if thisYear == thenYear && thisMonth == thenMonth && thisDay == thenDay {
-				ts = item.Timestamp.Local().Format("15:04:05")
+				ts = item.Timestamp.Local().Format(mv.App.config.GetTimeFormatSameDay())
 			} else {
-				ts = item.Timestamp.Local().Format(time.Stamp)
+				ts = item.Timestamp.Local().Format(mv.App.config.GetTimeFormatFull())
 			}
 			ts += " "
 			tsLen := utf8.RuneCountInString(ts)

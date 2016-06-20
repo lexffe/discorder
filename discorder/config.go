@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -20,6 +21,9 @@ type Config struct {
 	Theme     string `json:"theme"`
 
 	Tabs []*TabConfig `json:"tabs"`
+
+	TimeFormatSameDay string `json:"time_format_same_day"`
+	TimeFormatFull    string `json:"time_format_full"`
 
 	// General settings
 	ShortGuilds   bool `json:"short_guilds"`
@@ -32,6 +36,25 @@ type TabConfig struct {
 	SendChannel       string   `json:"send_channel"`
 	ListeningChannels []string `json:"listening_cannels"`
 	Index             int      `json:"index"`
+}
+
+const (
+	DefaultTimeFormatSameDay = "15:04:05"
+	DefaultTimeFormatFull    = time.Stamp
+)
+
+func (c *Config) GetTimeFormatSameDay() string {
+	if c.TimeFormatSameDay == "" {
+		return DefaultTimeFormatSameDay
+	}
+	return c.TimeFormatSameDay
+}
+
+func (c *Config) GetTimeFormatFull() string {
+	if c.TimeFormatFull == "" {
+		return DefaultTimeFormatFull
+	}
+	return c.TimeFormatFull
 }
 
 func LoadOrCreateConfig(path string) (*Config, error) {

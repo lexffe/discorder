@@ -405,14 +405,39 @@ var SimpleCommands = []Command{
 				return strconv.FormatBool(app.config.ShortGuilds)
 			}}, &ArgumentDef{Name: "hide_nicknames", Description: "Shows usernames instead of nicknames if true", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.HideNicknames)
+			}}, &ArgumentDef{Name: "time_format_full", Description: "Sets the full time format", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
+				return app.config.GetTimeFormatFull()
+			}}, &ArgumentDef{Name: "time_format_short", Description: "Sets the short time format (for messages on the same day)", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
+				return app.config.GetTimeFormatSameDay()
 			}},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			shortGuilds, _ := args.Bool("short_guilds")
 			hideNicks, _ := args.Bool("hide_nicknames")
+
+			formatFull, _ := args.String("time_format_full")
+			formatShort, _ := args.String("time_format_short")
+
+			displayFormatFull := formatFull
+
+			if formatFull == DefaultTimeFormatFull || formatFull == "" {
+				formatFull = ""
+				displayFormatFull = "Default"
+			}
+
+			displayFormatShort := formatShort
+
+			if formatShort == DefaultTimeFormatSameDay || formatShort == "" {
+				formatShort = ""
+				displayFormatShort = "Default"
+			}
+
 			app.config.ShortGuilds = shortGuilds
 			app.config.HideNicknames = hideNicks
-			log.Printf("Set short_guilds: %v; hide_nicknames: %v", shortGuilds, hideNicks)
+			app.config.TimeFormatFull = formatFull
+			app.config.TimeFormatSameDay = formatShort
+
+			log.Printf("Set short_guilds: %v; hide_nicknames: %v, time_format_same_day: %v, time_format_full: %v", shortGuilds, hideNicks, displayFormatShort, displayFormatFull)
 		},
 	},
 	&SimpleCommand{
