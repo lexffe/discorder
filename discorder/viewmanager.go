@@ -135,6 +135,7 @@ func (v *ViewManager) OnInit() {
 	v.tabContainer = ui.NewAutoLayoutContainer()
 	v.tabContainer.Transform.Size.Y = 1
 	v.tabContainer.LayoutType = ui.LayoutTypeHorizontal
+	v.tabContainer.Spacing = 1
 	v.tabContainer.ForceExpandHeight = true
 	v.rootContainer.Transform.AddChildren(v.tabContainer)
 
