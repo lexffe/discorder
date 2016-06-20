@@ -121,6 +121,7 @@ func (ssw *ServerSelectWindow) GenMenu() {
 		Highlighted: true,
 		IsCategory:  true,
 		Children:    make([]*ui.MenuItem, len(state.PrivateChannels)),
+		UserData:    "DM",
 	}
 
 	for i, channel := range state.PrivateChannels {
@@ -233,7 +234,6 @@ OUTER:
 		return true
 	})
 
-	ssw.messageView.ShowAllPrivate = toggleTo
 	ssw.menuWindow.Dirty = true
 }
 
@@ -267,4 +267,22 @@ func (ssw *ServerSelectWindow) ToggleChannel(channel *discordgo.Channel, element
 
 func (ssw *ServerSelectWindow) ToggleDirectMessages() {
 
+	toggleTo := true
+	if ssw.messageView.ShowAllPrivate {
+		toggleTo = false
+	}
+
+	ssw.menuWindow.RunFunc(func(item *ui.MenuItem) bool {
+		cast, ok := item.UserData.(*discordgo.Channel)
+		if ok && cast.IsPrivate {
+			item.Marked = toggleTo
+			if !toggleTo {
+				ssw.messageView.RemoveChannel(cast.ID)
+			}
+		}
+		return true
+	})
+
+	ssw.messageView.ShowAllPrivate = toggleTo
+	ssw.menuWindow.Dirty = true
 }

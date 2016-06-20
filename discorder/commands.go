@@ -471,6 +471,21 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:        "rename_tab",
+		Description: "Renames the currently selected tab",
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "name", Description: "The name you want to give", Datatype: ui.DataTypeString},
+		},
+		RunFunc: func(app *App, args Arguments) {
+			tab := app.ViewManager.ActiveTab
+			if tab == nil {
+				return
+			}
+			name, _ := args.String("name")
+			tab.SetName(name)
+		},
+	},
+	&SimpleCommand{
 		Name:        "quit",
 		Description: "Quit discorder",
 		RunFunc: func(app *App, args Arguments) {
