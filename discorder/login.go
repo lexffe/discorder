@@ -7,7 +7,7 @@ import (
 )
 
 func OpenLoginWindow(app *App) *CommandWindow {
-	cmdWindow := NewCommandWindow(app, 5, nil, "Because of discord api restrictions i can not add 2 factor authentication, they made it very clear that only official clients can use that api endpoint so go nag them and not me about it\n\nITo grab a token from the official client, open the developer tools with 'ctrl-i' and enter this into the console\n'localStorage.getItem(\"token\")'\nThen copy the token without the quotes\n")
+	cmdWindow := NewCommandWindow(app, 5, nil, "Because of discord api restrictions i can not add 2 factor authentication, they made it very clear that only official clients can use that api endpoint so go nag them and not me about it\n\nTo grab a token from the official client, open the developer tools with 'ctrl-i' and enter this into the console\n'localStorage.getItem(\"token\")'\nThen copy the token without the quotes\n")
 	cmdWindow.menuWindow.SearchInput.SetActive(false)
 	cmdWindow.commands = LoginCommands
 	cmdWindow.categories = []*CommandCategory{}
