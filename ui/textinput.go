@@ -141,27 +141,49 @@ func (ti *TextInput) MoveCursor(dir Direction, amount int, byWords bool) {
 
 func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
 	bufLen := utf8.RuneCountInString(ti.TextBuffer)
+
+	if byWords {
+
+		switch dir {
+		case DirLeft:
+			spaces := make([]int, 1)
+
+			i := 0
+			for _, v := range ti.TextBuffer {
+				if v == ' ' || v == '_' || v == '-' {
+					spaces = append(spaces, i)
+				}
+
+				if i >= ti.CursorLocation {
+					break
+				}
+				i++
+			}
+
+			if amount >= len(spaces) {
+				amount = ti.CursorLocation
+			} else {
+				amount = ti.CursorLocation - spaces[len(spaces)-amount]
+			}
+
+		}
+
+	}
+
 	switch dir {
 	case DirLeft:
-		if bufLen == 0 {
+		if bufLen == 0 || ti.CursorLocation == 0 {
 			return
 		}
-		if ti.CursorLocation == bufLen {
-			_, size := utf8.DecodeLastRuneInString(ti.TextBuffer)
-			ti.CursorLocation--
-			ti.TextBuffer = ti.TextBuffer[:len(ti.TextBuffer)-size]
-		} else if ti.CursorLocation == 1 {
-			_, size := utf8.DecodeRuneInString(ti.TextBuffer)
-			ti.CursorLocation--
-			ti.TextBuffer = ti.TextBuffer[size:]
-		} else if ti.CursorLocation == 0 {
-			return
-		} else {
-			runeSlice := []rune(ti.TextBuffer)
-			newSlice := append(runeSlice[:ti.CursorLocation-1], runeSlice[ti.CursorLocation:]...)
-			ti.TextBuffer = string(newSlice)
-			ti.CursorLocation--
+
+		runeSlice := []rune(ti.TextBuffer)
+		runeSlice = append(runeSlice[:ti.CursorLocation-amount], runeSlice[ti.CursorLocation:]...)
+		ti.TextBuffer = string(runeSlice)
+		ti.CursorLocation -= amount
+		if ti.CursorLocation < 0 {
+			ti.CursorLocation = 0
 		}
+
 	case DirRight:
 		if ti.CursorLocation >= bufLen {
 			break

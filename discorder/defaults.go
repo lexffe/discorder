@@ -23,6 +23,7 @@ var DefaultKeybinds = []byte(`[
 	
 	{"key": "Backspace", "command": "erase", "args": {"amount": 1, "direction": "left"}},
 	{"key": "Backspace2", "command": "erase", "args": {"amount": 1, "direction": "left"}},
+	{"key": "CtrlW", "command": "erase", "args": {"amount": 1, "direction": "left", "words": true}},
 	{"key": "Delete", "command": "erase", "args": {"amount": 1, "direction": "right"}},
 		
 	{"key": "Alt+Backspace", "command": "back"},
