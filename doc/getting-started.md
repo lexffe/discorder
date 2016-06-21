@@ -6,12 +6,12 @@ Discorder is a interactive command line client for discord, this file will help 
 
 First you download discorder, or if you want clone the repo and build it yourself.
 
-You can place discorder anywhere, it will use ~/.config/discorder (unix) and %APPDATA%/discorder (windows) for configuration files.
+You can place discorder anywhere, it will use `~/.config/discorder` (unix) and `%APPDATA%/discorder` (windows) for configuration files.
 
-After that you're pretty much set, you should out defaults.md for the default keybinds and theme
+After that you're pretty much set, you should check out [doc/defaults.md](https://github.com/jonas747/discorder/blob/master/doc/defaults.md) for the default keybinds and theme
 
 ### Customization
 
 Discorder is customizable, you can change the appearence and the keybindings.
 
-See keybinds and themeing for more info
+See [doc/keybinds.md](https://github.com/jonas747/discorder/blob/master/doc/keybinds.md) and [doc/themeing.md](https://github.com/jonas747/discorder/blob/master/doc/themeing.md) for more info

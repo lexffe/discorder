@@ -1,30 +1,30 @@
 # Configuring keybinds
 
-If you want to add/change/remove a keybind you can do that in your keybinds-user.json file in either ~/.config/discorder for unix systems or %APPDATA%/discorder windows
+If you want to add/change/remove a keybind you can do that in your keybinds-user.json file in either `~/.config/discorder` for unix systems or `%APPDATA%/discorder` windows
 
 There should also be a file called keybinds-default.json, changing this will have no effect as it's hardcoded into discorder, it's purpose is to show the defaults as a reference
 
-For a full list of commands see commands.md, special keys are listed at the bottom
+For a full list of commands see [doc/commands.md](https://github.com/jonas747/discorder/blob/master/doc/commands.md), special keys are listed at the bottom
 
 NOTES: Some keys will trigger eachother, check out the bottom for a list of keys with the same keycodes, Some keys will also flat out not work such as the esc key (Reason is because discorder runs using termbox alt mode and not esc mode as input)
 
 ### Change a Keybind
 
-If you want to change say the open server keybind from ctrl-s to ctrl-w you would put this into keybinds-user.json:
+If you want to change say the open server keybind from ctrl-s to ctrl-j you would put this into keybinds-user.json:
 
 ```json
 [
     {"key": "CtrlS", "command": "nop"},
-    {"key": "CtrlW", "command": "servers"}
+    {"key": "CtrlJ", "command": "servers"}
 ]
 ```
 
-First we unbind the CtrlS key to "nop" (No operation), since user binds overrides default binds, then we set CtrlW to servers
+First we unbind the CtrlS key to "nop" (No operation), since user binds overrides default binds, then we set CtrlJ to servers
 
 ### Sequences and arguments
 
 ```json
-{"key": "CtrlC-d", "command": "delete_message", "args":{"which": "last"}}
+{"key": "CtrlC-d", "command": "delete_message", "args":{"last_yours": true}}
 ```
 
 Here we have a key sequence, doing CtrlC and then d will delete our last message

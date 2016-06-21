@@ -1,12 +1,12 @@
 # Themeing
 
-Themes are located in a themes folder in your discorder configuration dir ( ~/.config/discorder on unix, %APPDATA%/discorder on windows) 
+Themes are located in a themes folder in your discorder configuration dir ( `~/.config/discorder` on unix, `%APPDATA%/discorder` on windows) 
 
 To pick a theme you can use the theme selection menu or specify the theme in the discorder.json file manually, in your themes folder there is also a theme called default which changes to have no effect as it's built into discorder
 
-There's also 2 arguments related to themes:
+There's also an argument related to themes:
 
--t "path/to/theme.json": Forces said theme
+`-t "path/to/theme.json"`: Forces said theme
 
 ### Theme file
 
