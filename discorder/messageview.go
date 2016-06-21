@@ -292,7 +292,7 @@ func (mv *MessageView) BuildTexts() {
 			authorLen := utf8.RuneCountInString(author)
 
 			if isPrivate {
-				channelName = "Direct Message"
+				channelName = "DM " + channel.Recipient.Username + "#" + channel.Recipient.Discriminator
 			}
 
 			body := msg.ContentWithMentionsReplaced()
