@@ -8,13 +8,21 @@ First you download discorder, or if you want clone the repo and build it yoursel
 
 You can place discorder anywhere, it will use `~/.config/discorder` (unix) and `%APPDATA%/discorder` (windows) for configuration files.
 
-After that you're pretty much set, you should check out [doc/defaults.md](https://github.com/jonas747/discorder/blob/master/doc/defaults.md) for the default keybinds and theme
-
 The most important default keybinds are:
 
  - ctrl-s: opens the server window
- - ctrl-space: toggles a server for listening
+ - ctrl-space: toggles a server/channel for listening in server window
  - alt-backspace: goes back
+ - ctrl-q: quit
+
+Other usefull default keybinds:
+
+ - ctrl-x: opens up the command window
+ - ctrl-l: clears the log messages
+
+
+For the full list check out [doc/defaults.md](https://github.com/jonas747/discorder/blob/master/doc/defaults.md) for all the default keybinds
+
 
 ### Customization
 
