@@ -160,6 +160,15 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:        "autocomplete_selection",
+		Description: "Changes the autocomplete selection",
+		Category:    []string{"hidden"},
+		Args: []*ArgumentDef{
+			&ArgumentDef{Name: "amount", Description: "The amoount to change in", Datatype: ui.DataTypeBool},
+		},
+		RunFunc: func(app *App, args Arguments) {},
+	},
+	&SimpleCommand{
 		Name:        "clear_log",
 		Description: "Clear the logbuffer",
 		Category:    []string{"Utils"},

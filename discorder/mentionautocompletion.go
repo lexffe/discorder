@@ -4,7 +4,6 @@ import (
 	"github.com/jonas747/discorder/common"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
-	"github.com/jonas747/termbox-go"
 	"strings"
 	"unicode/utf8"
 )
@@ -28,25 +27,29 @@ func NewMentionAutoCompletion(app *App, input *ui.TextInput) *MentionAutoComplet
 	}
 }
 
-func (ma *MentionAutoCompletion) HandleInput(event termbox.Event) {
-	if event.Type == termbox.EventKey {
-		switch event.Key {
-		case termbox.KeyTab:
-			if ma.isAutocompletingMention {
-				ma.mentionSelect++
-				if ma.mentionSelect > len(ma.mentionMatches)-1 {
-					ma.mentionSelect = 0
-				}
-				ma.dirty = true
-			}
-		}
+func (ma *MentionAutoCompletion) OnCommand(cmd Command, args Arguments) {
+	if cmd.GetName() != "autocomplete_selection" {
+		return
 	}
+
+	amount, _ := args.Int("amount")
+
+	ma.mentionSelect += amount
+	if ma.mentionSelect < 0 {
+		ma.mentionSelect = 0
+	} else if ma.mentionSelect >= len(ma.mentionMatches) {
+		ma.mentionSelect = 0
+	}
+	ma.dirty = true
 }
 
 func (ma *MentionAutoCompletion) Update() {
+
 	if ma.lastBufferCheck != ma.input.TextBuffer || ma.dirty {
-		// Do stuff
-		ma.lastBufferCheck = ma.input.TextBuffer
+		if ma.lastBufferCheck != ma.input.TextBuffer {
+			ma.lastBufferCheck = ma.input.TextBuffer
+			ma.mentionSelect = 0 // Reset the selection if input changed
+		}
 
 		ma.Check()
 

@@ -192,10 +192,6 @@ func (app *App) init() {
 	go app.InputManager.Run()
 
 	app.AddCommands()
-	// out, err := DefaultTheme.Read()
-	// if err == nil {
-	// 	log.Println(string(out))
-	// }
 }
 
 // Lsiten on the channels for incoming messages
