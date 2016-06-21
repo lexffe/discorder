@@ -129,6 +129,27 @@ func (a *ArgumentDef) GetCurrentVal(app *App) string {
 	return a.CurVal
 }
 
+func (a *ArgumentDef) String() string {
+	out := a.GetName()
+
+	switch a.Datatype {
+	case ui.DataTypeString:
+		out += ":string"
+	case ui.DataTypePassword:
+		out += ":password"
+	case ui.DataTypeFloat:
+		out += ":float"
+	case ui.DataTypeInt:
+		out += ":int"
+	case ui.DataTypeBool:
+		out += ":boolean"
+	}
+	if a.Description != "" {
+		out += " - " + a.Description
+	}
+	return out
+}
+
 type Arguments map[string]interface{}
 
 func (a Arguments) Get(key string) (val interface{}, ok bool) {

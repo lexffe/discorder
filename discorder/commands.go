@@ -1,6 +1,7 @@
 package discorder
 
 import (
+	"fmt"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"log"
@@ -530,6 +531,39 @@ var SimpleCommands = []Command{
 			}
 			name, _ := args.String("name")
 			tab.SetName(name)
+		},
+	},
+	&SimpleCommand{
+		Name:        "gen_command_table",
+		Description: "Generates command docs",
+		Category:    []string{"Utils"},
+		RunFunc: func(app *App, args Arguments) {
+
+			out := "| Name | Description | Category | Args |"
+			out += "\n| --- | --------- | ------- | ---- |"
+
+			for _, cmd := range app.Commands {
+
+				category := ""
+				categories := cmd.GetCategory()
+				for k, v := range categories {
+					category += v
+					if k < len(categories)-1 {
+						category += "/"
+					}
+				}
+
+				argumentDefinitions := cmd.GetArgs(nil)
+				argString := "<ul>"
+				for _, v := range argumentDefinitions {
+					argString += "<li>" + v.String() + "</li>"
+				}
+				argString += "</ul>"
+
+				out += fmt.Sprintf("\n| %s | %s | %s | %s | ", cmd.GetName(), cmd.GetDescription(app), category, argString)
+			}
+
+			log.Println("Command table:\n" + out)
 		},
 	},
 	&SimpleCommand{
