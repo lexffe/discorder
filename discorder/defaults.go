@@ -8,7 +8,8 @@ var DefaultKeybinds = []byte(`[
 	{"key": "CtrlL", "command": "clear_log"},
 	{"key": "CtrlT", "command": "reload_theme"},
 	{"key": "CtrlN", "command": "set_nick", "open_exec_window": true},
-	{"key": "Esc", "command": "close_windows"},
+	{"key": "CtrlC-Backspace", "command": "close_windows"},
+	{"key": "CtrlC-Backspace2", "command": "close_windows"},
 
 	{"key": "ArrowLeft", "command": "move_cursor", "args": {"amount": 1, "direction": "left"}},
 	{"key": "ArrowRight", "command": "move_cursor", "args": {"amount": 1, "direction": "right"}},

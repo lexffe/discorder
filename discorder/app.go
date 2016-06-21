@@ -174,7 +174,7 @@ func (app *App) init() {
 	if err != nil {
 		panic(err)
 	}
-	termbox.SetInputMode(termbox.InputEsc)
+	termbox.SetInputMode(termbox.InputAlt)
 
 	app.ViewManager = NewViewManager(app)
 	app.Transform.AddChildren(app.ViewManager)
