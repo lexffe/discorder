@@ -162,6 +162,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "clear_log",
 		Description: "Clear the logbuffer",
+		Category:    []string{"Utils"},
 		RunFunc: func(app *App, args Arguments) {
 			logRoutine.Clear()
 		},
@@ -169,6 +170,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "reload_theme",
 		Description: "Reloads the current theme",
+		Category:    []string{"Utils"},
 		RunFunc: func(app *App, args Arguments) {
 			userTheme := app.options.CustomThemePath
 			if userTheme == "" {
@@ -186,6 +188,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:         "theme_window",
 		Description:  "Select a theme",
+		Category:     []string{"Windows"},
 		CustomWindow: &ThemeCommandWindow{},
 	},
 	&SimpleCommand{
@@ -491,6 +494,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "remove_tab",
 		Description: "Removes the active tab",
+		Category:    []string{"Utils"},
 		RunFunc: func(app *App, args Arguments) {
 			app.ViewManager.RemoveTab(app.ViewManager.ActiveTab)
 		},
@@ -498,6 +502,7 @@ var SimpleCommands = []Command{
 	&SimpleCommand{
 		Name:        "rename_tab",
 		Description: "Renames the currently selected tab",
+		Category:    []string{"Utils"},
 		Args: []*ArgumentDef{
 			&ArgumentDef{Name: "name", Description: "The name you want to give", Datatype: ui.DataTypeString},
 		},
