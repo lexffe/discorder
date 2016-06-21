@@ -109,6 +109,7 @@ func (mv *MessageView) RemoveChannel(channel string) {
 			break
 		}
 	}
+	mv.DisplayMessagesDirty = true
 }
 
 func (mv *MessageView) Select() {
