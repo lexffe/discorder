@@ -400,6 +400,14 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:        "close_windows",
+		Description: "Closes all windows",
+		Category:    []string{"hidden"},
+		RunFunc: func(app *App, args Arguments) {
+			app.ViewManager.RemoveAllWindows()
+		},
+	},
+	&SimpleCommand{
 		Name:           "discorder_settings",
 		Description:    "Change settings",
 		CustomExecText: "Save",
