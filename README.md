@@ -24,12 +24,12 @@ After that there should be a built executable in your $GOPATH/bin folder
 
 ##Features
 
-Note: Discorder still lacks a lot of features, so i wouldn't consider using it as a full replacement just yet
+Note: Discorder still lacks a lot of features, so i wouldn't consider using it as a full replacement yet
 
  - Light on resource usage
      + This depends on how many tabs you have open and how many channels you're listening in on offcourse
      + Maybe not so much in this early development stage where everything is still getting set up and organised, but will be a focus later on
- - Customizeble
+ - Customizable
      + Discorder is very customizable, you can change the looks of it with your own themes and change the keybinds (See doc for more info) 
 
 Feature list:
@@ -62,11 +62,7 @@ Feature list:
 
 Run the executable and follow the instructions on screen
 
-Keybinds:
-
-After you run it once, a keybind file will be generated in the config dir either at ~/.config/discorder for unix or %appdata%/discorder for windows
-
-Look there for keybinds
+Keybinds: See [doc/keybinds.md](https://github.com/jonas747/discorder/blob/master/doc/keybinds.md) for keybind configuration and [doc/defaults.md](https://github.com/jonas747/discorder/blob/master/doc/defaults.md) for defaults
 
 ## Dependencies
 
