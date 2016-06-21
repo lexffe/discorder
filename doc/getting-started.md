@@ -10,6 +10,12 @@ You can place discorder anywhere, it will use `~/.config/discorder` (unix) and `
 
 After that you're pretty much set, you should check out [doc/defaults.md](https://github.com/jonas747/discorder/blob/master/doc/defaults.md) for the default keybinds and theme
 
+The most important default keybinds are:
+
+ - ctrl-s: opens the server window
+ - ctrl-space: toggles a server for listening
+ - alt-backspace: goes back
+
 ### Customization
 
 Discorder is customizable, you can change the appearence and the keybindings.
