@@ -55,7 +55,6 @@ func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*Argume
 		},
 	}
 	if curArgs == nil {
-		log.Println(args)
 		return args
 	}
 

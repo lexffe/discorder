@@ -168,7 +168,6 @@ func (app *App) GenMessageCommands(msg *discordgo.Message) []Command {
 				go app.OpenLink(linkCopy)
 			},
 		})
-		log.Println("assbutt")
 	}
 
 	return out
