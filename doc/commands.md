@@ -1,3 +1,6 @@
+
+Commands are executed via keybinds or view the command menu (ctrl-x by default)
+
 ## Builtin Commands
 
 | Name | Description | Category | Args |

@@ -6,8 +6,7 @@ To pick a theme you can use the theme selection menu or specify the theme in the
 
 There's also 2 arguments related to themes:
 
--t -theme "path/to/theme.json": Forces said theme
---no-theme: Only uses default theme (Incase you pick one your terminal didn't support and you're having issues changing back)
+-t "path/to/theme.json": Forces said theme
 
 ### Theme file
 
@@ -18,7 +17,7 @@ An example theme:
     "name": "SUPER FUN THEME",
     "author": "jonas747",
     "comment": "SO MUCH FUN OMG",
-    "color_mode": 0,
+    "color_mode": 1,
     "window_border": {
         "fg": {"color": "white","bold": true},
         "bg": {"color": "blue"}

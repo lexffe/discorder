@@ -8,7 +8,7 @@ First you download discorder, or if you want clone the repo and build it yoursel
 
 You can place discorder anywhere, it will use ~/.config/discorder (unix) and %APPDATA%/discorder (windows) for configuration files.
 
-After that you're pretty much set
+After that you're pretty much set, you should out defaults.md for the default keybinds and theme
 
 ### Customization
 

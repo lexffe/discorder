@@ -70,7 +70,7 @@ Look there for keybinds
 
 ## Dependencies
 
-Discorder depends on termbox, discordgo, and go-runewidth which should be staticly compiled in automaticly
+Discorder depends on termbox, discordgo, and go-runewidth at compile time
 
 #### Optional dependencies
 
@@ -78,7 +78,6 @@ Discorder depends on termbox, discordgo, and go-runewidth which should be static
  - notify-send: Used for notifications
 
 ##Screenshots
-
 
 ![Typing status](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-04-07T16%3A18%3A02%2B02%3A00.png)
 
