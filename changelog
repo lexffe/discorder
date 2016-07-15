@@ -1,0 +1,5 @@
+Changes since 0.4:
+
+ - Better bot account support, don't use enpoints that bots can't use
+ - Deteministic random colors for channels, users and guils taken from a attribute table in a theme (see the default theme for example on how to define your own)
+ - If text is longer than width, try to find whitespaces to split at before just splitting up in the middle of a word
