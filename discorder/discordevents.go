@@ -47,19 +47,20 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 		}
 	}
 
-	author := "Unknown?"
-	authorId := ""
-	if m.Author != nil { // Yes this does happen... very rare though
-		author = m.Author.Username
-		authorId = m.Author.ID
+	if m.Author == nil {
+		log.Println("!MESSAGE HAS NO AUTHOR!")
+		return
 	}
+
+	author := m.Author.Username
+	authorId := m.Author.ID
 
 	if app.typingRoutine != nil {
 		app.typingRoutine.msgEvtIn <- authorId
 	}
 
 	// Check if we should do a notification
-	if authorId != app.session.State.User.ID {
+	if authorId != app.session.State.User.ID && !s.State.User.Bot {
 
 		shouldNotify := false
 
