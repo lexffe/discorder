@@ -30,7 +30,22 @@ func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	app.Lock()
 	defer app.Unlock()
-	settings := app.GetNotificationSettingsForChannel(m.ChannelID)
+
+	// Have no idea how this happens but it has so... just gonna leave this here to be sure
+	if app.session.State.User == nil {
+		return
+	}
+
+	var settings *ChannelNotificationSettings
+	if !app.session.State.User.Bot {
+		settings = app.GetNotificationSettingsForChannel(m.ChannelID)
+	} else {
+		settings = &ChannelNotificationSettings{
+			Notifications:    2,
+			Muted:            true,
+			SurpressEveryone: true,
+		}
+	}
 
 	author := "Unknown?"
 	authorId := ""
@@ -41,12 +56,6 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 
 	if app.typingRoutine != nil {
 		app.typingRoutine.msgEvtIn <- authorId
-	}
-
-	// Happens when we haven't received ready yet
-	// TODO Put them in queue instead
-	if app.session.State.User == nil {
-		return
 	}
 
 	// Check if we should do a notification

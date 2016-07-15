@@ -23,7 +23,7 @@ func NewAckRoutine(app *App) *AckRoutine {
 
 func (a *AckRoutine) Run() {
 	// Send ack's every 30th second if any, with the latest message from the channel
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 
 	curAckBuffer := make([]*discordgo.Message, 0)
 
@@ -71,6 +71,10 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	state := a.App.session.State
 	state.Lock()
 	defer state.Unlock()
+
+	if state.User.Bot {
+		return // Bot accounts can't do acks
+	}
 
 	// Do we really need this check here? maybe move it to the history processing...
 	shouldAck := true
