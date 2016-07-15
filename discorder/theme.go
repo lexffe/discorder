@@ -7,15 +7,16 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strconv"
 )
 
 type Theme struct {
-	Name      string             `json:"name"`
-	Author    string             `json:"author"`
-	Comment   string             `json:"comment"`
-	ColorMode termbox.OutputMode `json:"color_mode"` // see termbox.OutputMode for info
-
-	Theme map[string]ThemeAttribPair `json:"theme"`
+	Name         string                     `json:"name"`
+	Author       string                     `json:"author"`
+	Comment      string                     `json:"comment"`
+	ColorMode    termbox.OutputMode         `json:"color_mode"`    // see termbox.OutputMode for info
+	DiscrimTable []ThemeAttribPair          `json:"discrim_table"` // Used for different color for users and channels & servers
+	Theme        map[string]ThemeAttribPair `json:"theme"`
 }
 
 func (t *Theme) GetAttribute(key string, fg bool) (attrib termbox.Attribute, ok bool) {
@@ -54,6 +55,20 @@ func (app *App) GetThemeAttribute(key string, fg bool) termbox.Attribute {
 	}
 	defaultAttrib, _ := app.defaultTheme.GetAttribute(key, fg)
 	return defaultAttrib
+}
+
+func (app *App) GetThemeDiscrim(id string) ThemeAttribPair {
+	parsed, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		log.Println("Failed parsign id", err)
+	}
+
+	discrims := app.defaultTheme.DiscrimTable
+	if app.userTheme != nil && len(app.userTheme.DiscrimTable) > 0 {
+		discrims = app.userTheme.DiscrimTable
+	}
+
+	return discrims[uint64(parsed)%uint64(len(discrims))]
 }
 
 func (app *App) ApplyThemeToMenu(menu *ui.MenuWindow) {

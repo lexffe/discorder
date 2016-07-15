@@ -430,6 +430,12 @@ var SimpleCommands = []Command{
 				return app.config.GetTimeFormatFull()
 			}}, &ArgumentDef{Name: "time_format_short", Description: "Sets the short time format (for messages on the same day)", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
 				return app.config.GetTimeFormatSameDay()
+			}}, &ArgumentDef{Name: "colored_guilds", Description: "Sets the guild names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+				return strconv.FormatBool(app.config.ColoredGuilds)
+			}}, &ArgumentDef{Name: "colored_channels", Description: "Sets the channel names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+				return strconv.FormatBool(app.config.ColoredChannels)
+			}}, &ArgumentDef{Name: "colored_users", Description: "Sets the user names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+				return strconv.FormatBool(app.config.ColoredUsers)
 			}},
 		},
 		RunFunc: func(app *App, args Arguments) {
@@ -438,6 +444,10 @@ var SimpleCommands = []Command{
 
 			formatFull, _ := args.String("time_format_full")
 			formatShort, _ := args.String("time_format_short")
+
+			coloredGuilds, _ := args.Bool("colored_guilds")
+			coloredChannels, _ := args.Bool("colored_channels")
+			coloredUsers, _ := args.Bool("colored_users")
 
 			displayFormatFull := formatFull
 
@@ -457,6 +467,10 @@ var SimpleCommands = []Command{
 			app.config.HideNicknames = hideNicks
 			app.config.TimeFormatFull = formatFull
 			app.config.TimeFormatSameDay = formatShort
+
+			app.config.ColoredGuilds = coloredGuilds
+			app.config.ColoredChannels = coloredChannels
+			app.config.ColoredUsers = coloredUsers
 
 			log.Printf("Set short_guilds: %v; hide_nicknames: %v, time_format_same_day: %v, time_format_full: %v", shortGuilds, hideNicks, displayFormatShort, displayFormatFull)
 		},

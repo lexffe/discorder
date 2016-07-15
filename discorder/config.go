@@ -28,6 +28,11 @@ type Config struct {
 	// General settings
 	ShortGuilds   bool `json:"short_guilds"`
 	HideNicknames bool `json:"hide_nicknames"`
+	// The blow gives guilds, channels and users dtereministic "random" colors from the
+	// Active theme's discrim table
+	ColoredGuilds   bool `json:"colored_guilds"`
+	ColoredChannels bool `json:"colored_channels"`
+	ColoredUsers    bool `json:"colored_users"`
 }
 
 type TabConfig struct {

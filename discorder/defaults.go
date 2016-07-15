@@ -1,5 +1,8 @@
 package discorder
 
+// The reason i have this in json encoded constants instead of struct literals
+// Is to have the formatting when written to disk be neat
+
 var DefaultKeybinds = []byte(`[
 	{"key": "CtrlQ", "command": "quit"},
 	{"key": "CtrlS", "command": "servers"},
@@ -53,6 +56,19 @@ var DefaultTheme = []byte(`{
     "author": "jonas747",
     "comment": "The default discorder theme",
     "color_mode": 1,
+    "discrim_table":[
+    	{"fg": {"color":"red", "bold": true} },
+    	{"fg": {"color":"green", "bold": true} },
+    	{"fg": {"color":"green"} },
+    	{"fg": {"color":"yellow", "bold": true} },
+    	{"fg": {"color":"yellow"} },
+    	{"fg": {"color":"blue", "bold": true} },
+    	{"fg": {"color":"blue"} },
+    	{"fg": {"color":"magenta", "bold": true} },
+    	{"fg": {"color":"magenta"} },
+    	{"fg": {"color":"cyan", "bold": true} },
+    	{"fg": {"color":"cyan"} }
+    ],
     "theme":{
 		"window_border": {
 			"fg": {"color": "white", "bold": true},
@@ -71,6 +87,7 @@ var DefaultTheme = []byte(`{
 		"element_selected_marked": { "bg": {"color": "blue"} },
 
 		"message_timestamp": { "fg": {"color": "blue"} },
+		"message_server": { "fg": {"color": "green"} },
 		"message_server_channel": { "fg": {"color": "green"} },
 		"message_direct_channel": { "fg": {"color": "magenta", "bold": true} },
 		"message_author": { "fg": {"color": "cyan", "bold": true} },

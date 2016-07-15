@@ -223,7 +223,6 @@ func (mv *MessageView) BuildTexts() {
 	padding := 0
 
 	now := time.Now()
-	thisYear, thisMonth, thisDay := now.Date()
 
 	isFirst := true
 
@@ -233,86 +232,9 @@ func (mv *MessageView) BuildTexts() {
 			continue
 		}
 
-		text := ui.NewText()
-		text.Transform.Size = common.NewVector2F(rect.W, 0)
-
-		attribs := make(map[int]ui.AttribPair)
-
-		if item.IsLogMessage {
-			text.Text = "Log: " + item.LogMessage.Content
-			attribs[0] = mv.App.GetThemeAttribPair("message_log").AttribPair()
-		} else {
-			msg := item.DiscordMessage
-			if msg == nil {
-				continue
-			}
-
-			ts := ""
-			thenYear, thenMonth, thenDay := item.Timestamp.Date()
-			if thisYear == thenYear && thisMonth == thenMonth && thisDay == thenDay {
-				ts = item.Timestamp.Local().Format(mv.App.config.GetTimeFormatSameDay())
-			} else {
-				ts = item.Timestamp.Local().Format(mv.App.config.GetTimeFormatFull())
-			}
-			ts += " "
-			tsLen := utf8.RuneCountInString(ts)
-
-			isPrivate := false
-			channelName := "???"
-			channel, err := mv.App.session.State.Channel(msg.ChannelID)
-			var guild *discordgo.Guild
-			if err == nil {
-				channelName = channel.Name
-				isPrivate = channel.IsPrivate
-				if !isPrivate {
-					guild, err = mv.App.session.State.Guild(channel.GuildID)
-					if err == nil {
-						guildName := guild.Name
-						if mv.App.config.ShortGuilds {
-							guildName = ShortName(guildName)
-						}
-						channelName = guildName + "/#" + channelName
-					}
-				}
-			}
-
-			author := "Unknown?"
-			if msg.Author != nil {
-				if mv.App.config.HideNicknames || guild == nil {
-					author = msg.Author.Username
-				} else {
-					member, err := mv.App.session.State.Member(guild.ID, msg.Author.ID)
-					if (err == nil && member.Nick == "") || err != nil {
-						author = msg.Author.Username // Fallback
-					} else {
-						author = member.Nick
-					}
-				}
-			}
-
-			authorLen := utf8.RuneCountInString(author)
-
-			if isPrivate {
-				channelName = "DM " + channel.Recipient.Username + "#" + channel.Recipient.Discriminator
-			}
-
-			body := msg.ContentWithMentionsReplaced()
-			for _, v := range msg.Attachments {
-				body += " Attachment: " + v.ProxyURL + " (original: " + v.URL + ") "
-			}
-
-			fullMsg := ts + "[" + channelName + "]" + author + ": " + body
-			channelLen := utf8.RuneCountInString(channelName) + 2
-			attribs = map[int]ui.AttribPair{
-				0:                              mv.App.GetThemeAttribPair("message_timestamp").AttribPair(),
-				tsLen:                          mv.App.GetThemeAttribPair("message_server_channel").AttribPair(),
-				channelLen + tsLen:             mv.App.GetThemeAttribPair("message_author").AttribPair(),
-				channelLen + authorLen + tsLen: mv.App.GetThemeAttribPair("message_content").AttribPair(),
-			}
-			if isPrivate {
-				attribs[tsLen] = mv.App.GetThemeAttribPair("message_direct_channel").AttribPair()
-			}
-			text.Text = fullMsg
+		text, attribs := mv.CreateText(item, rect, now)
+		if text == nil {
+			continue
 		}
 
 		lines := text.HeightRequired()
@@ -330,7 +252,7 @@ func (mv *MessageView) BuildTexts() {
 		}
 
 		// Send ack
-		if !item.IsLogMessage && !mv.App.stopping {
+		if !item.IsLogMessage && !mv.App.stopping && (mv.App.session != nil && mv.App.session.State != nil && mv.App.session.State.User != nil && !mv.App.session.State.User.Bot) {
 			msgCopy := item.DiscordMessage
 			go func() {
 				mv.App.ackRoutine.In <- msgCopy
@@ -358,6 +280,128 @@ func (mv *MessageView) BuildTexts() {
 			break
 		}
 	}
+}
+
+func (mv *MessageView) CreateText(displayMessage *DisplayMessage, rect common.Rect, when time.Time) (*ui.Text, map[int]ui.AttribPair) {
+	thisYear, thisMonth, thisDay := when.Date()
+
+	text := ui.NewText()
+	text.Transform.Size = common.NewVector2F(rect.W, 0)
+
+	attribs := make(map[int]ui.AttribPair)
+
+	// Log messages are very simple
+	if displayMessage.IsLogMessage {
+		text.Text = "Log: " + displayMessage.LogMessage.Content
+		attribs[0] = mv.App.GetThemeAttribPair("message_log").AttribPair()
+		//text.SetAttribs(attribs)
+		return text, attribs
+	}
+
+	msg := displayMessage.DiscordMessage
+	if msg == nil {
+		return nil, nil
+	}
+
+	ts := ""
+	thenYear, thenMonth, thenDay := displayMessage.Timestamp.Date()
+	if thisYear == thenYear && thisMonth == thenMonth && thisDay == thenDay {
+		ts = displayMessage.Timestamp.Local().Format(mv.App.config.GetTimeFormatSameDay())
+	} else {
+		ts = displayMessage.Timestamp.Local().Format(mv.App.config.GetTimeFormatFull())
+	}
+	ts += " "
+	tsLen := utf8.RuneCountInString(ts)
+
+	isPrivate := false
+
+	channelName := "???"
+	guildName := ""
+
+	channel, err := mv.App.session.State.Channel(msg.ChannelID)
+	var guild *discordgo.Guild
+	if err == nil {
+		isPrivate = channel.IsPrivate
+
+		if channel.IsPrivate {
+			channelName = channel.Recipient.Username + "#" + channel.Recipient.Discriminator
+			guildName = "DM"
+		} else {
+			channelName = "#" + channel.Name
+
+			guild, err = mv.App.session.State.Guild(channel.GuildID)
+			if err == nil {
+				guildName = guild.Name
+				if mv.App.config.ShortGuilds {
+					guildName = ShortName(guildName)
+				}
+			}
+		}
+	}
+
+	author := "Unknown?"
+	if msg.Author != nil {
+		if mv.App.config.HideNicknames || guild == nil {
+			author = msg.Author.Username
+		} else {
+			member, err := mv.App.session.State.Member(guild.ID, msg.Author.ID)
+			if (err == nil && member.Nick == "") || err != nil {
+				author = msg.Author.Username // Fallback
+			} else {
+				author = member.Nick
+			}
+		}
+	}
+
+	authorLen := utf8.RuneCountInString(author)
+
+	body := msg.ContentWithMentionsReplaced()
+	for _, v := range msg.Attachments {
+		body += " Attachment: " + v.ProxyURL + " (original: " + v.URL + ") "
+	}
+
+	fullMsg := ts + "[" + guildName + "/" + channelName + "]" + author + ": " + body
+	channelLen := utf8.RuneCountInString(channelName) + 1
+	guildLen := utf8.RuneCountInString(guildName) + 2
+
+	// Set up the custom attributes
+	var guildAtrribs ThemeAttribPair
+	var channelAttribs ThemeAttribPair
+	var userAttribs ThemeAttribPair
+
+	if mv.App.config.ColoredGuilds && guild != nil {
+		guildAtrribs = mv.App.GetThemeDiscrim(guild.ID)
+	} else {
+		if isPrivate {
+			attribs[tsLen] = mv.App.GetThemeAttribPair("message_direct_channel").AttribPair()
+		} else {
+			guildAtrribs = mv.App.GetThemeAttribPair("message_server")
+		}
+	}
+
+	if mv.App.config.ColoredChannels && channel != nil {
+		channelAttribs = mv.App.GetThemeDiscrim(channel.ID)
+	} else {
+		channelAttribs = mv.App.GetThemeAttribPair("message_server_channel")
+	}
+
+	if mv.App.config.ColoredUsers && msg.Author != nil {
+		userAttribs = mv.App.GetThemeDiscrim(msg.Author.ID)
+	} else {
+		userAttribs = mv.App.GetThemeAttribPair("message_author")
+	}
+
+	attribs = map[int]ui.AttribPair{
+		0:                                         mv.App.GetThemeAttribPair("message_timestamp").AttribPair(),
+		tsLen:                                     guildAtrribs.AttribPair(),
+		guildLen + tsLen:                          channelAttribs.AttribPair(),
+		channelLen + guildLen + tsLen:             userAttribs.AttribPair(),
+		authorLen + channelLen + guildLen + tsLen: mv.App.GetThemeAttribPair("message_content").AttribPair(),
+	}
+
+	text.Text = fullMsg
+	//text.SetAttribs(attribs)
+	return text, attribs
 }
 
 // TODO: Merge private and normal channels to make this a little big ligther

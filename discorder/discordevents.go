@@ -10,6 +10,7 @@ import (
 func (app *App) Ready(s *discordgo.Session, r *discordgo.Ready) {
 	app.Lock()
 	defer app.Unlock()
+
 	log.Println("Received ready from discord!")
 
 	app.settings = r.Settings
@@ -48,6 +49,8 @@ func (app *App) messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) 
 	}
 
 	if m.Author == nil {
+		// I believe this only happens in mesasge edits
+		// but to be sure i just put this check here, will prob get removed in the future
 		log.Println("!MESSAGE HAS NO AUTHOR!")
 		return
 	}
