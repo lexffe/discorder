@@ -70,19 +70,6 @@ func HeightRequired(str string, width int) int {
 		return 0
 	}
 
-	x := 0
-	y := 1
-	for _, v := range str {
-		if v == '\n' {
-			y++
-			x = 0
-		} else {
-			x++
-			if x >= width {
-				x = 0
-				y++
-			}
-		}
-	}
-	return y
+	lines := BuildTextLines(str, width)
+	return (len(lines))
 }
