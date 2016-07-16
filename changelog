@@ -4,3 +4,4 @@ Changes since 0.4:
  - Deteministic random colors for channels, users and guils taken from a attribute table in a theme (see the default theme for example on how to define your own)
  - If text is longer than width, try to find whitespaces to split at before just splitting up in the middle of a word
  - Fix link opening
+ - Fixed some messages received at the same time not showing up
