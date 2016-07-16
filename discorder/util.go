@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var linkRegex = regexp.MustCompile("[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)")
+var linkRegex = regexp.MustCompile(`^(https?|ftp):\/\/[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)`)
 
 func (app *App) GetNotificationSettingsForChannel(channelId string) *ChannelNotificationSettings {
 	channel, err := app.session.State.Channel(channelId)
