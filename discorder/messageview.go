@@ -222,7 +222,7 @@ func (mv *MessageView) BuildTexts() {
 	y := int(rect.H) + realScroll
 	padding := 0
 
-	now := time.Now()
+	now := time.Now().Local()
 
 	isFirst := true
 
@@ -306,9 +306,9 @@ func (mv *MessageView) CreateText(displayMessage *DisplayMessage, rect common.Re
 	ts := ""
 	thenYear, thenMonth, thenDay := displayMessage.Timestamp.Date()
 	if thisYear == thenYear && thisMonth == thenMonth && thisDay == thenDay {
-		ts = displayMessage.Timestamp.Local().Format(mv.App.config.GetTimeFormatSameDay())
+		ts = displayMessage.Timestamp.Format(mv.App.config.GetTimeFormatSameDay())
 	} else {
-		ts = displayMessage.Timestamp.Local().Format(mv.App.config.GetTimeFormatFull())
+		ts = displayMessage.Timestamp.Format(mv.App.config.GetTimeFormatFull())
 	}
 	ts += " "
 	tsLen := utf8.RuneCountInString(ts)
@@ -400,7 +400,6 @@ func (mv *MessageView) CreateText(displayMessage *DisplayMessage, rect common.Re
 	}
 
 	text.Text = fullMsg
-	//text.SetAttribs(attribs)
 	return text, attribs
 }
 
@@ -441,8 +440,6 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 	nextLogIndex := len(mv.Logs) - 1
 
 	// Get a sorted list
-	var lastMessage *DisplayMessage
-	var beforeTime time.Time
 	for i := 0; i < size; i++ {
 		// Get newest message after "lastMessage", set it to curNewestMessage if its newer than that
 
@@ -461,7 +458,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 				continue
 			}
 
-			newest, nextIndex := mv.GetNewestMessageBefore(channel, beforeTime, listeningIndexes[k])
+			newest, nextIndex := mv.GetNewestMessageBefore(channel, listeningIndexes[k])
 
 			if newest != nil && (newestListening == nil || !newest.Timestamp.Before(newestListening.Timestamp)) {
 				newestListening = newest
@@ -478,7 +475,7 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 			if mv.ShowAllPrivate {
 				for k, privateChannel := range state.PrivateChannels {
 
-					newest, nextIndex := mv.GetNewestMessageBefore(privateChannel, beforeTime, pmIndexes[k])
+					newest, nextIndex := mv.GetNewestMessageBefore(privateChannel, pmIndexes[k])
 
 					if newest != nil && (newestPm == nil || !newest.Timestamp.Before(newestPm.Timestamp)) {
 						newestPm = newest
@@ -495,17 +492,15 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 		// Check the logerino
 		for j := nextLogIndex; j >= 0; j-- {
 			msg := mv.Logs[j]
-			if !msg.Timestamp.After(beforeTime) || beforeTime.IsZero() {
-				if newestLog == nil || !msg.Timestamp.Before(newestLog.Timestamp) {
-					newestLog = &DisplayMessage{
-						LogMessage:   msg,
-						Timestamp:    msg.Timestamp,
-						IsLogMessage: true,
-					}
-					newNextLogIndex = j - 1
+			if newestLog == nil || !msg.Timestamp.Before(newestLog.Timestamp) {
+				newestLog = &DisplayMessage{
+					LogMessage:   msg,
+					Timestamp:    msg.Timestamp,
+					IsLogMessage: true,
 				}
-				break // Newest message after last since ordered
+				newNextLogIndex = j - 1
 			}
+			break // Newest message after last since ordered
 		}
 
 		if newestListening != nil &&
@@ -514,8 +509,6 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 			messages[i] = newestListening
 			listeningIndexes[newestListeningIndex] = nextListeningStartIndex
 
-			lastMessage = newestListening
-			beforeTime = lastMessage.Timestamp
 		} else if newestPm != nil &&
 			(newestListening == nil || !newestPm.Timestamp.Before(newestListening.Timestamp)) &&
 			(newestLog == nil || !newestPm.Timestamp.Before(newestLog.Timestamp)) {
@@ -523,14 +516,10 @@ func (mv *MessageView) BuildDisplayMessages(size int) {
 			messages[i] = newestPm
 			pmIndexes[newestPmIndex] = nextPmStartIndex
 
-			lastMessage = newestPm
-			beforeTime = lastMessage.Timestamp
 		} else if newestLog != nil {
 			messages[i] = newestLog
 			nextLogIndex = newNextLogIndex
 
-			lastMessage = newestLog
-			beforeTime = lastMessage.Timestamp
 		} else {
 			break // No new shit!
 		}
@@ -578,21 +567,26 @@ func (mv *MessageView) GetDrawLayer() int {
 	return mv.Layer
 }
 
-func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, before time.Time, startIndex int) (*DisplayMessage, int) {
+func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, startIndex int) (*DisplayMessage, int) {
+
 	msgs := channel.Messages
 	if startIndex == -10 {
 		startIndex = len(msgs) - 1
 	}
-	for j := startIndex; j >= 0; j-- {
-		msg := msgs[j]
-		parsedTimestamp, _ := time.Parse(DiscordTimeFormat, msg.Timestamp)
-		if !parsedTimestamp.After(before) || before.IsZero() { // Reason for !after is so that we still show all the messages with same timestamps
-			curNewestMessage := &DisplayMessage{
-				DiscordMessage: msg,
-				Timestamp:      parsedTimestamp,
-			}
-			return curNewestMessage, j - 1
+
+	if startIndex >= 0 {
+		msg := msgs[startIndex]
+		parsedTimestamp, err := time.Parse(DiscordTimeFormat, msg.Timestamp)
+		if err != nil {
+			log.Println("Failed parsing discord timestamp (bad timestamp:", msg.Timestamp, " :( )")
+			return mv.GetNewestMessageBefore(channel, startIndex-1)
 		}
+
+		curNewestMessage := &DisplayMessage{
+			DiscordMessage: msg,
+			Timestamp:      parsedTimestamp.Local(),
+		}
+		return curNewestMessage, startIndex - 1
 	}
 
 	if len(msgs) > 0 && !mv.App.stopping {
