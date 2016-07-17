@@ -11,6 +11,7 @@ var DefaultKeybinds = []byte(`[
 	{"key": "CtrlL", "command": "clear_log"},
 	{"key": "CtrlT", "command": "reload_theme"},
 	{"key": "CtrlN", "command": "set_nick", "open_exec_window": true},
+	{"key": "CtrlZ", "command": "open_last_link"},
 	{"key": "CtrlC-Backspace", "command": "close_windows"},
 	{"key": "CtrlC-Backspace2", "command": "close_windows"},
 

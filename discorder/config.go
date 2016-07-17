@@ -38,9 +38,9 @@ type Config struct {
 type TabConfig struct {
 	Name              string   `json:"name"`
 	AllPrivateMode    bool     `json:"all_private_mode"`
+	Index             int      `json:"index"`
 	SendChannel       string   `json:"send_channel"`
 	ListeningChannels []string `json:"listening_cannels"`
-	Index             int      `json:"index"`
 }
 
 const (

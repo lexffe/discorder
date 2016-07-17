@@ -306,8 +306,6 @@ func (app *App) PrintWelcome() {
 func (app *App) shutdown() {
 	app.Lock()
 	app.running = false
-	// app.config.LastServer = app.selectedServerId
-	// app.config.LastChannel = app.selectedChannelId
 	app.config.Tabs = make([]*TabConfig, 0)
 	for _, tab := range app.ViewManager.Tabs {
 		app.config.Tabs = append(app.config.Tabs, &TabConfig{

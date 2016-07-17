@@ -548,6 +548,45 @@ var SimpleCommands = []Command{
 		},
 	},
 	&SimpleCommand{
+		Name:        "open_last_link",
+		Description: "Opens the last link",
+		Category:    []string{"Utils"},
+		RunFunc: func(app *App, args Arguments) {
+			tab := app.ViewManager.ActiveTab
+			if tab == nil {
+				return
+			}
+
+			// Below stuff requires an active tab
+			if app.session.State != nil && app.session.State.User != nil {
+				for _, text := range tab.MessageView.MessageTexts {
+					if text.Userdata == nil {
+						continue
+					}
+
+					displayMsg, ok := text.Userdata.(*DisplayMessage)
+					if !ok {
+						continue
+					}
+
+					if !displayMsg.IsLogMessage {
+						matches := linkRegex.FindAllString(displayMsg.DiscordMessage.Content, -1)
+						if len(matches) > 0 {
+							go app.OpenLink(matches[0])
+							return
+						}
+
+						if len(displayMsg.DiscordMessage.Attachments) > 0 {
+							go app.OpenLink(displayMsg.DiscordMessage.Attachments[0].URL)
+							return
+						}
+					}
+				}
+				log.Println("No recent links found :'(")
+			}
+		},
+	},
+	&SimpleCommand{
 		Name:        "gen_command_table",
 		Description: "Generates command docs",
 		Category:    []string{"Utils"},

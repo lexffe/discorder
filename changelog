@@ -5,3 +5,5 @@ Changes since 0.4:
  - If text is longer than width, try to find whitespaces to split at before just splitting up in the middle of a word
  - Fix link opening
  - Fixed some messages received at the same time not showing up
+ - Close command window after executing a command
+ - Added open_last_link command and added a default keybind for it (CtrlZ)

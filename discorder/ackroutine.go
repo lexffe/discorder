@@ -22,7 +22,7 @@ func NewAckRoutine(app *App) *AckRoutine {
 }
 
 func (a *AckRoutine) Run() {
-	// Send ack's every 30th second if any, with the latest message from the channel
+	// Send ack's every 15 seconds if any, with the latest message from the channel
 	ticker := time.NewTicker(15 * time.Second)
 
 	curAckBuffer := make([]*discordgo.Message, 0)
