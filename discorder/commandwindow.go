@@ -182,6 +182,6 @@ func (cw *CommandWindow) Select() {
 	if execWindow != nil {
 		cw.app.ViewManager.AddWindow(execWindow)
 	}
-
+	cw.app.ViewManager.RemoveWindow(cw)
 	//cw.Transform.Parent.RemoveChild(cw, true)
 }

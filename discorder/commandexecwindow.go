@@ -200,7 +200,11 @@ func (cew *CommandExecWindow) Execute(parseArgs bool) {
 	cew.app.RunCommand(cew.command, Arguments(args))
 	parent := cew.Transform.Parent
 	if parent != nil {
-		cew.Transform.Parent.RemoveChild(cew, true)
+		if parent == cew.app.ViewManager.menuContainer.GetTransform() {
+			cew.app.ViewManager.RemoveWindow(cew)
+		} else {
+			cew.Transform.Parent.RemoveChild(cew, true)
+		}
 	} else {
 		// Manually destroy
 		cew.Destroy()
