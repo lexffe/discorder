@@ -267,9 +267,7 @@ func (v *ViewManager) RemoveWindow(e ui.Entity) {
 
 	if len(v.menuContainer.Children(false)) > 0 {
 		v.menuContainer.Dynamic = true
-		log.Println("Dynamic is true")
 	} else {
-		log.Println("Dynamic is false")
 		v.menuContainer.Dynamic = false
 		v.menuContainer.Transform.Size = common.NewVector2I(0, 0)
 	}
