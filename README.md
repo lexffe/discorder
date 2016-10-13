@@ -1,5 +1,9 @@
 # Discorder
 
+### I'm not actively developing this anymore, so don't expect any new features anytime soon 
+
+![Ayy](https://dl.dropboxusercontent.com/u/17487167/screenshots/1476387883.png)
+
 Discorder is an interactive command line discord client.
 
 Discord server: https://discord.gg/0vYlUK2XBKlmxGrX
@@ -64,6 +68,17 @@ Run the executable and follow the instructions on screen
 
 Keybinds: See [doc/keybinds.md](https://github.com/jonas747/discorder/blob/master/doc/keybinds.md) for keybind configuration and [doc/defaults.md](https://github.com/jonas747/discorder/blob/master/doc/defaults.md) for defaults
 
+Quick start:
+
+1. log in using token or username/pw
+2. ctrl-s to open server/channel list
+3. mark servers/channels for listening with ctrl-space
+4. set as sending channel with enter
+5. close out of windows wih alt-backspace
+6. f1-12 for tabs
+7. ctrl-x to open command menu
+8. change discorder settings such as randomized colors, short guild names, hide nicknames etc in discorder_setttings which you can find in the command menu
+
 ## Dependencies
 
 Discorder depends on termbox, discordgo, and go-runewidth at compile time
@@ -72,18 +87,5 @@ Discorder depends on termbox, discordgo, and go-runewidth at compile time
 
  - xdg-open: Used for opening links
  - notify-send: Used for notifications
-
-##Screenshots
-
-![Typing status](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-04-07T16%3A18%3A02%2B02%3A00.png)
-
-![Mention auto complete](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-04-07T16%3A19%3A10%2B02%3A00.png)
-
-
-![Logging in](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T01%3A00%3A23%2B01%3A00.png)
-
-![Channels list](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-16T03%3A57%3A45%2B01%3A00.png)
-
-![Direct messages](https://dl.dropboxusercontent.com/u/17487167/screenshots/2016-03-18T04%3A15%3A40%2B01%3A00.png)
 
 
