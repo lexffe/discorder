@@ -576,7 +576,7 @@ func (mv *MessageView) GetNewestMessageBefore(channel *discordgo.Channel, startI
 
 	if startIndex >= 0 {
 		msg := msgs[startIndex]
-		parsedTimestamp, err := time.Parse(DiscordTimeFormat, msg.Timestamp)
+		parsedTimestamp, err := msg.Timestamp.Parse()
 		if err != nil {
 			log.Println("Failed parsing discord timestamp (bad timestamp:", msg.Timestamp, " :( )")
 			return mv.GetNewestMessageBefore(channel, startIndex-1)

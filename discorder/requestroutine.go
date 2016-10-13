@@ -140,8 +140,8 @@ func (hq *HistoryRequest) Do(finished chan error) {
 			continue
 		}
 
-		parsedNew, _ := time.Parse(DiscordTimeFormat, nextNewMessage.Timestamp)
-		parsedOld, _ := time.Parse(DiscordTimeFormat, nextOldMessage.Timestamp)
+		parsedNew, _ := nextNewMessage.Timestamp.Parse()
+		parsedOld, _ := nextOldMessage.Timestamp.Parse()
 
 		if parsedNew.Before(parsedOld) {
 			newMessages = append(newMessages, nextNewMessage)

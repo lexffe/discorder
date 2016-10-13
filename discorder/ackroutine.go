@@ -27,10 +27,11 @@ func (a *AckRoutine) Run() {
 
 	curAckBuffer := make([]*discordgo.Message, 0)
 
+	lastToken := ""
 	for {
 		select {
 		case m := <-a.In:
-			ts, err := time.Parse(DiscordTimeFormat, m.Timestamp)
+			ts, err := m.Timestamp.Parse()
 			if err != nil {
 				continue
 			}
@@ -38,9 +39,9 @@ func (a *AckRoutine) Run() {
 			for k, v := range curAckBuffer {
 				if v.ChannelID == m.ChannelID {
 					found = true
-					parsed, err := time.Parse(DiscordTimeFormat, v.Timestamp)
+					parsed, err := v.Timestamp.Parse()
 					if err != nil {
-						log.Println("Error pasring timestamp", err)
+						log.Println("Error parsing timestamp", err)
 					}
 					if ts.After(parsed) {
 						curAckBuffer[k] = m
@@ -58,7 +59,10 @@ func (a *AckRoutine) Run() {
 			return
 		case <-ticker.C:
 			for _, v := range curAckBuffer {
-				a.AckMessage(v)
+				t := a.AckMessage(v, lastToken)
+				if t != "" {
+					lastToken = t
+				}
 			}
 			curAckBuffer = make([]*discordgo.Message, 0)
 		}
@@ -66,7 +70,7 @@ func (a *AckRoutine) Run() {
 }
 
 // Send a ack if we should, the read state check may be overkill? dunno, should check how the official client handles it
-func (a AckRoutine) AckMessage(msg *discordgo.Message) {
+func (a AckRoutine) AckMessage(msg *discordgo.Message, lastToken string) (newToken string) {
 	// Check the readstate first to verify if we already have ack'd this messaeg before
 	state := a.App.session.State
 	state.Lock()
@@ -78,7 +82,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 
 	// Do we really need this check here? maybe move it to the history processing...
 	shouldAck := true
-	ackTs, err := time.Parse(DiscordTimeFormat, msg.Timestamp)
+	ackTs, err := msg.Timestamp.Parse()
 	if err == nil {
 		for _, rs := range state.ReadState {
 			if rs.ID == msg.ChannelID {
@@ -97,7 +101,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 				}
 				for _, cm := range channel.Messages {
 					if cm.ID == lastRead {
-						parsedTs, err := time.Parse(DiscordTimeFormat, cm.Timestamp)
+						parsedTs, err := cm.Timestamp.Parse()
 						if err == nil {
 							if ackTs.Before(parsedTs) {
 								// Do not ack, this message is older than the last read message
@@ -122,9 +126,11 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 	if channel != nil {
 		msgStr = GetChannelNameOrRecipient(channel)
 	}
-	err = a.App.session.ChannelMessageAck(msg.ChannelID, msg.ID)
+	resp, err := a.App.session.ChannelMessageAck(msg.ChannelID, msg.ID, lastToken)
 	if err != nil {
 		log.Println("Error sending ack: ", err)
+	} else {
+		newToken = resp.Token
 	}
 
 	if a.App.options.DebugEnabled {
@@ -133,6 +139,7 @@ func (a AckRoutine) AckMessage(msg *discordgo.Message) {
 
 	state.Lock()
 	a.SetReadState(msg)
+	return
 }
 
 // Sets the last read message, should also undo notifications bound to this channel and readstate?
