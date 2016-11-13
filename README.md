@@ -1,6 +1,6 @@
 # Discorder
 
-### I'm not actively developing this anymore, so don't expect any new features anytime soon 
+### I'm not actively developing this anymore, so don't expect any new features anytime soon
 
 ![Ayy](https://dl.dropboxusercontent.com/u/17487167/screenshots/1476387883.png)
 
@@ -34,12 +34,12 @@ Note: Discorder still lacks a lot of features, so i wouldn't consider using it a
      + This depends on how many tabs you have open and how many channels you're listening in on offcourse
      + Maybe not so much in this early development stage where everything is still getting set up and organised, but will be a focus later on
  - Customizable
-     + Discorder is very customizable, you can change the looks of it with your own themes and change the keybinds (See doc for more info) 
+     + Discorder is very customizable, you can change the looks of it with your own themes and change the keybinds (See doc for more info)
 
 Feature list:
 
 - [x] Sending receiving messages and dm's
-- [x] Multiple channels in one view 
+- [x] Multiple channels in one view
 - [x] Initiating new dm conversations
 - [x] Delete messages
 - [ ] Edit messages
@@ -86,6 +86,5 @@ Discorder depends on termbox, discordgo, and go-runewidth at compile time
 #### Optional dependencies
 
  - xdg-open: Used for opening links
- - notify-send: Used for notifications
-
-
+ - notify-send: Used for Linux notifications
+ - terminal-emulator: Used for macOS notifications
