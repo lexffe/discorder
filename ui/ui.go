@@ -15,7 +15,7 @@ type AttribPair struct {
 
 // A Helper for drawing simple text, returns number of lines
 func SimpleSetText(startX, startY, width int, str string, fg, bg termbox.Attribute) int {
-	cells := GenCellSlice(str, map[int]AttribPair{0: AttribPair{fg, bg}})
+	cells := GenCellSlice(str, map[int]AttribPair{0: {fg, bg}})
 	return SetCells(cells, startX, startY, width, 0)
 }
 

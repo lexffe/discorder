@@ -24,9 +24,9 @@ var SimpleCommands = []Command{
 		Description: "Moves cursor in specified direction",
 		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
-			&ArgumentDef{Name: "word", Optional: true, Datatype: ui.DataTypeBool},
+			{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
+			{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
+			{Name: "word", Optional: true, Datatype: ui.DataTypeBool},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
@@ -44,9 +44,9 @@ var SimpleCommands = []Command{
 		Description: "Erase text",
 		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
-			&ArgumentDef{Name: "words", Optional: true, Datatype: ui.DataTypeBool},
+			{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
+			{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
+			{Name: "words", Optional: true, Datatype: ui.DataTypeBool},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
@@ -96,8 +96,8 @@ var SimpleCommands = []Command{
 		Description: "Scrolls currently active view",
 		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
+			{Name: "direction", Optional: false, Datatype: ui.DataTypeString},
+			{Name: "amount", Optional: false, Datatype: ui.DataTypeInt},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			amount, _ := args.Int("amount")
@@ -165,7 +165,7 @@ var SimpleCommands = []Command{
 		Description: "Changes the autocomplete selection",
 		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "amount", Description: "The amoount to change in", Datatype: ui.DataTypeBool},
+			{Name: "amount", Description: "The amoount to change in", Datatype: ui.DataTypeBool},
 		},
 		RunFunc: func(app *App, args Arguments) {},
 	},
@@ -206,12 +206,12 @@ var SimpleCommands = []Command{
 		Description: "Deletes a message",
 		Category:    []string{"Discord"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "last_yours", Description: "If true deletes last message you sent", Datatype: ui.DataTypeBool},
-			&ArgumentDef{Name: "last_any", Description: "If true deletes last message anyone sent", Datatype: ui.DataTypeBool},
-			&ArgumentDef{Name: "message", Description: "Specify a message id", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
-			&ArgumentDef{Name: "channel", Description: "Specify a channel id", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
+			{Name: "last_yours", Description: "If true deletes last message you sent", Datatype: ui.DataTypeBool},
+			{Name: "last_any", Description: "If true deletes last message anyone sent", Datatype: ui.DataTypeBool},
+			{Name: "message", Description: "Specify a message id", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
+			{Name: "channel", Description: "Specify a channel id", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
 		},
-		ArgCombinations: [][]string{[]string{"last_yours"}, []string{"last_any"}, []string{"message", "channel"}},
+		ArgCombinations: [][]string{{"last_yours"}, {"last_any"}, {"message", "channel"}},
 		RunFunc: func(app *App, args Arguments) {
 			// We need to be logged in
 			if app.session == nil {
@@ -276,8 +276,8 @@ var SimpleCommands = []Command{
 		CustomExecText: "Set",
 		Category:       []string{"Discord"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "game", Description: "What game you should appear playing as", Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "idle", Description: "How long you've been idle in seconds", Datatype: ui.DataTypeInt},
+			{Name: "game", Description: "What game you should appear playing as", Datatype: ui.DataTypeString},
+			{Name: "idle", Description: "How long you've been idle in seconds", Datatype: ui.DataTypeInt},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			game, _ := args.String("game")
@@ -297,7 +297,7 @@ var SimpleCommands = []Command{
 		Description: "Initiate a conversation",
 		Category:    []string{"Discord"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "user", Description: "User to intiate a conversation with", Datatype: ui.DataTypeString, Helper: &UserArgumentHelper{}},
+			{Name: "user", Description: "User to intiate a conversation with", Datatype: ui.DataTypeString, Helper: &UserArgumentHelper{}},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			userId, _ := args.String("user")
@@ -340,9 +340,9 @@ var SimpleCommands = []Command{
 		CustomExecText: "Set",
 		Category:       []string{"Discord"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "name", Description: "The nickname you will set (empty to reset)", Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{}},
-			&ArgumentDef{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeString, Helper: &UserArgumentHelper{}},
+			{Name: "name", Description: "The nickname you will set (empty to reset)", Datatype: ui.DataTypeString},
+			{Name: "server", Description: "Server to set the nickname on", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{}},
+			{Name: "user", Description: "Specify a user, leave empty for youself", Datatype: ui.DataTypeString, Helper: &UserArgumentHelper{}},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			serverId, _ := args.String("server")
@@ -366,8 +366,8 @@ var SimpleCommands = []Command{
 		CustomExecText: "Pin!",
 		Category:       []string{"Discord"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "message", Description: "The message that will be pinned", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
-			&ArgumentDef{Name: "channel", Description: "The message that will be pinned", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
+			{Name: "message", Description: "The message that will be pinned", Datatype: ui.DataTypeString, Helper: &MessageArgumentHelper{}},
+			{Name: "channel", Description: "The message that will be pinned", Datatype: ui.DataTypeString, Helper: &ServerChannelArgumentHelper{Channel: true}},
 		},
 		RunFunc: func(app *App, args Arguments) {
 		},
@@ -422,19 +422,19 @@ var SimpleCommands = []Command{
 		Description:    "Change settings",
 		CustomExecText: "Save",
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "short_guilds", Description: "Displays a mini version of guilds in message view", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+			{Name: "short_guilds", Description: "Displays a mini version of guilds in message view", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.ShortGuilds)
-			}}, &ArgumentDef{Name: "hide_nicknames", Description: "Shows usernames instead of nicknames if true", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+			}}, {Name: "hide_nicknames", Description: "Shows usernames instead of nicknames if true", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.HideNicknames)
-			}}, &ArgumentDef{Name: "time_format_full", Description: "Sets the full time format", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
+			}}, {Name: "time_format_full", Description: "Sets the full time format", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
 				return app.config.GetTimeFormatFull()
-			}}, &ArgumentDef{Name: "time_format_short", Description: "Sets the short time format (for messages on the same day)", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
+			}}, {Name: "time_format_short", Description: "Sets the short time format (for messages on the same day)", Datatype: ui.DataTypeString, CurValFunc: func(app *App) string {
 				return app.config.GetTimeFormatSameDay()
-			}}, &ArgumentDef{Name: "colored_guilds", Description: "Sets the guild names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+			}}, {Name: "colored_guilds", Description: "Sets the guild names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.ColoredGuilds)
-			}}, &ArgumentDef{Name: "colored_channels", Description: "Sets the channel names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+			}}, {Name: "colored_channels", Description: "Sets the channel names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.ColoredChannels)
-			}}, &ArgumentDef{Name: "colored_users", Description: "Sets the user names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
+			}}, {Name: "colored_users", Description: "Sets the user names to a deterministic 'random' color", Datatype: ui.DataTypeBool, CurValFunc: func(app *App) string {
 				return strconv.FormatBool(app.config.ColoredUsers)
 			}},
 		},
@@ -480,8 +480,8 @@ var SimpleCommands = []Command{
 		Description: "Change tab",
 		Category:    []string{"hidden"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "tab", Datatype: ui.DataTypeInt},
-			&ArgumentDef{Name: "change", Datatype: ui.DataTypeInt},
+			{Name: "tab", Datatype: ui.DataTypeInt},
+			{Name: "change", Datatype: ui.DataTypeInt},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			index, ok := args.Int("tab")
@@ -536,7 +536,7 @@ var SimpleCommands = []Command{
 		Description: "Renames the currently selected tab",
 		Category:    []string{"Utils"},
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "name", Description: "The name you want to give", Datatype: ui.DataTypeString},
+			{Name: "name", Description: "The name you want to give", Datatype: ui.DataTypeString},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			tab := app.ViewManager.ActiveTab

@@ -21,7 +21,7 @@ var LoginCommands = []Command{
 		Description:    "Login using a token that was peviously aquired from somewhere else (like the official client)",
 		CustomExecText: "Login",
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "token", Description: "The token", Datatype: ui.DataTypeString},
+			{Name: "token", Description: "The token", Datatype: ui.DataTypeString},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			token, _ := args.String("token")
@@ -42,8 +42,8 @@ var LoginCommands = []Command{
 		Description:    "Login using email and password",
 		CustomExecText: "Login",
 		Args: []*ArgumentDef{
-			&ArgumentDef{Name: "Email", Description: "Your email", Datatype: ui.DataTypeString},
-			&ArgumentDef{Name: "Password", Description: "Your email", Datatype: ui.DataTypePassword},
+			{Name: "Email", Description: "Your email", Datatype: ui.DataTypeString},
+			{Name: "Password", Description: "Your email", Datatype: ui.DataTypePassword},
 		},
 		RunFunc: func(app *App, args Arguments) {
 			email, _ := args.String("Email")

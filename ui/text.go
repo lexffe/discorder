@@ -49,7 +49,7 @@ func (t *Text) GetDrawLayer() int {
 
 func (t *Text) SetAttribs(attribs map[int]AttribPair) {
 	highest := 0
-	for key, _ := range attribs {
+	for key := range attribs {
 		if key > highest {
 			highest = key
 		}

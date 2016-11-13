@@ -11,13 +11,13 @@ type CommandCategory struct {
 }
 
 var CommandCategories = []*CommandCategory{
-	&CommandCategory{
+	{
 		Name:        "Discord",
 		Description: "Discord utilities",
-	}, &CommandCategory{
+	}, {
 		Name:        "Windows",
 		Description: "Server browser, help etc...",
-	}, &CommandCategory{
+	}, {
 		Name:        "Utils",
 		Description: "Discorder utilities",
 	},

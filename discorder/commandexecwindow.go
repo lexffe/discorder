@@ -244,7 +244,7 @@ func (cew *CommandExecWindow) CheckAutoExec() bool {
 		for _, combination := range combinations {
 			for _, step := range combination {
 				found := false
-				for key, _ := range args {
+				for key := range args {
 					if key == step {
 						found = true
 						break

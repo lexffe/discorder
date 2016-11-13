@@ -45,7 +45,7 @@ func (s *ServerNotificationSettingsCommand) GetIgnoreFilter() bool {
 
 func (s *ServerNotificationSettingsCommand) GetArgs(curArgs Arguments) []*ArgumentDef {
 	args := []*ArgumentDef{
-		&ArgumentDef{
+		{
 			Name:                   "server",
 			Description:            "Server to change settings on",
 			Datatype:               ui.DataTypeString,

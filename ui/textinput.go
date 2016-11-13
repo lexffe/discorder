@@ -199,7 +199,7 @@ func (ti *TextInput) Erase(dir Direction, amount int, byWords bool) {
 func (ti *TextInput) Update() {
 	if ti.MaskInput || ti.DataType == DataTypePassword {
 		ti.Text.Text = ""
-		for _, _ = range ti.TextBuffer {
+		for range ti.TextBuffer {
 			ti.Text.Text += "*"
 		}
 	} else {

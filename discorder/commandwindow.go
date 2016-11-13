@@ -107,7 +107,7 @@ func (cw *CommandWindow) GetArgMatchesForCommand(cmd Command) []string {
 		}
 
 		name := arg.Helper.GetName()
-		for key, _ := range cw.providedArgs {
+		for key := range cw.providedArgs {
 			if name == key {
 				matches = append(matches, key)
 				break
