@@ -5,9 +5,9 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
-	"runtime"
 )
 
 var linkRegex = regexp.MustCompile(`(https?|ftp):\/\/[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)`)
@@ -176,19 +176,19 @@ func (app *App) GenMessageCommands(msg *discordgo.Message) []Command {
 
 func (app *App) OpenLink(link string) {
 
-  // Checks if it is in macOS
+	// Checks if it is in macOS
 	// In Windows, start [URL] might work, though it is not implemented here.
 
 	var cmd *exec.Cmd
 
 	switch runtime.GOOS {
-  case "darwin":
+	case "darwin":
 		cmd = exec.Command("open", link)
-		break;
+		break
 	case "linux":
 	default:
 		cmd = exec.Command("xdg-open", link)
-		break;
+		break
 	}
 
 	err := cmd.Run()
