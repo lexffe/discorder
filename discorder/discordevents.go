@@ -1,10 +1,7 @@
 package discorder
 
-// Please remove condulum's notificator fork when 0xAX accepted pull request.
-
 import (
-	//"github.com/0xAX/notificator"
-	"github.com/condulum/notificator"
+	"github.com/0xAX/notificator"
 	"github.com/jonas747/discorder/ui"
 	"github.com/jonas747/discordgo"
 	"log"
